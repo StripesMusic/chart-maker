@@ -417,6 +417,19 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 </head>
 <body>
 
+<div id="view-auth" style="display:none; flex-direction:column; justify-content:center; align-items:center; height:100vh; text-align:center;">
+  <div style="background:var(--bg2); padding:40px; border-radius:12px; border:1px solid var(--border); width:100%; max-width:400px;">
+    <h2 style="color:var(--accent); letter-spacing: 5px; margin-bottom: 20px;">DRUM CHARTS</h2>
+    <input type="email" id="auth-email" style="width:100%; padding:12px; margin:10px 0; background:var(--bg3); border:1px solid var(--border2); color:var(--text); border-radius:5px;" placeholder="Email">
+    <input type="password" id="auth-pass" style="width:100%; padding:12px; margin:10px 0; background:var(--bg3); border:1px solid var(--border2); color:var(--text); border-radius:5px;" placeholder="Password">
+    <div style="margin-top: 20px; display: flex; gap: 10px;">
+      <button class="btn accent" style="flex:1" onclick="handleAuth('login')">Login</button>
+      <button class="btn" style="flex:1" onclick="handleAuth('signup')">Sign Up</button>
+    </div>
+    <p id="auth-error" style="color:var(--red); font-size: 12px; margin-top: 15px;"></p>
+  </div>
+</div>
+
 <!-- ═══════════ LIBRARY VIEW ═══════════ -->
 <div id="view-library" class="active">
   <div id="lib-header">
@@ -562,6 +575,65 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 </div>
 
 <script>
+
+/* ── FIREBASE INTEGRATION ── */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// PASTE YOUR CONFIG HERE
+const firebaseConfig = {
+  apiKey: "AIzaSyCdhJhDOeqYlR2xrVVUKXAs7Cms6tiTRJ8",
+  authDomain: "chart-maker-firebase.firebaseapp.com",
+  projectId: "chart-maker-firebase",
+  storageBucket: "chart-maker-firebase.firebasestorage.app",
+  messagingSenderId: "892558984",
+  appId: "1:892558984:web:9eb403a2b41d6c7299093d",
+  measurementId: "G-TV2HYST7DF"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+let currentUser = null;
+
+// Auth Logic
+window.handleAuth = async (mode) => {
+    const email = document.getElementById('auth-email').value;
+    const pass = document.getElementById('auth-pass').value;
+    try {
+        if(mode === 'login') await signInWithEmailAndPassword(auth, email, pass);
+        else await createUserWithEmailAndPassword(auth, email, pass);
+    } catch(e) { document.getElementById('auth-error').textContent = e.message; }
+};
+
+onAuthStateChanged(auth, async (user) => {
+    if (user) {
+        currentUser = user;
+        document.getElementById('view-auth').style.display = 'none';
+        document.getElementById('view-library').classList.add('active');
+        // Load cloud data into your existing library array
+        const docSnap = await getDoc(doc(db, "users", user.uid));
+        if (docSnap.exists()) {
+            library = docSnap.data().library || [];
+            renderLibrary(); // This calls YOUR original render function
+        }
+    } else {
+        document.getElementById('view-auth').style.display = 'flex';
+        document.getElementById('view-library').classList.remove('active');
+    }
+});
+
+// Update YOUR existing save function to also talk to the cloud
+const originalSave = window.save;
+window.save = async function() {
+    originalSave(); // Keeps your LocalStorage backup
+    if(currentUser) {
+        await setDoc(doc(db, "users", currentUser.uid), { library });
+        console.log("Cloud synced!");
+    }
+}
+  
 // ─── DATA ───────────────────────────────────────────
 const TYPES = [
   {id:'intro',     label:'Intro',      color:'#5bc0de', key:'i'},
