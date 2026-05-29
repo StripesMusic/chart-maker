@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Drum Chart</title>
+<title>Drum Chart Pro</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -27,12 +27,16 @@
 body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column}
 
 /* ── VIEWS ── */
-#view-library,#view-editor{width:100%;height:100%;display:none;flex-direction:column}
-#view-library.active,#view-editor.active{display:flex}
+#view-library,#view-editor,#view-auth{width:100%;height:100%;display:none;flex-direction:column}
+#view-library.active,#view-editor.active,#view-auth.active{display:flex}
 
-/* ═══════════════════════════════
-   LIBRARY VIEW
-═══════════════════════════════ */
+/* ── AUTH UI ── */
+#view-auth { justify-content: center; align-items: center; text-align: center; background: var(--bg); }
+.auth-box { background: var(--bg2); padding: 40px; border-radius: 12px; border: 1px solid var(--border); width: 90%; max-width: 400px; }
+.auth-input { width: 100%; padding: 12px; margin: 10px 0; background: var(--bg3); border: 1px solid var(--border2); color: var(--text); border-radius: 5px; font-family: inherit; outline: none; }
+.auth-input:focus { border-color: var(--accent); }
+
+/* ── LIBRARY VIEW ── */
 #lib-header{
   display:flex;align-items:center;justify-content:space-between;
   padding:24px 36px;border-bottom:1px solid var(--border);
@@ -57,7 +61,7 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
   background:var(--bg2);border:1px solid var(--border);border-radius:8px;
   cursor:pointer;transition:all .15s;
 }
-.song-card:hover{background:var(--bg3);border-color:var(--border2)}
+.song-card:hover{background:var(--bg3);border-color:var(--border2); transform: translateY(-2px); }
 .song-card-left{flex:1;min-width:0}
 .song-card-name{font-size:20px;font-weight:700;letter-spacing:2px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .song-card-meta{font-size:13px;color:var(--muted);letter-spacing:1px;margin-top:6px}
@@ -65,9 +69,7 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 .song-card-strip{height:8px;border-radius:2px;min-width:14px}
 .song-card-actions{display:flex;gap:8px;flex-shrink:0}
 
-/* ═══════════════════════════════
-   EDITOR VIEW
-═══════════════════════════════ */
+/* ── EDITOR VIEW ── */
 #ed-header{
   display:flex;align-items:center;gap:14px;
   padding:14px 24px;border-bottom:1px solid var(--border);
@@ -417,11 +419,11 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 </head>
 <body>
 
-<div id="view-auth" style="display:none; flex-direction:column; justify-content:center; align-items:center; height:100vh; text-align:center;">
-  <div style="background:var(--bg2); padding:40px; border-radius:12px; border:1px solid var(--border); width:100%; max-width:400px;">
+<div id="view-auth">
+  <div class="auth-box">
     <h2 style="color:var(--accent); letter-spacing: 5px; margin-bottom: 20px;">DRUM CHARTS</h2>
-    <input type="email" id="auth-email" style="width:100%; padding:12px; margin:10px 0; background:var(--bg3); border:1px solid var(--border2); color:var(--text); border-radius:5px;" placeholder="Email">
-    <input type="password" id="auth-pass" style="width:100%; padding:12px; margin:10px 0; background:var(--bg3); border:1px solid var(--border2); color:var(--text); border-radius:5px;" placeholder="Password">
+    <input type="email" id="auth-email" class="auth-input" placeholder="Email">
+    <input type="password" id="auth-pass" class="auth-input" placeholder="Password">
     <div style="margin-top: 20px; display: flex; gap: 10px;">
       <button class="btn accent" style="flex:1" onclick="handleAuth('login')">Login</button>
       <button class="btn" style="flex:1" onclick="handleAuth('signup')">Sign Up</button>
@@ -430,17 +432,19 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
   </div>
 </div>
 
-<!-- ═══════════ LIBRARY VIEW ═══════════ -->
-<div id="view-library" class="active">
+<div id="view-library">
   <div id="lib-header">
     <div>
       <div id="lib-title">🥁 Drum Charts</div>
       <div id="lib-subtitle">Your song library</div>
     </div>
-    <button class="btn new-song" onclick="newSong()">+ NEW SONG</button>
+    <div style="display:flex; gap:10px">
+        <button class="btn new-song" onclick="newSong()">+ NEW SONG</button>
+        <button class="btn danger" onclick="handleLogout()">Logout</button>
+    </div>
   </div>
   <div class="lib-save-row">
-    <label id="save-status-label">All changes saved to browser &nbsp;·&nbsp; Export to keep a backup file</label>
+    <label id="save-status-label">All changes saved to cloud</label>
     <button class="btn" onclick="exportLibrary()" title="Download all songs as a .json file">⬇ Export All</button>
     <button class="btn" onclick="document.getElementById('import-input').click()" title="Load songs from a .json file">⬆ Import</button>
     <input type="file" id="import-input" accept=".json" style="display:none" onchange="importLibrary(event)">
@@ -454,7 +458,6 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
   </div>
 </div>
 
-<!-- ═══════════ EDITOR VIEW ═══════════ -->
 <div id="view-editor">
   <div id="ed-header">
     <button id="back-btn" onclick="goLibrary()">← Library</button>
@@ -502,7 +505,6 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
   </div>
 </div>
 
-<!-- ═══════════ PERFORMANCE OVERLAY ═══════════ -->
 <div id="perf-overlay">
   <div id="perf-topbar">
     <div id="perf-song"></div>
@@ -562,7 +564,6 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
     </div>
   </div>
 
-  <!-- LIST VIEW -->
   <div id="perf-list-view"></div>
 
   <div id="perf-progress"><div id="perf-progress-fill" style="width:0%"></div></div>
@@ -574,14 +575,14 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
   <div id="key-hint">SPACE / ENTER = next &nbsp;·&nbsp; BACKSPACE = back &nbsp;·&nbsp; ESC = exit</div>
 </div>
 
-<script>
+<div id="save-toast"></div>
 
-/* ── FIREBASE INTEGRATION ── */
+<script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// PASTE YOUR CONFIG HERE
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyCdhJhDOeqYlR2xrVVUKXAs7Cms6tiTRJ8",
   authDomain: "chart-maker-firebase.firebaseapp.com",
@@ -595,46 +596,23 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+
+// ─── STATE ───────────────────────────────────────────
+let library = [];     
 let currentUser = null;
+let currentSongId = null;
+let idCounter = Date.now();
+let dragSrc = null;
 
-// Auth Logic
-window.handleAuth = async (mode) => {
-    const email = document.getElementById('auth-email').value;
-    const pass = document.getElementById('auth-pass').value;
-    try {
-        if(mode === 'login') await signInWithEmailAndPassword(auth, email, pass);
-        else await createUserWithEmailAndPassword(auth, email, pass);
-    } catch(e) { document.getElementById('auth-error').textContent = e.message; }
-};
+// Performance state
+let perfIdx = 0;
+let perfMode = 'auto'; 
+let autoTimer = null;
+let barTickInterval = null;
+let currentBarTick = 0;
+let totalBarTicks  = 0;
+let displayMode = 'focus';
 
-onAuthStateChanged(auth, async (user) => {
-    if (user) {
-        currentUser = user;
-        document.getElementById('view-auth').style.display = 'none';
-        document.getElementById('view-library').classList.add('active');
-        // Load cloud data into your existing library array
-        const docSnap = await getDoc(doc(db, "users", user.uid));
-        if (docSnap.exists()) {
-            library = docSnap.data().library || [];
-            renderLibrary(); // This calls YOUR original render function
-        }
-    } else {
-        document.getElementById('view-auth').style.display = 'flex';
-        document.getElementById('view-library').classList.remove('active');
-    }
-});
-
-// Update YOUR existing save function to also talk to the cloud
-const originalSave = window.save;
-window.save = async function() {
-    originalSave(); // Keeps your LocalStorage backup
-    if(currentUser) {
-        await setDoc(doc(db, "users", currentUser.uid), { library });
-        console.log("Cloud synced!");
-    }
-}
-  
-// ─── DATA ───────────────────────────────────────────
 const TYPES = [
   {id:'intro',     label:'Intro',      color:'#5bc0de', key:'i'},
   {id:'verse',     label:'Verse',      color:'#4caf6e', key:'v'},
@@ -650,118 +628,103 @@ const TYPES = [
 const TM = {};
 TYPES.forEach(t => TM[t.id] = t);
 
-let library = [];     // array of song objects
-let currentSongId = null;
-let idCounter = Date.now();
-let dragSrc = null;
+// ─── AUTH CORE ───────────────────────────────────────
+window.handleAuth = async (mode) => {
+    const email = document.getElementById('auth-email').value;
+    const pass = document.getElementById('auth-pass').value;
+    const errEl = document.getElementById('auth-error');
+    try {
+        if(mode === 'login') await signInWithEmailAndPassword(auth, email, pass);
+        else await createUserWithEmailAndPassword(auth, email, pass);
+    } catch(e) { errEl.textContent = e.message; }
+};
 
-// perf state
-let perfIdx = 0;
-let perfMode = 'auto'; // 'auto' | 'manual'
-let autoTimer = null;
-let barTimer  = null;
-let barTickInterval = null;
-let currentBarTick = 0;
-let totalBarTicks  = 0;
+window.handleLogout = () => signOut(auth);
+
+onAuthStateChanged(auth, async (user) => {
+    const vAuth = document.getElementById('view-auth');
+    const vLib = document.getElementById('view-library');
+    if (user) {
+        currentUser = user;
+        vAuth.classList.remove('active');
+        vLib.classList.add('active');
+        const docSnap = await getDoc(doc(db, "users", user.uid));
+        if (docSnap.exists()) {
+            library = docSnap.data().library || [];
+        }
+        renderLibrary();
+    } else {
+        currentUser = null;
+        vLib.classList.remove('active');
+        vAuth.classList.add('active');
+    }
+});
 
 // ─── STORAGE ─────────────────────────────────────────
 let saveToast = null;
 function showToast(msg, type='saved', duration=1800){
   const el = document.getElementById('save-toast');
+  if(!el) return;
   el.textContent = msg;
   el.className = 'show ' + type;
   clearTimeout(saveToast);
   saveToast = setTimeout(() => { el.className = ''; }, duration);
 }
-function save(){
+
+window.save = async function(){
   try {
     const json = JSON.stringify(library);
     localStorage.setItem('drumcharts_lib', json);
-    document.getElementById('save-status-label').textContent =
-      'Saved to browser · ' + library.length + ' song' + (library.length!==1?'s':'') + ' · Export for a backup file';
+    document.getElementById('save-status-label').textContent = 'Cloud synced · ' + library.length + ' songs';
+    
+    if(currentUser) {
+        await setDoc(doc(db, "users", currentUser.uid), { library });
+    }
   } catch(e) {
-    showToast('Save failed — storage full?', 'error', 3000);
+    showToast('Save failed', 'error');
   }
 }
-function load(){
-  try{
-    const d = localStorage.getItem('drumcharts_lib');
-    if(d) library = JSON.parse(d);
-  }catch(e){ library = []; }
-}
-function exportLibrary(){
+
+window.exportLibrary = function(){
   saveSongMeta();
-  const data = {
-    version: 1,
-    exported: new Date().toISOString(),
-    library: library
-  };
+  const data = { version: 1, exported: new Date().toISOString(), library: library };
   const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
   const url  = URL.createObjectURL(blob);
   const a    = document.createElement('a');
-  const date = new Date().toISOString().slice(0,10);
-  a.href     = url;
-  a.download = 'drum-charts-' + date + '.json';
-  a.click();
+  a.href = url; a.download = 'drum-charts.json'; a.click();
   URL.revokeObjectURL(url);
-  showToast('✓ Exported', 'saved');
+  showToast('✓ Exported');
 }
-function importLibrary(e){
+
+window.importLibrary = function(e){
   const file = e.target.files[0];
   if(!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
     try {
       const data = JSON.parse(ev.target.result);
-      const incoming = data.library || data; // support both wrapped and raw array
-      if(!Array.isArray(incoming)) throw new Error('Not an array');
-      const count = incoming.length;
-      if(!confirm('Import ' + count + ' song' + (count!==1?'s':'') + '? This will MERGE with your existing library (no songs deleted).')) {
-        e.target.value = '';
-        return;
-      }
-      // Merge: skip songs with same id, add new ones
-      const existingIds = new Set(library.map(s => s.id));
-      let added = 0;
-      incoming.forEach(s => {
-        if(!existingIds.has(s.id)){
-          library.push(s);
-          added++;
-        }
-      });
-      save();
+      const incoming = data.library || data;
+      if(!Array.isArray(incoming)) return;
+      library = [...library, ...incoming];
+      window.save();
       renderLibrary();
-      showToast('✓ Imported ' + added + ' song' + (added!==1?'s':''), 'saved', 2500);
-    } catch(err) {
-      showToast('Import failed — invalid file', 'error', 3000);
-    }
-    e.target.value = '';
+      showToast('✓ Imported');
+    } catch(err) { showToast('Import failed', 'error'); }
   };
   reader.readAsText(file);
 }
 
 // ─── SONG HELPERS ────────────────────────────────────
-function makeSong(){
-  return {
-    id: idCounter++,
-    name: '',
-    bpm: 120,
-    ts: 4,
-    notes: '',
-    sections: [],
-    created: Date.now(),
-  };
-}
-function currentSong(){
-  return library.find(s => s.id === currentSongId) || null;
-}
+function makeSong(){ return { id: idCounter++, name: '', bpm: 120, ts: 4, notes: '', sections: [], created: Date.now() }; }
+function currentSong(){ return library.find(s => s.id === currentSongId) || null; }
 
-// ─── LIBRARY ─────────────────────────────────────────
-function showView(v){
+// ─── VIEWS ───────────────────────────────────────────
+window.showView = function(v){
   document.getElementById('view-library').classList.toggle('active', v==='library');
   document.getElementById('view-editor').classList.toggle('active', v==='editor');
 }
-function renderLibrary(){
+
+window.renderLibrary = function(){
   const list = document.getElementById('song-list');
   const empty = document.getElementById('lib-empty');
   list.innerHTML = '';
@@ -769,444 +732,174 @@ function renderLibrary(){
   empty.style.display = 'none';
   [...library].reverse().forEach(song => {
     const totalBars = song.sections.reduce((a,s)=>a+(s.bars*s.repeats),0);
-    const secs = song.sections.length;
-    const bpmMs = Math.round((totalBars * song.ts * 60000) / song.bpm / 1000);
-    const timeStr = bpmMs ? `~${Math.floor(bpmMs/60)}:${String(bpmMs%60).padStart(2,'0')}` : '';
-
-    const strips = song.sections.map(s => {
-      const t = TM[s.typeId];
-      const w = Math.max(12, Math.round((s.bars*s.repeats)*3));
-      return `<div class="song-card-strip" style="background:${t?t.color:'#555'};width:${w}px" title="${t?t.label:''}"></div>`;
-    }).join('');
-
+    const strips = song.sections.map(s => `<div class="song-card-strip" style="background:${TM[s.typeId]?.color || '#555'};width:14px"></div>`).join('');
     const card = document.createElement('div');
     card.className = 'song-card';
     card.innerHTML = `
       <div class="song-card-left" onclick="openSong(${song.id})">
         <div class="song-card-name">${song.name||'Untitled Song'}</div>
-        <div class="song-card-meta">${song.bpm} BPM &nbsp;·&nbsp; ${song.ts}/4 &nbsp;·&nbsp; ${secs} section${secs!==1?'s':''} &nbsp;·&nbsp; ${totalBars} bars${timeStr?' &nbsp;·&nbsp; '+timeStr:''}</div>
-        <div class="song-card-strips">${strips||'<span style="font-size:10px;color:#333">No sections</span>'}</div>
+        <div class="song-card-meta">${song.bpm} BPM · ${song.ts}/4 · ${totalBars} bars</div>
+        <div class="song-card-strips">${strips}</div>
       </div>
       <div class="song-card-actions">
-        <button class="btn perform" style="padding:6px 14px;font-size:11px" onclick="event.stopPropagation();openAndPerform(${song.id})">▶ Play</button>
+        <button class="btn perform" onclick="event.stopPropagation();openAndPerform(${song.id})">▶ Play</button>
         <button class="btn danger" onclick="event.stopPropagation();deleteSongById(${song.id})">✕</button>
       </div>`;
     list.appendChild(card);
   });
 }
-function newSong(){
+
+window.newSong = function(){
   const song = makeSong();
   library.push(song);
-  save();
+  window.save();
   openSong(song.id);
 }
-function openSong(id){
+
+window.openSong = function(id){
   currentSongId = id;
   const song = currentSong();
   document.getElementById('song-name-input').value = song.name;
   document.getElementById('bpm-input').value = song.bpm;
   document.getElementById('ts-select').value = String(song.ts);
   document.getElementById('global-notes').value = song.notes;
-  showView('editor');
+  window.showView('editor');
   renderChart();
 }
-function openAndPerform(id){
-  openSong(id);
-  setTimeout(startPerf, 80);
-}
-function goLibrary(){
-  saveSongMeta();
-  showView('library');
-  renderLibrary();
-}
-function saveSongMeta(){
+
+window.openAndPerform = function(id){ openSong(id); setTimeout(window.startPerf, 80); }
+window.goLibrary = function(){ saveSongMeta(); window.showView('library'); renderLibrary(); }
+
+window.saveSongMeta = function(){
   const song = currentSong(); if(!song) return;
   song.name = document.getElementById('song-name-input').value;
   song.bpm  = parseInt(document.getElementById('bpm-input').value)||120;
   song.ts   = parseInt(document.getElementById('ts-select').value)||4;
   song.notes= document.getElementById('global-notes').value;
-  save();
-}
-function deleteSong(){
-  if(!confirm('Delete this song?')) return;
-  library = library.filter(s => s.id !== currentSongId);
-  save();
-  goLibrary();
-}
-function deleteSongById(id){
-  if(!confirm('Delete this song?')) return;
-  library = library.filter(s => s.id !== id);
-  save();
-  renderLibrary();
-}
-function clearChart(){
-  const song = currentSong(); if(!song) return;
-  if(!confirm('Clear all sections?')) return;
-  song.sections = [];
-  save();
-  renderChart();
+  window.save();
 }
 
-// ─── PALETTE ─────────────────────────────────────────
-(function buildPalette(){
-  const pal = document.getElementById('section-palette');
-  TYPES.forEach(t => {
-    const el = document.createElement('div');
-    el.className='palette-item';
-    el.innerHTML=`<div class="dot" style="background:${t.color}"></div><span>${t.label}</span><span class="key-hint">${t.key.toUpperCase()}</span>`;
-    el.onclick = () => addSection(t.id);
-    pal.appendChild(el);
-  });
-})();
+window.deleteSong = function(){ if(confirm('Delete?')){ library = library.filter(s => s.id !== currentSongId); window.save(); goLibrary(); } }
+window.deleteSongById = function(id){ if(confirm('Delete?')){ library = library.filter(s => s.id !== id); window.save(); renderLibrary(); } }
+window.clearChart = function(){ if(confirm('Clear?')){ currentSong().sections = []; window.save(); renderChart(); } }
 
 // ─── EDITOR ──────────────────────────────────────────
-function addSection(typeId){
+window.addSection = function(typeId){
   const song = currentSong(); if(!song) return;
   song.sections.push({id:idCounter++, typeId, bars:8, notes:'', repeats:1});
-  save(); renderChart();
+  window.save(); renderChart();
 }
+
 function renderChart(){
   const song = currentSong();
   const list = document.getElementById('chart-list');
   const hint = document.getElementById('drop-hint');
-  const stats = document.getElementById('chart-stats');
-  if(!song){ list.innerHTML=''; hint.style.display='block'; return; }
-
+  if(!song){ list.innerHTML=''; return; }
   hint.style.display = song.sections.length ? 'none' : 'block';
   list.innerHTML = '';
 
-  // Count per type for numbering
   const counts = {};
-  song.sections.forEach(s => {
-    counts[s.typeId] = (counts[s.typeId]||0)+1;
-    s._num = counts[s.typeId];
-  });
-  const multiTypes = new Set(Object.keys(counts).filter(k=>counts[k]>1));
+  song.sections.forEach(s => counts[s.typeId] = (counts[s.typeId]||0)+1);
 
   song.sections.forEach((sec, i) => {
     const t = TM[sec.typeId];
     const el = document.createElement('div');
     el.className = 'section-block';
     el.draggable = true;
-    el.dataset.idx = i;
-
-    const instanceLabel = multiTypes.has(sec.typeId) ? ` <span class="sec-instance" style="color:${t.color}88">${sec._num}</span>` : '';
-    const repeatLabel = sec.repeats > 1 ? `×${sec.repeats}` : `×1`;
-
     el.innerHTML = `
       <div class="sec-bar" style="background:${t.color}"></div>
       <div class="sec-body">
         <div class="sec-row1">
-          <span class="sec-type-label" style="color:${t.color}">${t.label}</span>${instanceLabel}
+          <span class="sec-type-label" style="color:${t.color}">${t.label}</span>
           <div class="sec-row1-right">
-            <span class="repeat-pill" title="Click to change repeats" onclick="cycleRepeats(${i})">${repeatLabel}</span>
+            <span class="repeat-pill" onclick="cycleRepeats(${i})">×${sec.repeats}</span>
             <div class="bars-wrap">
-              <span>Bars</span>
-              <input class="bars-input" type="number" value="${sec.bars}" min="1" max="999"
-                onchange="updateBars(${i},this.value)" onclick="event.stopPropagation()">
+              <input class="bars-input" type="number" value="${sec.bars}" onchange="updateBars(${i},this.value)">
             </div>
-            <div class="sec-actions">
-              <button class="ico-btn" onclick="moveUp(${i})" title="Move up">↑</button>
-              <button class="ico-btn" onclick="moveDown(${i})" title="Move down">↓</button>
-              <button class="ico-btn" onclick="duplicate(${i})" title="Duplicate">⧉</button>
-              <button class="ico-btn del" onclick="removeSection(${i})" title="Remove">✕</button>
-            </div>
+            <button class="ico-btn del" onclick="removeSection(${i})">✕</button>
           </div>
         </div>
-        <div class="sec-row2">
-          <input class="sec-notes-input" type="text"
-            placeholder="Notes: fill on 4, open hihat, crash on 1, build intensity..."
-            value="${escHtml(sec.notes)}"
-            onchange="updateNotes(${i},this.value)"
-            onclick="event.stopPropagation()">
-        </div>
+        <input class="sec-notes-input" type="text" value="${sec.notes}" onchange="updateNotes(${i},this.value)">
       </div>`;
-
-    // drag
-    el.addEventListener('dragstart', e => { dragSrc=i; el.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
-    el.addEventListener('dragend', () => { el.classList.remove('dragging'); document.querySelectorAll('.section-block').forEach(b=>b.classList.remove('drag-over-top','drag-over-bot')); });
-    el.addEventListener('dragover', e => {
-      e.preventDefault();
-      const mid = el.getBoundingClientRect().top + el.offsetHeight/2;
-      el.classList.toggle('drag-over-top', e.clientY < mid);
-      el.classList.toggle('drag-over-bot', e.clientY >= mid);
-    });
-    el.addEventListener('dragleave', () => el.classList.remove('drag-over-top','drag-over-bot'));
-    el.addEventListener('drop', e => {
-      e.preventDefault();
-      el.classList.remove('drag-over-top','drag-over-bot');
-      if(dragSrc===null || dragSrc===i) return;
-      const mid = el.getBoundingClientRect().top + el.offsetHeight/2;
-      const insertAfter = e.clientY >= mid ? 1 : 0;
-      const moved = song.sections.splice(dragSrc,1)[0];
-      let dest = i > dragSrc ? i - 1 : i;
-      song.sections.splice(dest + insertAfter, 0, moved);
-      save(); renderChart();
-      dragSrc = null;
-    });
-
     list.appendChild(el);
   });
-
-  // stats
-  const totalBars = song.sections.reduce((a,s)=>a+(s.bars*s.repeats),0);
-  const bpm = parseInt(document.getElementById('bpm-input').value)||120;
-  const ts  = parseInt(document.getElementById('ts-select').value)||4;
-  const secs = Math.round((totalBars * ts * 60) / bpm);
-  const mm = Math.floor(secs/60), ss = String(secs%60).padStart(2,'0');
-  stats.textContent = `${song.sections.length} sections · ${totalBars} bars · ~${mm}:${ss}`;
-}
-
-function escHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;'); }
-function updateBars(i,v){ const s=currentSong(); s.sections[i].bars=Math.max(1,parseInt(v)||1); save(); renderChart(); }
-function updateNotes(i,v){ const s=currentSong(); s.sections[i].notes=v; save(); }
-function removeSection(i){ const s=currentSong(); s.sections.splice(i,1); save(); renderChart(); }
-function moveUp(i){ const s=currentSong(); if(i>0){[s.sections[i-1],s.sections[i]]=[s.sections[i],s.sections[i-1]]; save(); renderChart();} }
-function moveDown(i){ const s=currentSong(); if(i<s.sections.length-1){[s.sections[i],s.sections[i+1]]=[s.sections[i+1],s.sections[i]]; save(); renderChart();} }
-function duplicate(i){ const s=currentSong(); s.sections.splice(i+1,0,{...s.sections[i],id:idCounter++}); save(); renderChart(); }
-function cycleRepeats(i){ const s=currentSong(); s.sections[i].repeats=(s.sections[i].repeats%8)+1; save(); renderChart(); }
-
-// keyboard shortcuts in editor
-document.addEventListener('keydown', e => {
-  if(document.getElementById('perf-overlay').classList.contains('active')) return;
-  if(['INPUT','TEXTAREA','SELECT'].includes(e.target.tagName)) return;
-  const t = TYPES.find(t=>t.key===e.key.toLowerCase());
-  if(t) addSection(t.id);
-});
-
-
-// ─── DISPLAY MODES ───────────────────────────────────
-let displayMode = 'focus';
-function setDisplayMode(m){
-  displayMode = m;
-  document.getElementById('disp-focus').classList.toggle('active', m==='focus');
-  document.getElementById('disp-list').classList.toggle('active', m==='list');
-  document.getElementById('perf-body').style.display = m==='focus' ? 'flex' : 'none';
-  document.getElementById('perf-list-view').classList.toggle('active', m==='list');
-  if(m==='list') renderListView();
-}
-function renderListView(){
-  const song = currentSong(); if(!song) return;
-  const lv = document.getElementById('perf-list-view');
-  lv.innerHTML = '';
-  song.sections.forEach((sec, i) => {
-    const t = TM[sec.typeId];
-    const isDone    = i < perfIdx;
-    const isCurrent = i === perfIdx;
-    const rpt = sec.repeats > 1 ? ` ×${sec.repeats}` : '';
-    const barInfo = isCurrent && perfMode==='auto'
-      ? `bar ${currentBarTick}/${totalBarTicks}`
-      : `${sec.bars * sec.repeats} bars`;
-    const row = document.createElement('div');
-    row.className = 'pl-row' + (isCurrent?' pl-current':'') + (isDone?' pl-done':'');
-    row.id = 'pl-row-'+i;
-    row.innerHTML = `
-      <div class="pl-swatch" style="background:${t.color}"></div>
-      <div class="pl-num">${i+1}</div>
-      <div class="pl-body">
-        <div class="pl-name" style="color:${t.color}">${t.label}</div>
-        <div class="pl-meta-col">${sec.bars} bars${rpt}</div>
-        <div class="pl-notes-col">${sec.notes || ''}</div>
-        <div class="pl-right">
-          <div class="pl-badge">${isCurrent?'PLAYING':''}</div>
-          <div class="pl-bar-live" id="pl-bar-${i}">${barInfo}</div>
-        </div>
-      </div>`;
-    row.onclick = () => { clearAuto(); perfIdx=i; renderPerf(); if(perfMode==='auto') scheduleAuto(); };
-    lv.appendChild(row);
-  });
-  // scroll current into view
-  setTimeout(()=>{
-    const cur = document.getElementById('pl-row-'+perfIdx);
-    if(cur) cur.scrollIntoView({block:'center', behavior:'smooth'});
-  }, 50);
-}
-function updateListViewLive(){
-  if(displayMode !== 'list') return;
-  // update bar count on current row only (cheap)
-  const barEl = document.getElementById('pl-bar-'+perfIdx);
-  if(barEl && perfMode==='auto') barEl.textContent = 'bar '+currentBarTick+'/'+totalBarTicks;
 }
 
 // ─── PERFORMANCE ─────────────────────────────────────
-function startPerf(){
+window.startPerf = function(){
   const song = currentSong();
-  if(!song || !song.sections.length){ alert('Add some sections first!'); return; }
-  saveSongMeta();
+  if(!song || !song.sections.length) return;
   perfIdx = 0;
   document.getElementById('perf-overlay').classList.add('active');
-  document.getElementById('perf-song').textContent = song.name || 'UNTITLED';
-  document.getElementById('perf-bpm-disp').textContent = song.bpm+' BPM';
-  document.getElementById('perf-ts-disp').textContent = song.ts+'/4';
-  setMode('auto');
-  setDisplayMode('focus');
+  document.getElementById('perf-song').textContent = song.name;
+  window.setMode('auto');
+  window.setDisplayMode('focus');
   renderPerf();
 }
-function stopPerf(){
-  clearAuto();
-  document.getElementById('perf-overlay').classList.remove('active');
-}
-function setMode(m){
+
+window.stopPerf = function(){ clearAuto(); document.getElementById('perf-overlay').classList.remove('active'); }
+
+window.setMode = function(m){
   perfMode = m;
   document.getElementById('mode-auto').classList.toggle('active', m==='auto');
   document.getElementById('mode-manual').classList.toggle('active', m==='manual');
   clearAuto();
   if(m==='auto') scheduleAuto();
-  else {
-    document.getElementById('countdown-ring-wrap').classList.remove('visible');
-    document.getElementById('auto-status').textContent = 'MANUAL — use keys';
-    document.getElementById('bar-ticker-num').textContent = '—';
-    document.getElementById('bar-ticker-label').textContent = 'bar';
-  }
 }
-function clearAuto(){
-  if(autoTimer) clearTimeout(autoTimer);
-  if(barTickInterval) clearInterval(barTickInterval);
-  autoTimer = null; barTickInterval = null;
-}
+
+function clearAuto(){ if(autoTimer) clearTimeout(autoTimer); if(barTickInterval) clearInterval(barTickInterval); }
+
 function scheduleAuto(){
-  const song = currentSong();
-  if(!song) return;
-  const sec = song.sections[perfIdx];
-  if(!sec) return;
-  const bpm = song.bpm;
-  const ts  = song.ts;
-  const totalBeats = sec.bars * sec.repeats * ts;
-  const beatMs = 60000 / bpm;
-  const totalMs = totalBeats * beatMs;
-
+  const song = currentSong(); const sec = song.sections[perfIdx]; if(!sec) return;
+  const totalMs = (sec.bars * sec.repeats * song.ts) * (60000 / song.bpm);
   document.getElementById('countdown-ring-wrap').classList.add('visible');
-  document.getElementById('auto-status').textContent = 'AUTO ADVANCE';
-
-  // bar ticker
-  const totalBarsWithRepeats = sec.bars * sec.repeats;
-  currentBarTick = 1;
-  totalBarTicks = totalBarsWithRepeats;
-  updateBarTicker();
-
-  const barMs = beatMs * ts;
-  barTickInterval = setInterval(()=>{
-    currentBarTick++;
-    if(currentBarTick > totalBarTicks) currentBarTick = totalBarTicks;
-    updateBarTicker();
-    updateRing((currentBarTick-1)/totalBarTicks);
-  }, barMs);
-
-  autoTimer = setTimeout(()=>{
-    clearInterval(barTickInterval);
-    if(perfIdx < song.sections.length-1){
-      perfIdx++;
-      renderPerf();
-      scheduleAuto();
-    } else {
-      document.getElementById('auto-status').textContent = 'SONG COMPLETE';
-      document.getElementById('countdown-ring-wrap').classList.remove('visible');
-      document.getElementById('bar-ticker-num').textContent = '✓';
-    }
+  autoTimer = setTimeout(() => {
+    if(perfIdx < song.sections.length-1){ perfIdx++; renderPerf(); scheduleAuto(); }
   }, totalMs);
+}
 
-  // ring animation
-  updateRing(0);
-  let ringStart = null;
-  function animateRing(ts2){
-    if(!ringStart) ringStart = ts2;
-    const progress = (ts2-ringStart)/totalMs;
-    if(progress<1 && autoTimer){
-      updateRing(progress);
-      requestAnimationFrame(animateRing);
-    }
-  }
-  requestAnimationFrame(animateRing);
-}
-function updateBarTicker(){
-  document.getElementById('bar-ticker-num').textContent = currentBarTick;
-  document.getElementById('bar-ticker-label').textContent = 'of '+totalBarTicks+' bar'+(totalBarTicks!==1?'s':'');
-  updateListViewLive();
-}
-function updateRing(progress){
-  const circ = 81.7;
-  const arc = document.getElementById('ring-arc');
-  const txt = document.getElementById('countdown-ring-text');
-  const song = currentSong();
-  if(!song) return;
-  const sec = song.sections[perfIdx];
-  if(!sec) return;
-  const bpm = song.bpm, ts = song.ts;
-  const totalMs = sec.bars * sec.repeats * ts * (60000/bpm);
-  const remaining = Math.ceil((1-progress) * totalMs / 1000);
-  arc.setAttribute('stroke-dashoffset', circ - circ * progress);
-  txt.textContent = remaining > 60 ? Math.ceil(remaining/60)+'m' : remaining+'s';
-}
-function perfNext(){
-  clearAuto();
-  const song = currentSong();
-  if(!song) return;
-  if(perfIdx < song.sections.length-1){
-    perfIdx++;
-    renderPerf();
-    if(perfMode==='auto') scheduleAuto();
-  }
-}
-function perfBack(){
-  clearAuto();
-  if(perfIdx > 0){
-    perfIdx--;
-    renderPerf();
-    if(perfMode==='auto') scheduleAuto();
-  }
-}
 function renderPerf(){
-  const song = currentSong(); if(!song) return;
-  const sec  = song.sections[perfIdx];
-  const t    = TM[sec.typeId];
-  const prev = perfIdx > 0 ? song.sections[perfIdx-1] : null;
-  const next = perfIdx < song.sections.length-1 ? song.sections[perfIdx+1] : null;
-
-  // current
+  const song = currentSong(); const sec = song.sections[perfIdx]; const t = TM[sec.typeId];
   document.getElementById('perf-section-name').textContent = t.label.toUpperCase();
   document.getElementById('perf-section-name').style.color = t.color;
-  document.getElementById('perf-stripe').style.background  = t.color;
-  const rptStr = sec.repeats > 1 ? ` × ${sec.repeats}` : '';
-  document.getElementById('perf-section-sub').textContent  = `${sec.bars} bars${rptStr}`;
-  document.getElementById('perf-notes-disp').textContent   = sec.notes || '';
-
-  // prev
-  document.getElementById('perf-prev-label').style.display = prev ? 'block' : 'none';
-  document.getElementById('perf-prev-val').textContent = prev ? TM[prev.typeId].label.toUpperCase() : (perfIdx===0 ? '— START —' : '—');
-  document.getElementById('perf-prev-val').style.color = prev ? TM[prev.typeId].color+'55' : '#2a2a2a';
-
-  // next
-  if(next){
-    document.getElementById('perf-next-label').style.display = 'block';
-    document.getElementById('perf-next-val').textContent = TM[next.typeId].label.toUpperCase();
-    document.getElementById('perf-next-val').style.color = TM[next.typeId].color+'88';
-  } else {
-    document.getElementById('perf-next-label').style.display = 'none';
-    document.getElementById('perf-next-val').textContent = '— END —';
-    document.getElementById('perf-next-val').style.color = '#2a2a2a';
-  }
-
-  // counter + progress
-  document.getElementById('perf-pos-num').textContent = (perfIdx+1)+'/'+song.sections.length;
-  const pct = song.sections.length > 1 ? (perfIdx/(song.sections.length-1))*100 : 100;
-  document.getElementById('perf-progress-fill').style.width = pct+'%';
-  if(displayMode==='list') renderListView();
+  document.getElementById('perf-stripe').style.background = t.color;
+  document.getElementById('perf-notes-disp').textContent = sec.notes;
 }
 
-// keyboard nav in perf
+window.perfNext = () => { clearAuto(); if(perfIdx < currentSong().sections.length-1){ perfIdx++; renderPerf(); if(perfMode==='auto') scheduleAuto(); } }
+window.perfBack = () => { clearAuto(); if(perfIdx > 0){ perfIdx--; renderPerf(); if(perfMode==='auto') scheduleAuto(); } }
+
+window.setDisplayMode = (m) => {
+    displayMode = m;
+    document.getElementById('disp-focus').classList.toggle('active', m==='focus');
+    document.getElementById('disp-list').classList.toggle('active', m==='list');
+    document.getElementById('perf-body').style.display = m==='focus' ? 'flex' : 'none';
+    document.getElementById('perf-list-view').classList.toggle('active', m==='list');
+};
+
+// ─── HELPERS ───
+window.updateBars = (i,v) => { currentSong().sections[i].bars = parseInt(v); window.save(); renderChart(); }
+window.updateNotes = (i,v) => { currentSong().sections[i].notes = v; window.save(); }
+window.removeSection = (i) => { currentSong().sections.splice(i,1); window.save(); renderChart(); }
+window.cycleRepeats = (i) => { currentSong().sections[i].repeats = (currentSong().sections[i].repeats % 8) + 1; window.save(); renderChart(); }
+
+// Palette
+(function(){
+  const pal = document.getElementById('section-palette');
+  TYPES.forEach(t => {
+    const el = document.createElement('div');
+    el.className='palette-item';
+    el.innerHTML=`<div class="dot" style="background:${t.color}"></div><span>${t.label}</span>`;
+    el.onclick = () => window.addSection(t.id);
+    pal.appendChild(el);
+  });
+})();
+
 document.addEventListener('keydown', e => {
   if(!document.getElementById('perf-overlay').classList.contains('active')) return;
-  if(e.key==='ArrowRight'||e.key===' '||e.key==='Enter'){ e.preventDefault(); perfNext(); }
-  if(e.key==='ArrowLeft'||e.key==='Backspace'){ e.preventDefault(); perfBack(); }
-  if(e.key==='Escape') stopPerf();
-  if(e.key==='a'||e.key==='A') setMode('auto');
-  if(e.key==='m'||e.key==='M') setMode('manual');
+  if(e.key===' ' || e.key==='Enter') window.perfNext();
+  if(e.key==='Escape') window.stopPerf();
 });
-
-// ─── INIT ─────────────────────────────────────────────
-load();
-renderLibrary();
 </script>
-<div id="save-toast"></div>
 </body>
 </html>
