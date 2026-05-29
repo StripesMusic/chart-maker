@@ -1,0 +1,5 @@
+- try to add the animations
+- add "fill" sections (customizable length?, almost like a layer)
+- add numbering ability like songsterr (e.g. verse 3, chorus 4)
+- add "post" and "pre" everything
+- try to make an add music (youtube or wav/mp3) feature and have performance mode auto-scroll and highlight with the song
