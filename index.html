@@ -452,6 +452,152 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
   background:var(--bg);flex-shrink:0;
 }
 .lib-save-row label{font-size:12px;color:var(--muted2);letter-spacing:1px;flex:1}
+
+/* ═══════════════════════════════
+   ADDED FEATURES — animations, fills, numbering, modifiers, audio
+═══════════════════════════════ */
+@keyframes fadeSlideUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+@keyframes pulseGlow { 0%,100%{box-shadow:0 0 0 0 rgba(232,197,71,0)} 50%{box-shadow:0 0 14px 2px rgba(232,197,71,.35)} }
+@keyframes fillFlash { 0%{background:var(--orange,#e87d47)} 50%{background:#ffb37a} 100%{background:var(--orange,#e87d47)} }
+@keyframes spinIn { from{opacity:0;transform:rotate(-8deg) scale(.9)} to{opacity:1;transform:rotate(0) scale(1)} }
+@keyframes barFlash { 0%{transform:scale(1)} 40%{transform:scale(1.18)} 100%{transform:scale(1)} }
+
+/* smoother default transitions on interactive bits */
+.ico-btn,.repeat-pill,.mod-btn,.fill-add-btn,.cue-pill,.disp-btn,.mode-btn{transition:all .18s cubic-bezier(.34,1.56,.64,1)}
+
+/* ── section instance numbering ── */
+.sec-instance-num{
+  font-size:13px;font-weight:700;opacity:.55;flex-shrink:0;letter-spacing:1px;
+  font-variant-numeric:tabular-nums;
+}
+.sec-mod-label{font-size:11px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-right:-4px}
+
+/* ── pre/post modifier toggles ── */
+.mod-toggle-wrap{display:flex;gap:3px;margin-right:4px}
+.mod-btn{
+  font-size:10px;background:var(--bg4);border:1px solid var(--border2);color:var(--muted2);
+  padding:2px 7px;border-radius:9px;cursor:pointer;letter-spacing:1px;text-transform:uppercase;
+  line-height:1.4;user-select:none;
+}
+.mod-btn:hover{border-color:var(--accent);color:var(--accent)}
+.mod-btn.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700}
+
+/* ── drum fill layer ── */
+.fill-add-btn{
+  font-size:10px;background:transparent;border:1px dashed var(--border2);color:var(--muted2);
+  padding:3px 9px;border-radius:9px;cursor:pointer;letter-spacing:1px;text-transform:uppercase;
+}
+.fill-add-btn:hover{border-color:#e87d47;color:#e87d47}
+.fill-layer{
+  display:flex;align-items:center;gap:10px;margin-top:8px;padding:7px 10px;
+  background:linear-gradient(90deg, rgba(232,125,71,.12), rgba(232,125,71,.03));
+  border:1px solid rgba(232,125,71,.35);border-left:3px solid #e87d47;border-radius:5px;
+  animation:fadeSlideUp .25s ease;
+}
+.fill-layer .fill-icon{font-size:13px;color:#e87d47}
+.fill-layer .fill-title{font-size:11px;font-weight:700;letter-spacing:2px;color:#e87d47;text-transform:uppercase}
+.fill-len-input{
+  width:46px;background:var(--bg);border:1px solid rgba(232,125,71,.5);color:#f0a878;
+  font-family:inherit;font-size:13px;padding:3px 5px;border-radius:4px;text-align:center;outline:none;
+}
+.fill-len-input:focus{border-color:#e87d47}
+.fill-layer .fill-unit{font-size:11px;color:var(--muted2);letter-spacing:1px;text-transform:uppercase}
+.fill-notes-input{
+  flex:1;background:transparent;border:none;border-bottom:1px solid rgba(232,125,71,.25);
+  color:#d9a583;font-family:inherit;font-size:12px;padding:3px 0;outline:none;
+}
+.fill-notes-input::placeholder{color:#7a5540}
+.fill-del{background:transparent;border:none;color:#7a5540;cursor:pointer;font-size:14px;padding:2px 5px}
+.fill-del:hover{color:#e87d47}
+
+/* ── cue point pill (audio sync) ── */
+.cue-pill{
+  font-size:10px;background:var(--bg4);border:1px solid var(--border2);color:var(--muted2);
+  padding:3px 9px;border-radius:9px;cursor:pointer;letter-spacing:1px;white-space:nowrap;
+}
+.cue-pill.set{border-color:var(--blue);color:var(--blue)}
+.cue-pill:hover{border-color:var(--blue);color:var(--blue)}
+
+/* ── numbering toggle in header ── */
+.toggle-chip{
+  display:flex;align-items:center;gap:7px;font-size:11px;color:var(--muted);
+  letter-spacing:1px;text-transform:uppercase;cursor:pointer;user-select:none;
+  border:1px solid var(--border2);padding:6px 11px;border-radius:5px;transition:all .15s;
+}
+.toggle-chip:hover{border-color:var(--accent)}
+.toggle-chip .sw{
+  width:30px;height:16px;border-radius:10px;background:var(--bg4);position:relative;transition:background .2s;flex-shrink:0;
+}
+.toggle-chip .sw::after{
+  content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;
+  background:var(--muted);transition:transform .2s,background .2s;
+}
+.toggle-chip.on .sw{background:var(--accent)}
+.toggle-chip.on .sw::after{transform:translateX(14px);background:#000}
+.toggle-chip.on{color:var(--accent);border-color:var(--accent)}
+
+/* ── audio bar (editor) ── */
+#audio-bar{
+  display:flex;align-items:center;gap:14px;padding:10px 24px;
+  border-bottom:1px solid var(--border);background:var(--bg);flex-shrink:0;
+  animation:fadeSlideUp .3s ease;
+}
+#audio-bar.empty{background:var(--bg2)}
+.audio-label{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;flex-shrink:0}
+#audio-url-input{
+  flex:1;min-width:0;background:var(--bg3);border:1px solid var(--border2);color:var(--text);
+  font-family:inherit;font-size:13px;padding:7px 10px;border-radius:5px;outline:none;
+}
+#audio-url-input:focus{border-color:var(--accent)}
+.audio-chip{
+  display:flex;align-items:center;gap:8px;font-size:12px;color:var(--blue);
+  background:var(--bg3);border:1px solid var(--blue);padding:6px 12px;border-radius:5px;
+  letter-spacing:1px;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.audio-chip .x{cursor:pointer;color:var(--muted2)}
+.audio-chip .x:hover{color:var(--red)}
+
+/* ── perf audio + fill highlight ── */
+#perf-audio-wrap{
+  display:flex;align-items:center;gap:16px;padding:10px 28px;
+  border-bottom:1px solid #111;background:#050505;flex-shrink:0;justify-content:center;
+}
+#perf-audio-wrap.hidden{display:none}
+#yt-player-holder{width:160px;height:90px;flex-shrink:0;border-radius:6px;overflow:hidden;background:#000}
+#yt-player-holder.audio-only{width:0;height:0;overflow:hidden}
+.perf-audio-btn{
+  background:#0a0a0a;border:1px solid #2a2a2a;color:#aaa;width:42px;height:42px;border-radius:50%;
+  cursor:pointer;font-size:16px;transition:all .15s;flex-shrink:0;
+}
+.perf-audio-btn:hover{border-color:#555;color:#fff;transform:scale(1.06)}
+#perf-audio-time{font-size:13px;color:#555;letter-spacing:1px;font-variant-numeric:tabular-nums;min-width:96px;text-align:center}
+#tap-cue-btn{
+  background:transparent;border:1px solid #2a4a55;color:var(--blue);
+  padding:8px 16px;font-family:inherit;font-size:11px;letter-spacing:2px;text-transform:uppercase;
+  border-radius:5px;cursor:pointer;transition:all .15s;
+}
+#tap-cue-btn:hover{background:rgba(90,175,200,.12);border-color:var(--blue)}
+#tap-cue-btn.armed{animation:pulseGlow 1.4s infinite}
+
+/* fill badge in perf focus view */
+#perf-fill-badge{
+  margin-top:18px;font-size:14px;letter-spacing:3px;text-transform:uppercase;color:#e87d47;
+  border:1px solid rgba(232,125,71,.4);border-radius:6px;padding:8px 18px;display:none;
+}
+#perf-fill-badge.show{display:inline-block;animation:fadeSlideUp .3s ease}
+#perf-fill-badge.imminent{animation:fillFlash .5s infinite;color:#000;border-color:#e87d47}
+
+/* fill marker in list view */
+.pl-fill-tag{
+  font-size:10px;letter-spacing:1px;color:#e87d47;border:1px solid rgba(232,125,71,.4);
+  padding:3px 8px;border-radius:4px;text-transform:uppercase;flex-shrink:0;
+}
+
+/* bar ticker flash on bar change */
+#bar-ticker-num.flash{animation:barFlash .25s ease}
+
+/* list view smooth current scroll target */
+.pl-row{scroll-margin:120px}
 </style>
 </head>
 <body>
@@ -514,8 +660,19 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
           <option value="7">7/8</option>
         </select>
       </div>
+      <div class="toggle-chip on" id="num-toggle" onclick="toggleNumbering()" title="Auto-number repeated sections (Verse 1, Verse 2…)">
+        <span class="sw"></span># No.
+      </div>
       <button class="btn perform" onclick="startPerf()">▶ PERFORM</button>
     </div>
+  </div>
+
+  <div id="audio-bar" class="empty">
+    <span class="audio-label">♪ Track</span>
+    <input id="audio-url-input" placeholder="Paste a YouTube link to sync playback…" onchange="attachYouTube(this.value)">
+    <button class="btn" onclick="document.getElementById('audio-file-input').click()">⬆ Audio file</button>
+    <input type="file" id="audio-file-input" accept="audio/*" style="display:none" onchange="attachAudioFile(event)">
+    <span id="audio-current" style="display:none"></span>
   </div>
 
   <div id="ed-main">
@@ -556,9 +713,17 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
     </div>
   </div>
 
+  <div id="perf-audio-wrap" class="hidden">
+    <div id="yt-player-holder"></div>
+    <button class="perf-audio-btn" id="perf-play-btn" onclick="toggleAudioPlay()">▶</button>
+    <span id="perf-audio-time">0:00 / 0:00</span>
+    <button id="tap-cue-btn" onclick="tapCue()" title="While listening, tap on the downbeat of each section to record its start time">⊙ TAP CUE</button>
+  </div>
+
   <div id="perf-mode-bar">
     <button class="mode-btn active" id="mode-auto" onclick="setMode('auto')">AUTO</button>
     <button class="mode-btn" id="mode-manual" onclick="setMode('manual')">MANUAL</button>
+    <button class="mode-btn" id="mode-sync" onclick="setMode('sync')" style="display:none">♪ SYNC</button>
     <div id="countdown-ring-wrap">
       <svg id="countdown-ring-svg" width="32" height="32" viewBox="0 0 32 32">
         <circle cx="16" cy="16" r="13" fill="none" stroke="#1a1a1a" stroke-width="3"/>
@@ -582,6 +747,7 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
         <div id="perf-section-name">—</div>
         <div id="perf-section-sub"></div>
         <div id="perf-notes-disp"></div>
+        <div id="perf-fill-badge"></div>
       </div>
     </div>
 
@@ -609,7 +775,7 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
     <button class="p-btn" onclick="perfBack()">← BACK</button>
     <button class="p-btn big" onclick="perfNext()">NEXT →</button>
   </div>
-  <div id="key-hint">SPACE / ENTER = next &nbsp;·&nbsp; BACKSPACE = back &nbsp;·&nbsp; ESC = exit</div>
+  <div id="key-hint">SPACE = next / tap-cue &nbsp;·&nbsp; ← → = back / next &nbsp;·&nbsp; T = tap cue &nbsp;·&nbsp; P = play/pause &nbsp;·&nbsp; F = focus/list &nbsp;·&nbsp; ESC = exit</div>
 </div>
 
 <div id="save-toast"></div>
@@ -648,6 +814,14 @@ let barTickInterval = null;
 let currentBarTick = 0;
 let totalBarTicks  = 0;
 let displayMode = 'focus';
+
+// Audio / sync state
+let ytPlayer = null;         // YouTube IFrame player
+let ytReady = false;
+let htmlAudio = null;        // <audio> element for local files
+let localAudioURL = null;    // object URL (session only)
+let syncRAF = null;          // requestAnimationFrame id for the sync follow-loop
+let audioTimeRAF = null;     // clock display loop
 
 const TYPES = [
   {id:'intro',     label:'Intro',      color:'#5bc0de', key:'i'},
@@ -703,6 +877,7 @@ onAuthStateChanged(auth, async (user) => {
         if (docSnap.exists()) {
             library = docSnap.data().library || [];
         }
+        library.forEach(migrateSong);
         renderLibrary();
     } else {
         currentUser = null;
@@ -761,8 +936,24 @@ window.importLibrary = function(e){
 }
 
 // ─── APP LOGIC ───────────────────────────────────────
-function makeSong(){ return { id: idCounter++, name: '', bpm: 120, ts: 4, notes: '', sections: [], created: Date.now() }; }
+function makeSong(){ return { id: idCounter++, name: '', bpm: 120, ts: 4, notes: '', sections: [], created: Date.now(), autoNumber:true, audio:null }; }
 function currentSong(){ return library.find(s => s.id === currentSongId) || null; }
+
+// Ensure older saved songs/sections have the newer fields
+function migrateSong(song){
+  if(!song) return song;
+  if(song.autoNumber === undefined) song.autoNumber = true;
+  if(song.audio === undefined) song.audio = null;
+  // a local audio-file URL can't survive a reload — drop the dead blob ref, keep cues
+  if(song.audio && song.audio.type === 'file') song.audio = null;
+  (song.sections||[]).forEach(s => {
+    if(s.mod === undefined)  s.mod = null;   // null | 'pre' | 'post'
+    if(s.fill === undefined) s.fill = null;  // null | { len:<beats>, notes:'' }
+    if(s.time === undefined) s.time = null;  // cue point in seconds (audio sync)
+    if(s.repeats === undefined) s.repeats = 1;
+  });
+  return song;
+}
 
 window.showView = function(v){
   document.getElementById('view-library').classList.toggle('active', v==='library');
@@ -804,13 +995,39 @@ window.newSong = function(){
 
 window.openSong = function(id){
   currentSongId = id;
-  const song = currentSong();
+  const song = migrateSong(currentSong());
   document.getElementById('song-name-input').value = song.name;
   document.getElementById('bpm-input').value = song.bpm;
   document.getElementById('ts-select').value = String(song.ts);
   document.getElementById('global-notes').value = song.notes;
+  document.getElementById('num-toggle').classList.toggle('on', song.autoNumber !== false);
   window.showView('editor');
+  renderAudioBar();
   window.renderChart();
+}
+
+// ─── LABEL HELPERS (numbering + pre/post modifiers) ──
+function baseLabel(sec){
+  const t = TM[sec.typeId];
+  const name = t ? t.label : 'Section';
+  if(sec.mod === 'pre')  return 'Pre-'  + name;
+  if(sec.mod === 'post') return 'Post-' + name;
+  return name;
+}
+// Map each section index -> instance number, but only when that base label repeats
+function computeInstanceNumbers(song){
+  const counts = {}, totals = {};
+  song.sections.forEach(s => { const k = baseLabel(s); totals[k] = (totals[k]||0) + 1; });
+  return song.sections.map(s => {
+    const k = baseLabel(s);
+    counts[k] = (counts[k]||0) + 1;
+    return totals[k] > 1 ? counts[k] : 0; // 0 = no number shown
+  });
+}
+function sectionDisplay(song, i){
+  const sec = song.sections[i];
+  const num = (song.autoNumber !== false) ? computeInstanceNumbers(song)[i] : 0;
+  return baseLabel(sec) + (num ? ' ' + num : '');
 }
 
 window.openAndPerform = function(id){ window.openSong(id); setTimeout(window.startPerf, 80); }
@@ -832,7 +1049,14 @@ window.clearChart = function(){ if(confirm('Clear?')){ currentSong().sections = 
 // ─── EDITOR ──────────────────────────────────────────
 window.addSection = function(typeId){
   const song = currentSong(); if(!song) return;
-  song.sections.push({id:idCounter++, typeId, bars:8, notes:'', repeats:1});
+  song.sections.push({id:idCounter++, typeId, bars:8, notes:'', repeats:1, mod:null, fill:null, time:null});
+  window.save(); window.renderChart();
+}
+
+window.toggleNumbering = function(){
+  const song = currentSong(); if(!song) return;
+  song.autoNumber = !(song.autoNumber !== false);
+  document.getElementById('num-toggle').classList.toggle('on', song.autoNumber);
   window.save(); window.renderChart();
 }
 
@@ -844,32 +1068,252 @@ window.renderChart = function(){
   hint.style.display = song.sections.length ? 'none' : 'block';
   list.innerHTML = '';
 
+  const nums = computeInstanceNumbers(song);
+  const hasAudio = !!song.audio;
   song.sections.forEach((sec, i) => {
     const t = TM[sec.typeId];
+    const num = (song.autoNumber !== false && nums[i]) ? `<span class="sec-instance-num" style="color:${t.color}">${nums[i]}</span>` : '';
+    const modPrefix = sec.mod === 'pre' ? '<span class="sec-mod-label">Pre-</span>'
+                    : sec.mod === 'post' ? '<span class="sec-mod-label">Post-</span>' : '';
+    const cuePill = hasAudio
+      ? `<span class="cue-pill ${sec.time!=null?'set':''}" onclick="clearCue(${i})" title="Cue point — set by tapping in SYNC mode. Click to clear.">${sec.time!=null?'⏱ '+fmtTime(sec.time):'⏱ —'}</span>`
+      : '';
+    const fillBlock = sec.fill
+      ? `<div class="fill-layer">
+           <span class="fill-icon">🥁</span><span class="fill-title">Fill</span>
+           <input class="fill-len-input" type="number" min="1" max="32" value="${sec.fill.len}" onchange="updateFillLen(${i},this.value)">
+           <span class="fill-unit">beats</span>
+           <input class="fill-notes-input" type="text" value="${esc(sec.fill.notes)}" placeholder="fill idea — e.g. tom roll into crash" onchange="updateFillNotes(${i},this.value)">
+           <button class="fill-del" onclick="toggleFill(${i})" title="Remove fill">✕</button>
+         </div>`
+      : `<button class="fill-add-btn" onclick="toggleFill(${i})">+ Drum Fill</button>`;
     const el = document.createElement('div');
     el.className = 'section-block';
-    el.style.animationDelay = (i * 0.05) + 's';
+    el.style.animationDelay = (i * 0.04) + 's';
     el.draggable = true;
     el.innerHTML = `
       <div class="sec-bar" style="background:${t.color}"></div>
       <div class="sec-body">
         <div class="sec-row1">
-          <span class="sec-type-label" style="color:${t.color}">${t.label}</span>
+          <span class="sec-type-label" style="color:${t.color}">${modPrefix}${t.label}</span>
+          ${num}
           <div class="sec-row1-right">
-            <span class="repeat-pill" onclick="cycleRepeats(${i})">×${sec.repeats}</span>
+            <div class="mod-toggle-wrap">
+              <span class="mod-btn ${sec.mod==='pre'?'active':''}"  onclick="setMod(${i},'pre')"  title="Mark as a pre- section">Pre</span>
+              <span class="mod-btn ${sec.mod==='post'?'active':''}" onclick="setMod(${i},'post')" title="Mark as a post- section">Post</span>
+            </div>
+            ${cuePill}
+            <span class="repeat-pill" onclick="cycleRepeats(${i})" title="Repeat count">×${sec.repeats}</span>
             <div class="bars-wrap">
               <input class="bars-input" type="number" value="${sec.bars}" onchange="updateBars(${i},this.value)">
+              <span>bars</span>
             </div>
             <button class="ico-btn del" onclick="removeSection(${i})">✕</button>
           </div>
         </div>
-        <input class="sec-notes-input" type="text" value="${sec.notes}" placeholder="Notes..." onchange="updateNotes(${i},this.value)">
+        <input class="sec-notes-input" type="text" value="${esc(sec.notes)}" placeholder="Notes..." onchange="updateNotes(${i},this.value)">
+        ${fillBlock}
       </div>`;
+    el.dataset.idx = i;
+    // don't start a block drag when interacting with inputs
+    el.querySelectorAll('input').forEach(inp => {
+      inp.addEventListener('mousedown', () => el.draggable = false);
+      inp.addEventListener('mouseup',   () => el.draggable = true);
+      inp.addEventListener('blur',      () => el.draggable = true);
+    });
+    el.addEventListener('dragstart', e => { dragSrc = i; el.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
+    el.addEventListener('dragend',   () => { el.classList.remove('dragging'); document.querySelectorAll('.section-block').forEach(b=>b.classList.remove('drag-over-top','drag-over-bot')); });
+    el.addEventListener('dragover',  e => {
+      e.preventDefault();
+      const before = (e.clientY - el.getBoundingClientRect().top) < el.offsetHeight/2;
+      el.classList.toggle('drag-over-top', before);
+      el.classList.toggle('drag-over-bot', !before);
+    });
+    el.addEventListener('dragleave', () => el.classList.remove('drag-over-top','drag-over-bot'));
+    el.addEventListener('drop', e => {
+      e.preventDefault();
+      const before = (e.clientY - el.getBoundingClientRect().top) < el.offsetHeight/2;
+      let target = before ? i : i+1;
+      reorderSection(dragSrc, target);
+    });
     list.appendChild(el);
   });
 
   const totalBars = song.sections.reduce((a,s)=>a+(s.bars*s.repeats),0);
-  document.getElementById('chart-stats').textContent = `${song.sections.length} sections · ${totalBars} bars`;
+  const fillCount = song.sections.filter(s=>s.fill).length;
+  document.getElementById('chart-stats').textContent =
+    `${song.sections.length} sections · ${totalBars} bars` + (fillCount?` · ${fillCount} fill${fillCount>1?'s':''}`:'');
+}
+
+// escape values placed into HTML attributes / text
+function esc(str){ return String(str==null?'':str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtTime(s){ s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+
+// ─── AUDIO / TRACK ───────────────────────────────────
+function parseYouTubeId(url){
+  if(!url) return null;
+  url = url.trim();
+  // bare 11-char id
+  if(/^[\w-]{11}$/.test(url)) return url;
+  const m = url.match(/(?:youtu\.be\/|v=|\/embed\/|\/shorts\/)([\w-]{11})/);
+  return m ? m[1] : null;
+}
+
+window.attachYouTube = function(url){
+  const song = currentSong(); if(!song) return;
+  const id = parseYouTubeId(url);
+  if(!id){ showToast('Not a valid YouTube link','error'); document.getElementById('audio-url-input').value=''; return; }
+  song.audio = { type:'youtube', videoId:id };
+  window.save(); renderAudioBar(); window.renderChart();
+  showToast('✓ Track linked');
+}
+
+window.attachAudioFile = function(e){
+  const file = e.target.files[0]; if(!file) return;
+  const song = currentSong(); if(!song) return;
+  if(localAudioURL) URL.revokeObjectURL(localAudioURL);
+  localAudioURL = URL.createObjectURL(file);
+  song.audio = { type:'file', name:file.name };   // name persists; blob is session-only
+  window.save(); renderAudioBar(); window.renderChart();
+  showToast('✓ Audio loaded');
+}
+
+window.removeAudio = function(){
+  const song = currentSong(); if(!song) return;
+  song.audio = null;
+  if(localAudioURL){ URL.revokeObjectURL(localAudioURL); localAudioURL = null; }
+  window.save(); renderAudioBar(); window.renderChart();
+}
+
+function renderAudioBar(){
+  const song = currentSong(); if(!song) return;
+  const bar   = document.getElementById('audio-bar');
+  const input = document.getElementById('audio-url-input');
+  const cur   = document.getElementById('audio-current');
+  if(song.audio){
+    bar.classList.remove('empty');
+    input.style.display = 'none';
+    cur.style.display = 'inline-flex';
+    const label = song.audio.type === 'youtube'
+      ? '▶ YouTube linked'
+      : (localAudioURL ? '♪ '+song.audio.name : '♪ '+song.audio.name+' (re-load file to play)');
+    cur.className = 'audio-chip';
+    cur.innerHTML = `${esc(label)} <span class="x" onclick="removeAudio()" title="Remove track">✕</span>`;
+  } else {
+    bar.classList.add('empty');
+    input.style.display = '';
+    input.value = '';
+    cur.style.display = 'none';
+  }
+}
+
+// Load the YouTube IFrame API once
+let ytApiLoading = false;
+function ensureYouTubeAPI(cb){
+  if(window.YT && window.YT.Player){ cb(); return; }
+  if(!ytApiLoading){
+    ytApiLoading = true;
+    const tag = document.createElement('script');
+    tag.src = 'https://www.youtube.com/iframe_api';
+    document.head.appendChild(tag);
+  }
+  const prev = window.onYouTubeIframeAPIReady;
+  window.onYouTubeIframeAPIReady = () => { if(prev) prev(); cb(); };
+}
+
+// ── unified audio control (works for YT or local file) ──
+function audioAvailable(){
+  const song = currentSong();
+  return !!(song && song.audio && (song.audio.type==='youtube' || (song.audio.type==='file' && localAudioURL)));
+}
+function getAudioTime(){
+  if(ytPlayer && ytReady && ytPlayer.getCurrentTime) return ytPlayer.getCurrentTime();
+  if(htmlAudio) return htmlAudio.currentTime;
+  return 0;
+}
+function getAudioDuration(){
+  if(ytPlayer && ytReady && ytPlayer.getDuration) return ytPlayer.getDuration()||0;
+  if(htmlAudio) return htmlAudio.duration||0;
+  return 0;
+}
+function isAudioPlaying(){
+  if(ytPlayer && ytReady && ytPlayer.getPlayerState) return ytPlayer.getPlayerState() === 1;
+  if(htmlAudio) return !htmlAudio.paused;
+  return false;
+}
+function playAudio(){
+  if(ytPlayer && ytReady) ytPlayer.playVideo();
+  else if(htmlAudio) htmlAudio.play();
+}
+function pauseAudio(){
+  if(ytPlayer && ytReady) ytPlayer.pauseVideo();
+  else if(htmlAudio) htmlAudio.pause();
+}
+
+window.toggleAudioPlay = function(){
+  if(isAudioPlaying()) pauseAudio(); else playAudio();
+  setTimeout(updatePlayBtn, 120);
+}
+function updatePlayBtn(){
+  const b = document.getElementById('perf-play-btn');
+  if(b) b.textContent = isAudioPlaying() ? '❚❚' : '▶';
+}
+
+// Build the player inside the performance overlay
+function setupPerfAudio(song){
+  const wrap = document.getElementById('perf-audio-wrap');
+  const holder = document.getElementById('yt-player-holder');
+  const syncBtn = document.getElementById('mode-sync');
+  // teardown any previous
+  if(ytPlayer){ try{ ytPlayer.destroy(); }catch(e){} ytPlayer = null; ytReady = false; }
+  if(htmlAudio){ htmlAudio.pause(); htmlAudio = null; }
+  holder.innerHTML = '';
+
+  if(!song.audio){ wrap.classList.add('hidden'); syncBtn.style.display='none'; return; }
+
+  wrap.classList.remove('hidden');
+  syncBtn.style.display = audioAvailable() ? '' : 'none';
+
+  if(song.audio.type === 'youtube'){
+    holder.classList.remove('audio-only');
+    const mount = document.createElement('div'); holder.appendChild(mount);
+    ensureYouTubeAPI(() => {
+      ytPlayer = new YT.Player(mount, {
+        videoId: song.audio.videoId,
+        playerVars:{ controls:1, modestbranding:1, rel:0 },
+        events:{ onReady:()=>{ ytReady = true; updatePlayBtn(); }, onStateChange:updatePlayBtn }
+      });
+    });
+  } else if(song.audio.type === 'file' && localAudioURL){
+    holder.classList.add('audio-only');
+    htmlAudio = new Audio(localAudioURL);
+    htmlAudio.addEventListener('play', updatePlayBtn);
+    htmlAudio.addEventListener('pause', updatePlayBtn);
+  } else {
+    // file ref exists but blob was lost on reload
+    holder.classList.add('audio-only');
+  }
+  startAudioClock();
+}
+
+function startAudioClock(){
+  cancelAnimationFrame(audioTimeRAF);
+  const tick = () => {
+    const el = document.getElementById('perf-audio-time');
+    if(el) el.textContent = fmtTime(getAudioTime()) + ' / ' + fmtTime(getAudioDuration());
+    audioTimeRAF = requestAnimationFrame(tick);
+  };
+  tick();
+}
+
+// TAP CUE — while a track plays, tap on each section's downbeat to record its start
+window.tapCue = function(){
+  const song = currentSong(); const sec = song.sections[perfIdx]; if(!sec) return;
+  sec.time = getAudioTime();
+  window.save();
+  // advance focus to the next section to be stamped
+  if(perfIdx < song.sections.length-1){ perfIdx++; window.renderPerf(); }
+  showToast('⏱ Cue set @ '+fmtTime(sec.time));
 }
 
 // ─── PERFORMANCE CORE ────────────────────────────────
@@ -882,22 +1326,66 @@ window.startPerf = function(){
   document.getElementById('perf-song').textContent = song.name || 'UNTITLED';
   document.getElementById('perf-bpm-disp').textContent = song.bpm+' BPM';
   document.getElementById('perf-ts-disp').textContent = song.ts+'/4';
-  window.setMode('auto');
+  setupPerfAudio(song);
+  // If a track is attached, default to SYNC; otherwise AUTO
+  window.setMode(audioAvailable() ? 'sync' : 'auto');
   window.setDisplayMode('focus');
   window.renderPerf();
 }
 
-window.stopPerf = function(){ clearAuto(); document.getElementById('perf-overlay').classList.remove('active'); }
+window.stopPerf = function(){
+  clearAuto(); stopSyncLoop();
+  cancelAnimationFrame(audioTimeRAF);
+  pauseAudio();
+  if(ytPlayer){ try{ ytPlayer.destroy(); }catch(e){} ytPlayer = null; ytReady = false; }
+  if(htmlAudio){ htmlAudio.pause(); htmlAudio = null; }
+  document.getElementById('perf-overlay').classList.remove('active');
+}
 
 window.setMode = function(m){
+  if(m==='sync' && !audioAvailable()) m = 'auto';
   perfMode = m;
   document.getElementById('mode-auto').classList.toggle('active', m==='auto');
   document.getElementById('mode-manual').classList.toggle('active', m==='manual');
-  clearAuto();
-  if(m==='auto') scheduleAuto();
+  document.getElementById('mode-sync').classList.toggle('active', m==='sync');
+  const tapBtn = document.getElementById('tap-cue-btn');
+  if(tapBtn) tapBtn.classList.toggle('armed', m==='sync');
+  clearAuto(); stopSyncLoop();
+  const status = document.getElementById('auto-status');
+  const ring = document.getElementById('countdown-ring-wrap');
+  if(m==='auto'){ status.textContent='AUTO · BPM TIMED'; scheduleAuto(); }
+  else if(m==='sync'){ status.textContent='SYNC · FOLLOWING TRACK'; ring.classList.remove('visible'); startSyncLoop(); }
+  else { status.textContent='MANUAL'; ring.classList.remove('visible'); }
 }
 
-function clearAuto(){ if(autoTimer) clearTimeout(autoTimer); if(barTickInterval) clearInterval(barTickInterval); }
+function stopSyncLoop(){ if(syncRAF){ cancelAnimationFrame(syncRAF); syncRAF = null; } }
+
+// Follow the audio clock: highlight whichever cued section we're inside of
+function startSyncLoop(){
+  stopSyncLoop();
+  const song = currentSong();
+  const follow = () => {
+    if(perfMode !== 'sync'){ syncRAF = null; return; }
+    const t = getAudioTime();
+    // sections that have a cue, in order
+    const cued = song.sections.map((s,i)=>({i,time:s.time})).filter(o=>o.time!=null);
+    if(cued.length){
+      let target = cued[0].i;
+      for(const o of cued){ if(t >= o.time - 0.15) target = o.i; else break; }
+      if(target !== perfIdx){ perfIdx = target; window.renderPerf(); }
+      // progress bar follows audio position within the song
+      const dur = getAudioDuration();
+      if(dur) document.getElementById('perf-progress-fill').style.width = Math.min(100,(t/dur)*100)+'%';
+    }
+    syncRAF = requestAnimationFrame(follow);
+  };
+  follow();
+}
+
+function clearAuto(){
+  if(autoTimer){ clearTimeout(autoTimer); autoTimer = null; }
+  if(barTickInterval){ clearInterval(barTickInterval); barTickInterval = null; }
+}
 
 function scheduleAuto(){
   const song = currentSong(); const sec = song.sections[perfIdx]; if(!sec) return;
@@ -932,8 +1420,16 @@ function scheduleAuto(){
 }
 
 function updateBarTicker(){
-  document.getElementById('bar-ticker-num').textContent = currentBarTick;
+  const num = document.getElementById('bar-ticker-num');
+  num.textContent = currentBarTick;
   document.getElementById('bar-ticker-label').textContent = 'of '+totalBarTicks;
+  // re-trigger the flash animation each bar
+  num.classList.remove('flash'); void num.offsetWidth; num.classList.add('flash');
+  // flash the fill badge on the final bar of a section that has a fill
+  const sec = currentSong().sections[perfIdx];
+  const fb = document.getElementById('perf-fill-badge');
+  if(sec && sec.fill && currentBarTick >= totalBarTicks) fb.classList.add('imminent');
+  else if(fb) fb.classList.remove('imminent');
 }
 
 function updateRing(prog){
@@ -943,20 +1439,66 @@ function updateRing(prog){
 
 window.renderPerf = function(){
   const song = currentSong(); const sec = song.sections[perfIdx]; const t = TM[sec.typeId];
-  const prev = perfIdx > 0 ? song.sections[perfIdx-1] : null;
-  const next = perfIdx < song.sections.length-1 ? song.sections[perfIdx+1] : null;
 
-  document.getElementById('perf-section-name').textContent = t.label.toUpperCase();
+  document.getElementById('perf-section-name').textContent = sectionDisplay(song, perfIdx).toUpperCase();
   document.getElementById('perf-section-name').style.color = t.color;
   document.getElementById('perf-stripe').style.background = t.color;
   document.getElementById('perf-section-sub').textContent = `${sec.bars} bars ${sec.repeats > 1 ? '×'+sec.repeats : ''}`;
   document.getElementById('perf-notes-disp').textContent = sec.notes;
 
-  document.getElementById('perf-prev-val').textContent = prev ? TM[prev.typeId].label.toUpperCase() : '—';
-  document.getElementById('perf-next-val').textContent = next ? TM[next.typeId].label.toUpperCase() : 'END';
-  
+  document.getElementById('perf-prev-val').textContent = perfIdx>0 ? sectionDisplay(song, perfIdx-1).toUpperCase() : '—';
+  document.getElementById('perf-next-val').textContent = perfIdx<song.sections.length-1 ? sectionDisplay(song, perfIdx+1).toUpperCase() : 'END';
+
+  // fill badge
+  const fb = document.getElementById('perf-fill-badge');
+  if(sec.fill){ fb.className='show'; fb.textContent = `🥁 FILL · ${sec.fill.len} beats${sec.fill.notes? ' · '+sec.fill.notes : ''}`; }
+  else { fb.className=''; fb.textContent=''; }
+
   document.getElementById('perf-pos-num').textContent = (perfIdx+1)+'/'+song.sections.length;
-  document.getElementById('perf-progress-fill').style.width = ((perfIdx+1)/song.sections.length*100)+'%';
+  // progress bar (sync mode drives it from the audio clock instead)
+  if(perfMode !== 'sync')
+    document.getElementById('perf-progress-fill').style.width = ((perfIdx+1)/song.sections.length*100)+'%';
+
+  renderPerfList();
+}
+
+// Full-song list view, with the current row highlighted + auto-scrolled into view
+function renderPerfList(){
+  const wrap = document.getElementById('perf-list-view');
+  const song = currentSong(); if(!song) return;
+  wrap.innerHTML = song.sections.map((sec,i) => {
+    const t = TM[sec.typeId];
+    const cls = i===perfIdx ? 'pl-current' : (i<perfIdx ? 'pl-done' : '');
+    const fillTag = sec.fill ? `<span class="pl-fill-tag">🥁 ${sec.fill.len}</span>` : '';
+    const cue = sec.time!=null ? `<span class="pl-bar-live">⏱ ${fmtTime(sec.time)}</span>` : `<span class="pl-bar-live">${sec.bars}×${sec.repeats}</span>`;
+    return `
+      <div class="pl-row ${cls}" data-i="${i}" onclick="perfJump(${i})">
+        <div class="pl-swatch" style="background:${t.color}"></div>
+        <div class="pl-num">${i+1}</div>
+        <div class="pl-body">
+          <div class="pl-name" style="color:${i===perfIdx?t.color:''}">${esc(sectionDisplay(song,i))}</div>
+          <div class="pl-meta-col">${sec.bars} bars ${sec.repeats>1?'×'+sec.repeats:''}</div>
+          <div class="pl-notes-col">${esc(sec.notes||'')}</div>
+          <div class="pl-right">${fillTag}<span class="pl-badge">NOW</span>${cue}</div>
+        </div>
+      </div>`;
+  }).join('');
+  // auto-scroll current row into view when the list is showing
+  if(displayMode==='list'){
+    const cur = wrap.querySelector('.pl-current');
+    if(cur) cur.scrollIntoView({behavior:'smooth', block:'center'});
+  }
+}
+
+window.perfJump = function(i){
+  clearAuto();
+  perfIdx = i; window.renderPerf();
+  if(perfMode==='auto') scheduleAuto();
+  if(perfMode==='sync' && audioAvailable() && currentSong().sections[i].time!=null) seekAudioTo(currentSong().sections[i].time);
+}
+function seekAudioTo(t){
+  if(ytPlayer && ytReady) ytPlayer.seekTo(t, true);
+  else if(htmlAudio) htmlAudio.currentTime = t;
 }
 
 window.perfNext = () => { clearAuto(); if(perfIdx < currentSong().sections.length-1){ perfIdx++; window.renderPerf(); if(perfMode==='auto') scheduleAuto(); } }
@@ -967,13 +1509,43 @@ window.setDisplayMode = (m) => {
     document.getElementById('disp-focus').classList.toggle('active', m==='focus');
     document.getElementById('disp-list').classList.toggle('active', m==='list');
     document.getElementById('perf-body').style.display = m==='focus' ? 'flex' : 'none';
+    document.getElementById('perf-list-view').classList.toggle('active', m==='list');
+    if(m==='list') renderPerfList();
 };
 
 // ─── HELPERS ───
-window.updateBars = (i,v) => { currentSong().sections[i].bars = parseInt(v); window.save(); window.renderChart(); }
+window.updateBars = (i,v) => { currentSong().sections[i].bars = Math.max(1,parseInt(v)||1); window.save(); window.renderChart(); }
 window.updateNotes = (i,v) => { currentSong().sections[i].notes = v; window.save(); }
 window.removeSection = (i) => { currentSong().sections.splice(i,1); window.save(); window.renderChart(); }
 window.cycleRepeats = (i) => { currentSong().sections[i].repeats = (currentSong().sections[i].repeats % 8) + 1; window.save(); window.renderChart(); }
+
+// pre/post modifier — clicking the active one turns it back off
+window.setMod = (i, m) => {
+  const sec = currentSong().sections[i];
+  sec.mod = (sec.mod === m) ? null : m;
+  window.save(); window.renderChart();
+}
+// drum fill layer
+window.toggleFill = (i) => {
+  const sec = currentSong().sections[i];
+  sec.fill = sec.fill ? null : { len: 4, notes: '' };
+  window.save(); window.renderChart();
+}
+window.updateFillLen   = (i,v) => { const f=currentSong().sections[i].fill; if(f){ f.len = Math.min(32,Math.max(1,parseInt(v)||1)); window.save(); window.renderChart(); } }
+window.updateFillNotes = (i,v) => { const f=currentSong().sections[i].fill; if(f){ f.notes = v; window.save(); } }
+// cue points
+window.clearCue = (i) => { currentSong().sections[i].time = null; window.save(); window.renderChart(); }
+
+// drag reorder
+function reorderSection(from, to){
+  if(from==null || from===to || to===from+1) { dragSrc=null; return; }
+  const secs = currentSong().sections;
+  const [moved] = secs.splice(from, 1);
+  if(to > from) to--;             // account for the removed element
+  secs.splice(to, 0, moved);
+  dragSrc = null;
+  window.save(); window.renderChart();
+}
 
 // Build Palette
 (function(){
@@ -989,9 +1561,18 @@ window.cycleRepeats = (i) => { currentSong().sections[i].repeats = (currentSong(
 
 document.addEventListener('keydown', e => {
   if(!document.getElementById('perf-overlay').classList.contains('active')) return;
-  if(e.key===' ' || e.key==='Enter') window.perfNext();
-  if(e.key==='Backspace') window.perfBack();
+  if(e.key===' ' || e.key==='Enter'){
+    e.preventDefault();
+    // in SYNC mode, space taps the next cue; otherwise it advances
+    if(perfMode==='sync') window.tapCue(); else window.perfNext();
+  }
+  if(e.key==='Backspace'){ e.preventDefault(); window.perfBack(); }
   if(e.key==='Escape') window.stopPerf();
+  if(e.key==='ArrowRight') window.perfNext();
+  if(e.key==='ArrowLeft')  window.perfBack();
+  if((e.key==='p'||e.key==='P') && audioAvailable()){ e.preventDefault(); window.toggleAudioPlay(); }
+  if(e.key==='t'||e.key==='T'){ e.preventDefault(); window.tapCue(); }
+  if(e.key==='f'||e.key==='F') window.setDisplayMode(displayMode==='focus'?'list':'focus');
 });
 </script>
 </body>
