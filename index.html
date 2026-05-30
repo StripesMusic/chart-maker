@@ -44,6 +44,11 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
   from { opacity: 0; transform: scale(0.9) translateX(-20px); }
   to { opacity: 1; transform: scale(1) translateX(0); }
 }
+@keyframes songOpen {
+  from { opacity: 0; transform: scale(0.985) translateY(14px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+#view-editor.just-opened { animation: songOpen 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
 
 /* ── VIEWS ── */
 #view-library,#view-editor,#view-auth{
@@ -193,8 +198,9 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 .section-block{
   display:flex;margin-bottom:8px;border-radius:6px;overflow:hidden;
   border:1px solid var(--border);cursor:grab; transition: all 0.2s;
-  animation: sectionEntrance 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) backwards;
 }
+/* bounce-in only when the chart is first opened (class added in JS), not on every re-render */
+.section-block.anim-in{ animation: sectionEntrance 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) backwards; }
 .section-block:active{cursor:grabbing}
 .section-block.dragging{opacity:.35}
 .section-block.drag-over-top{border-top:2px solid var(--accent)}
@@ -1002,6 +1008,11 @@ window.openSong = function(id){
   document.getElementById('global-notes').value = song.notes;
   document.getElementById('num-toggle').classList.toggle('on', song.autoNumber !== false);
   window.showView('editor');
+  // one-shot "open song" animation: the editor eases in and the sections bounce in once
+  const ed = document.getElementById('view-editor');
+  ed.classList.remove('just-opened'); void ed.offsetWidth; ed.classList.add('just-opened');
+  ed.addEventListener('animationend', () => ed.classList.remove('just-opened'), { once:true });
+  animateChartOnce = true;
   renderAudioBar();
   window.renderChart();
 }
@@ -1060,7 +1071,9 @@ window.toggleNumbering = function(){
   window.save(); window.renderChart();
 }
 
+let animateChartOnce = false; // true only right after opening a song, so the bounce-in plays once
 window.renderChart = function(){
+  const animate = animateChartOnce; animateChartOnce = false;
   const song = currentSong();
   const list = document.getElementById('chart-list');
   const hint = document.getElementById('drop-hint');
@@ -1088,8 +1101,8 @@ window.renderChart = function(){
          </div>`
       : `<button class="fill-add-btn" onclick="toggleFill(${i})">+ Drum Fill</button>`;
     const el = document.createElement('div');
-    el.className = 'section-block';
-    el.style.animationDelay = (i * 0.04) + 's';
+    el.className = 'section-block' + (animate ? ' anim-in' : '');
+    if(animate) el.style.animationDelay = (i * 0.04) + 's';
     el.draggable = true;
     el.innerHTML = `
       <div class="sec-bar" style="background:${t.color}"></div>
