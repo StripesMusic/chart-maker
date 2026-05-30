@@ -142,12 +142,14 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 #bpm-input:focus{border-color:var(--accent)}
 .ts-wrap{display:flex;align-items:center;gap:8px}
 .ts-wrap label{font-size:12px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
-#ts-select{
+#ts-num,#ts-den{
   background:var(--bg3);border:1px solid var(--border2);color:var(--text);
-  font-family:'Courier New',monospace;font-size:15px;padding:6px 10px;
+  font-family:'Courier New',monospace;font-size:15px;padding:6px 8px;
   border-radius:5px;outline:none;cursor:pointer;
 }
-#ts-select:focus{border-color:var(--accent)}
+#ts-num{width:46px;text-align:center;cursor:text}
+#ts-num:focus,#ts-den:focus{border-color:var(--accent)}
+.ts-slash{color:var(--muted2);font-size:16px}
 
 /* ── EDITOR MAIN ── */
 #ed-main{display:flex;flex:1;overflow:hidden}
@@ -477,6 +479,32 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
   font-variant-numeric:tabular-nums;
 }
 .sec-mod-label{font-size:11px;letter-spacing:1px;color:var(--muted);text-transform:uppercase;margin-right:-4px}
+.sec-num-input{
+  width:42px;background:var(--bg4);border:1px solid var(--border2);border-radius:4px;
+  font-family:inherit;font-size:13px;font-weight:700;text-align:center;padding:2px 4px;
+  outline:none;flex-shrink:0;font-variant-numeric:tabular-nums;
+}
+.sec-num-input:focus{border-color:var(--accent)}
+.sec-num-input::placeholder{color:var(--muted2);font-weight:400}
+
+/* ── per-section time signature control ── */
+.ts-mini{
+  display:inline-flex;align-items:center;gap:1px;background:var(--bg4);
+  border:1px solid var(--border2);border-radius:6px;padding:1px 4px;flex-shrink:0;
+}
+.ts-mini.custom{border-color:var(--blue);box-shadow:0 0 0 1px rgba(90,175,200,.25)}
+.ts-mini-num{
+  width:26px;background:transparent;border:none;color:var(--text);
+  font-family:inherit;font-size:13px;text-align:center;outline:none;padding:2px 0;
+  font-variant-numeric:tabular-nums;
+}
+.ts-mini.custom .ts-mini-num,.ts-mini.custom .ts-mini-den{color:var(--blue)}
+.ts-mini-slash{color:var(--muted2);font-size:12px}
+.ts-mini-den{
+  background:transparent;border:none;color:var(--text);font-family:inherit;
+  font-size:13px;outline:none;cursor:pointer;padding:2px 0;
+}
+.ts-mini-den option{background:var(--bg3)}
 
 /* ── pre/post modifier toggles ── */
 .mod-toggle-wrap{display:flex;gap:3px;margin-right:4px}
@@ -658,12 +686,11 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
       </div>
       <div class="ts-wrap">
         <label>TIME SIG</label>
-        <select id="ts-select" onchange="saveSongMeta()">
-          <option value="4">4/4</option>
-          <option value="3">3/4</option>
-          <option value="6">6/8</option>
-          <option value="5">5/4</option>
-          <option value="7">7/8</option>
+        <input type="number" id="ts-num" min="1" max="15" value="4" title="Beats per bar" oninput="saveSongMeta()">
+        <span class="ts-slash">/</span>
+        <select id="ts-den" title="Note value" onchange="saveSongMeta()">
+          <option value="4">4</option>
+          <option value="8">8</option>
         </select>
       </div>
       <div class="toggle-chip on" id="num-toggle" onclick="toggleNumbering()" title="Auto-number repeated sections (Verse 1, Verse 2…)">
@@ -815,8 +842,8 @@ let dragSrc = null;
 // Performance state
 let perfIdx = 0;
 let perfMode = 'auto'; 
-let autoTimer = null;
-let barTickInterval = null;
+let autoRAF = null;   // single requestAnimationFrame loop driving AUTO mode
+let autoGen = 0;       // generation token so stale loops cancel themselves
 let currentBarTick = 0;
 let totalBarTicks  = 0;
 let displayMode = 'focus';
@@ -942,13 +969,15 @@ window.importLibrary = function(e){
 }
 
 // ─── APP LOGIC ───────────────────────────────────────
-function makeSong(){ return { id: idCounter++, name: '', bpm: 120, ts: 4, notes: '', sections: [], created: Date.now(), autoNumber:true, audio:null }; }
+function makeSong(){ return { id: idCounter++, name: '', bpm: 120, ts: 4, tsd: 4, notes: '', sections: [], created: Date.now(), autoNumber:true, audio:null }; }
 function currentSong(){ return library.find(s => s.id === currentSongId) || null; }
 
 // Ensure older saved songs/sections have the newer fields
 function migrateSong(song){
   if(!song) return song;
   if(song.autoNumber === undefined) song.autoNumber = true;
+  // old data stored only a numerator; 6 and 7 were the /8 options, everything else /4
+  if(song.tsd === undefined) song.tsd = (song.ts === 6 || song.ts === 7) ? 8 : 4;
   if(song.audio === undefined) song.audio = null;
   // a local audio-file URL can't survive a reload — drop the dead blob ref, keep cues
   if(song.audio && song.audio.type === 'file') song.audio = null;
@@ -956,6 +985,9 @@ function migrateSong(song){
     if(s.mod === undefined)  s.mod = null;   // null | 'pre' | 'post'
     if(s.fill === undefined) s.fill = null;  // null | { len:<beats>, notes:'' }
     if(s.time === undefined) s.time = null;  // cue point in seconds (audio sync)
+    if(s.num === undefined)  s.num = null;   // manual instance number (used when auto-numbering is off)
+    if(s.ts === undefined)   s.ts = null;    // per-section time-sig override: numerator (null = inherit song)
+    if(s.tsd === undefined)  s.tsd = null;   // per-section time-sig override: denominator (null = inherit song)
     if(s.repeats === undefined) s.repeats = 1;
   });
   return song;
@@ -981,7 +1013,7 @@ window.renderLibrary = function(){
     card.innerHTML = `
       <div class="song-card-left" onclick="openSong(${song.id})">
         <div class="song-card-name">${song.name||'Untitled Song'}</div>
-        <div class="song-card-meta">${song.bpm} BPM · ${song.ts}/4 · ${totalBars} bars</div>
+        <div class="song-card-meta">${song.bpm} BPM · ${song.ts}/${song.tsd||4} · ${totalBars} bars</div>
         <div class="song-card-strips">${strips}</div>
       </div>
       <div class="song-card-actions">
@@ -1004,7 +1036,8 @@ window.openSong = function(id){
   const song = migrateSong(currentSong());
   document.getElementById('song-name-input').value = song.name;
   document.getElementById('bpm-input').value = song.bpm;
-  document.getElementById('ts-select').value = String(song.ts);
+  document.getElementById('ts-num').value = song.ts;
+  document.getElementById('ts-den').value = String(song.tsd || 4);
   document.getElementById('global-notes').value = song.notes;
   document.getElementById('num-toggle').classList.toggle('on', song.autoNumber !== false);
   window.showView('editor');
@@ -1037,9 +1070,20 @@ function computeInstanceNumbers(song){
 }
 function sectionDisplay(song, i){
   const sec = song.sections[i];
-  const num = (song.autoNumber !== false) ? computeInstanceNumbers(song)[i] : 0;
+  // auto: computed instance number; manual (toggle off): the section's own num field
+  const num = (song.autoNumber !== false) ? computeInstanceNumbers(song)[i] : (sec.num || 0);
   return baseLabel(sec) + (num ? ' ' + num : '');
 }
+
+// ─── TIME SIGNATURE HELPERS ──
+// effective time sig for a section (falls back to the song default), as {n, d}
+function effTS(song, sec){
+  return { n: (sec && sec.ts) || song.ts || 4, d: (sec && sec.tsd) || song.tsd || 4 };
+}
+function tsLabel(song, sec){ const {n,d} = effTS(song, sec); return n + '/' + d; }
+// ms per bar: a bar holds n notes of value 1/d; a 1/d note = (4/d) quarter notes; quarter = 60000/bpm
+function barMsFor(song, sec){ const {n,d} = effTS(song, sec); return n * (4/d) * (60000 / song.bpm); }
+function sectionHasTSOverride(sec){ return sec.ts != null || sec.tsd != null; }
 
 window.openAndPerform = function(id){ window.openSong(id); setTimeout(window.startPerf, 80); }
 window.goLibrary = function(){ window.saveSongMeta(); window.showView('library'); window.renderLibrary(); }
@@ -1048,9 +1092,12 @@ window.saveSongMeta = function(){
   const song = currentSong(); if(!song) return;
   song.name = document.getElementById('song-name-input').value;
   song.bpm  = parseInt(document.getElementById('bpm-input').value)||120;
-  song.ts   = parseInt(document.getElementById('ts-select').value)||4;
+  song.ts   = parseInt(document.getElementById('ts-num').value)||4;
+  song.tsd  = parseInt(document.getElementById('ts-den').value)||4;
   song.notes= document.getElementById('global-notes').value;
   window.save();
+  // sections that inherit the song TS need their displayed labels refreshed
+  window.renderChart();
 }
 
 window.deleteSong = function(){ if(confirm('Delete?')){ library = library.filter(s => s.id !== currentSongId); window.save(); window.goLibrary(); } }
@@ -1060,14 +1107,35 @@ window.clearChart = function(){ if(confirm('Clear?')){ currentSong().sections = 
 // ─── EDITOR ──────────────────────────────────────────
 window.addSection = function(typeId){
   const song = currentSong(); if(!song) return;
-  song.sections.push({id:idCounter++, typeId, bars:8, notes:'', repeats:1, mod:null, fill:null, time:null});
+  song.sections.push({id:idCounter++, typeId, bars:8, notes:'', repeats:1, mod:null, fill:null, time:null, num:null, ts:null, tsd:null});
   window.save(); window.renderChart();
 }
 
 window.toggleNumbering = function(){
   const song = currentSong(); if(!song) return;
   song.autoNumber = !(song.autoNumber !== false);
+  // when switching to manual, seed each section's number from the auto value so there's a sensible starting point
+  if(!song.autoNumber){
+    const auto = computeInstanceNumbers(song);
+    song.sections.forEach((s,i) => { if(s.num == null) s.num = auto[i] || null; });
+  }
   document.getElementById('num-toggle').classList.toggle('on', song.autoNumber);
+  window.save(); window.renderChart();
+}
+
+window.updateNum = (i,v) => {
+  const n = parseInt(v);
+  currentSong().sections[i].num = (v==='' || isNaN(n) || n<1) ? null : n;
+  window.save(); window.renderChart();
+}
+
+// per-section time signature override; if it ends up matching the song default it reverts to inherit
+window.updateSecTS = (i, which, v) => {
+  const song = currentSong(); const sec = song.sections[i];
+  if(which==='n'){ const n = parseInt(v); sec.ts = (isNaN(n)||n<1) ? null : n; }
+  else { sec.tsd = (parseInt(v)===8) ? 8 : 4; }
+  const e = effTS(song, sec);
+  if(e.n === song.ts && e.d === (song.tsd||4)){ sec.ts = null; sec.tsd = null; }
   window.save(); window.renderChart();
 }
 
@@ -1085,7 +1153,10 @@ window.renderChart = function(){
   const hasAudio = !!song.audio;
   song.sections.forEach((sec, i) => {
     const t = TM[sec.typeId];
-    const num = (song.autoNumber !== false && nums[i]) ? `<span class="sec-instance-num" style="color:${t.color}">${nums[i]}</span>` : '';
+    // auto-numbering on → read-only computed number; off → editable per-section number
+    const num = (song.autoNumber !== false)
+      ? (nums[i] ? `<span class="sec-instance-num" style="color:${t.color}">${nums[i]}</span>` : '')
+      : `<input class="sec-num-input" type="number" min="1" value="${sec.num??''}" placeholder="#" title="Section number" onchange="updateNum(${i},this.value)" style="color:${t.color}">`;
     const modPrefix = sec.mod === 'pre' ? '<span class="sec-mod-label">Pre-</span>'
                     : sec.mod === 'post' ? '<span class="sec-mod-label">Post-</span>' : '';
     const cuePill = hasAudio
@@ -1100,6 +1171,15 @@ window.renderChart = function(){
            <button class="fill-del" onclick="toggleFill(${i})" title="Remove fill">✕</button>
          </div>`
       : `<button class="fill-add-btn" onclick="toggleFill(${i})">+ Drum Fill</button>`;
+    const ets = effTS(song, sec);
+    const tsCtrl = `<span class="ts-mini ${sectionHasTSOverride(sec)?'custom':''}" title="Time signature for this section (blank = follow song)">
+        <input class="ts-mini-num" type="number" min="1" max="15" value="${ets.n}" onchange="updateSecTS(${i},'n',this.value)">
+        <span class="ts-mini-slash">/</span>
+        <select class="ts-mini-den" onchange="updateSecTS(${i},'d',this.value)">
+          <option value="4" ${ets.d==4?'selected':''}>4</option>
+          <option value="8" ${ets.d==8?'selected':''}>8</option>
+        </select>
+      </span>`;
     const el = document.createElement('div');
     el.className = 'section-block' + (animate ? ' anim-in' : '');
     if(animate) el.style.animationDelay = (i * 0.04) + 's';
@@ -1116,6 +1196,7 @@ window.renderChart = function(){
               <span class="mod-btn ${sec.mod==='post'?'active':''}" onclick="setMod(${i},'post')" title="Mark as a post- section">Post</span>
             </div>
             ${cuePill}
+            ${tsCtrl}
             <span class="repeat-pill" onclick="cycleRepeats(${i})" title="Repeat count">×${sec.repeats}</span>
             <div class="bars-wrap">
               <input class="bars-input" type="number" value="${sec.bars}" onchange="updateBars(${i},this.value)">
@@ -1338,7 +1419,7 @@ window.startPerf = function(){
   document.getElementById('perf-overlay').classList.add('active');
   document.getElementById('perf-song').textContent = song.name || 'UNTITLED';
   document.getElementById('perf-bpm-disp').textContent = song.bpm+' BPM';
-  document.getElementById('perf-ts-disp').textContent = song.ts+'/4';
+  document.getElementById('perf-ts-disp').textContent = tsLabel(song, null);
   setupPerfAudio(song);
   // If a track is attached, default to SYNC; otherwise AUTO
   window.setMode(audioAvailable() ? 'sync' : 'auto');
@@ -1396,40 +1477,50 @@ function startSyncLoop(){
 }
 
 function clearAuto(){
-  if(autoTimer){ clearTimeout(autoTimer); autoTimer = null; }
-  if(barTickInterval){ clearInterval(barTickInterval); barTickInterval = null; }
+  autoGen++;                                  // invalidate any running loop
+  if(autoRAF){ cancelAnimationFrame(autoRAF); autoRAF = null; }
 }
 
-function scheduleAuto(){
+// AUTO advance — one rAF loop anchored to performance.now().
+// Bar number and progress are recomputed from real elapsed time every frame,
+// so the ticker can never drift or lag; section boundaries are carried forward
+// exactly (startAnchor) so timing stays tight across the whole song.
+function scheduleAuto(startAnchor){
   const song = currentSong(); const sec = song.sections[perfIdx]; if(!sec) return;
-  const bpm = song.bpm; const ts = song.ts;
-  const beatMs = 60000 / bpm;
-  const totalMs = (sec.bars * sec.repeats * ts) * beatMs;
+  const barMs = barMsFor(song, sec);              // ms per bar, honouring this section's time sig
+  totalBarTicks = sec.bars * sec.repeats;
+  const totalMs = totalBarTicks * barMs;
 
   document.getElementById('countdown-ring-wrap').classList.add('visible');
-  
   currentBarTick = 1;
-  totalBarTicks = sec.bars * sec.repeats;
   updateBarTicker();
-
-  barTickInterval = setInterval(() => {
-    currentBarTick++;
-    if(currentBarTick > totalBarTicks) currentBarTick = totalBarTicks;
-    updateBarTicker();
-  }, beatMs * ts);
-
-  autoTimer = setTimeout(() => {
-    if(perfIdx < song.sections.length-1){ perfIdx++; window.renderPerf(); scheduleAuto(); }
-  }, totalMs);
-
   updateRing(0);
-  let start = null;
-  function anim(ts2){
-    if(!start) start = ts2;
-    const prog = (ts2 - start) / totalMs;
-    if(prog < 1 && autoTimer){ updateRing(prog); requestAnimationFrame(anim); }
+
+  const myGen = ++autoGen;
+  const start = (startAnchor != null) ? startAnchor : performance.now();
+
+  function frame(now){
+    if(myGen !== autoGen) return;                 // a newer loop took over / cancelled
+    const elapsed = now - start;
+
+    if(elapsed >= totalMs){                        // section finished
+      currentBarTick = totalBarTicks; updateBarTicker(); updateRing(1);
+      if(perfIdx < song.sections.length - 1){
+        perfIdx++;
+        window.renderPerf();
+        scheduleAuto(start + totalMs);             // anchor next section at this one's exact end
+      } else {
+        autoRAF = null;                            // end of song
+      }
+      return;
+    }
+
+    updateRing(elapsed / totalMs);
+    const bar = Math.min(totalBarTicks, Math.floor(elapsed / barMs) + 1);
+    if(bar !== currentBarTick){ currentBarTick = bar; updateBarTicker(); }
+    autoRAF = requestAnimationFrame(frame);
   }
-  requestAnimationFrame(anim);
+  autoRAF = requestAnimationFrame(frame);
 }
 
 function updateBarTicker(){
@@ -1456,8 +1547,10 @@ window.renderPerf = function(){
   document.getElementById('perf-section-name').textContent = sectionDisplay(song, perfIdx).toUpperCase();
   document.getElementById('perf-section-name').style.color = t.color;
   document.getElementById('perf-stripe').style.background = t.color;
-  document.getElementById('perf-section-sub').textContent = `${sec.bars} bars ${sec.repeats > 1 ? '×'+sec.repeats : ''}`;
+  document.getElementById('perf-section-sub').textContent = `${sec.bars} bars ${sec.repeats > 1 ? '×'+sec.repeats : ''} · ${tsLabel(song, sec)}`;
   document.getElementById('perf-notes-disp').textContent = sec.notes;
+  // top-bar shows the current section's time sig (which may differ from the song default)
+  document.getElementById('perf-ts-disp').textContent = tsLabel(song, sec);
 
   document.getElementById('perf-prev-val').textContent = perfIdx>0 ? sectionDisplay(song, perfIdx-1).toUpperCase() : '—';
   document.getElementById('perf-next-val').textContent = perfIdx<song.sections.length-1 ? sectionDisplay(song, perfIdx+1).toUpperCase() : 'END';
