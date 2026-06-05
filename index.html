@@ -51,12 +51,12 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 #view-editor.just-opened { animation: songOpen 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
 
 /* ── VIEWS ── */
-#view-library,#view-editor,#view-auth{
+#view-library,#view-editor,#view-auth,#view-shared{
     width:100%;height:100%;display:none;flex-direction:column;
     opacity: 0; transform: translateY(10px);
     transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
-#view-library.active,#view-editor.active,#view-auth.active{display:flex; opacity: 1; transform: translateY(0);}
+#view-library.active,#view-editor.active,#view-auth.active,#view-shared.active{display:flex; opacity: 1; transform: translateY(0);}
 
 /* ── AUTH UI ── */
 #view-auth { justify-content: center; align-items: center; text-align: center; background: var(--bg); }
@@ -328,11 +328,11 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
   line-height:1;transition:color .25s;
 }
 #perf-section-sub{
-  font-size:20px;color:#666;letter-spacing:4px;margin-top:12px;
+  font-size:46px;font-weight:700;color:#d0d0d0;letter-spacing:4px;margin-top:22px;
 }
 #perf-notes-disp{
-  font-size:16px;color:#777;margin-top:10px;letter-spacing:1px;
-  font-style:italic;min-height:22px;
+  font-size:32px;color:#b0b0b0;margin-top:16px;letter-spacing:1px;
+  font-style:italic;min-height:40px;
 }
 
 /* Next */
@@ -440,7 +440,7 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 .p-btn:hover{border-color:#555;color:#bbb}
 .p-btn.big{font-size:16px;padding:12px 44px;letter-spacing:3px;color:#aaa;border-color:#333}
 .p-btn.big:hover{border-color:#666;color:#ddd}
-#key-hint{font-size:11px;color:#2e2e2e;letter-spacing:2px;text-transform:uppercase;text-align:center;padding-bottom:8px}
+#key-hint{font-size:12px;color:#9a9a9a;font-weight:bold;letter-spacing:2px;text-transform:uppercase;text-align:center;padding-bottom:8px}
 
 /* ── SAVE INDICATOR ── */
 #save-toast{
@@ -505,6 +505,19 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
   font-size:13px;outline:none;cursor:pointer;padding:2px 0;
 }
 .ts-mini-den option{background:var(--bg3)}
+
+/* ── per-section color picker ── */
+.sec-color-wrap{display:inline-flex;align-items:center;gap:2px;flex-shrink:0}
+.sec-color-input{
+  width:22px;height:22px;padding:0;border:1px solid var(--border2);
+  border-radius:50%;background:none;cursor:pointer;overflow:hidden;transition:transform .15s;
+}
+.sec-color-input:hover{transform:scale(1.12);border-color:var(--text)}
+.sec-color-input::-webkit-color-swatch-wrapper{padding:0}
+.sec-color-input::-webkit-color-swatch{border:none;border-radius:50%}
+.sec-color-input::-moz-color-swatch{border:none;border-radius:50%}
+.sec-color-reset{background:transparent;border:none;color:var(--muted2);cursor:pointer;font-size:14px;padding:0 1px;line-height:1}
+.sec-color-reset:hover{color:var(--accent)}
 
 /* ── pre/post modifier toggles ── */
 .mod-toggle-wrap{display:flex;gap:3px;margin-right:4px}
@@ -597,7 +610,8 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
   border-bottom:1px solid #111;background:#050505;flex-shrink:0;justify-content:center;
 }
 #perf-audio-wrap.hidden{display:none}
-#yt-player-holder{width:160px;height:90px;flex-shrink:0;border-radius:6px;overflow:hidden;background:#000}
+#yt-player-holder{width:256px;height:144px;flex-shrink:0;border-radius:6px;overflow:hidden;background:#000}
+#yt-player-holder iframe{width:100%;height:100%;display:block;border:0}
 #yt-player-holder.audio-only{width:0;height:0;overflow:hidden}
 .perf-audio-btn{
   background:#0a0a0a;border:1px solid #2a2a2a;color:#aaa;width:42px;height:42px;border-radius:50%;
@@ -632,6 +646,37 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 
 /* list view smooth current scroll target */
 .pl-row{scroll-margin:120px}
+
+/* ── SHARED (read-only) VIEW ── */
+#view-shared{justify-content:flex-start;align-items:stretch;background:var(--bg)}
+#shared-header{
+  padding:28px 36px 20px;border-bottom:1px solid var(--border);background:var(--bg2);
+  flex-shrink:0;text-align:center;animation:fadeSlideUp .4s ease;
+}
+.shared-brand{font-size:12px;letter-spacing:4px;color:var(--accent);text-transform:uppercase;margin-bottom:14px}
+.shared-title{font-size:34px;font-weight:700;letter-spacing:4px;color:var(--text);text-transform:uppercase}
+.shared-meta{font-size:14px;color:var(--muted);letter-spacing:2px;margin-top:8px}
+.shared-actions{display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap}
+#shared-body{flex:1;overflow-y:auto;padding:28px 36px}
+#shared-body::-webkit-scrollbar{width:5px}
+#shared-body::-webkit-scrollbar-thumb{background:var(--border2)}
+#shared-chart{max-width:900px;margin:0 auto}
+.sv-row{
+  display:flex;align-items:stretch;margin-bottom:8px;border-radius:6px;overflow:hidden;
+  border:1px solid var(--border);background:var(--bg2);animation:sectionEntrance .3s cubic-bezier(.34,1.56,.64,1) backwards;
+}
+.sv-bar{width:8px;flex-shrink:0}
+.sv-body{flex:1;padding:14px 18px;min-width:0}
+.sv-row1{display:flex;align-items:center;gap:14px}
+.sv-name{font-size:18px;font-weight:700;letter-spacing:2px;text-transform:uppercase}
+.sv-num{font-size:13px;font-weight:700;opacity:.55}
+.sv-meta{margin-left:auto;font-size:13px;color:var(--muted);letter-spacing:1px;white-space:nowrap}
+.sv-fill{font-size:11px;color:#e87d47;border:1px solid rgba(232,125,71,.4);padding:3px 9px;border-radius:9px;text-transform:uppercase;letter-spacing:1px}
+.sv-notes{margin-top:7px;font-size:13px;color:#bbb;font-style:italic}
+#shared-foot{
+  padding:14px;text-align:center;font-size:12px;color:var(--muted2);letter-spacing:1px;
+  border-top:1px solid var(--border);background:var(--bg2);flex-shrink:0;
+}
 </style>
 </head>
 <body>
@@ -696,6 +741,7 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
       <div class="toggle-chip on" id="num-toggle" onclick="toggleNumbering()" title="Auto-number repeated sections (Verse 1, Verse 2…)">
         <span class="sw"></span># No.
       </div>
+      <button class="btn" onclick="shareSong()" title="Copy a shareable read-only link to this chart">🔗 SHARE</button>
       <button class="btn perform" onclick="startPerf()">▶ PERFORM</button>
     </div>
   </div>
@@ -732,6 +778,21 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
   </div>
 </div>
 
+<div id="view-shared" class="view">
+  <div id="shared-header">
+    <div class="shared-brand">🥁 Drum Chart Pro</div>
+    <div class="shared-title" id="shared-title">—</div>
+    <div class="shared-meta" id="shared-meta"></div>
+    <div class="shared-actions">
+      <button class="btn perform" onclick="startPerf()">▶ PERFORM</button>
+      <button class="btn accent" onclick="copySharedToLibrary()">＋ Save to my charts</button>
+      <button class="btn" onclick="exitShared()">Open the app</button>
+    </div>
+  </div>
+  <div id="shared-body"><div id="shared-chart"></div></div>
+  <div id="shared-foot">Read-only shared chart · anyone with the link can view this</div>
+</div>
+
 <div id="perf-overlay">
   <div id="perf-topbar">
     <div id="perf-song"></div>
@@ -754,9 +815,9 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
   </div>
 
   <div id="perf-mode-bar">
-    <button class="mode-btn active" id="mode-auto" onclick="setMode('auto')">AUTO</button>
-    <button class="mode-btn" id="mode-manual" onclick="setMode('manual')">MANUAL</button>
-    <button class="mode-btn" id="mode-sync" onclick="setMode('sync')" style="display:none">♪ SYNC</button>
+    <button class="mode-btn active" id="mode-auto" onclick="setMode('auto')" title="Hands-free: advances by itself using your BPM + time signature. No audio needed — great for practice.">AUTO</button>
+    <button class="mode-btn" id="mode-manual" onclick="setMode('manual')" title="You drive: nothing advances until you hit Space / arrows. Best for live playing.">MANUAL</button>
+    <button class="mode-btn" id="mode-sync" onclick="setMode('sync')" style="display:none" title="Follows your attached track using the cue points you tap. Needs a YouTube link or audio file.">♪ SYNC</button>
     <div id="countdown-ring-wrap">
       <svg id="countdown-ring-svg" width="32" height="32" viewBox="0 0 32 32">
         <circle cx="16" cy="16" r="13" fill="none" stroke="#1a1a1a" stroke-width="3"/>
@@ -833,11 +894,13 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // ─── STATE ───────────────────────────────────────────
-let library = [];     
+let library = [];
 let currentUser = null;
 let currentSongId = null;
 let idCounter = Date.now();
 let dragSrc = null;
+let sharedSong = null;          // when viewing a #s=… shared link (read-only)
+let pendingSharedImport = null; // a shared chart waiting to be saved once the user logs in
 
 // Performance state
 let perfIdx = 0;
@@ -859,7 +922,6 @@ let audioTimeRAF = null;     // clock display loop
 const TYPES = [
   {id:'intro',     label:'Intro',      color:'#5bc0de', key:'i'},
   {id:'verse',     label:'Verse',      color:'#4caf6e', key:'v'},
-  {id:'pre',       label:'Pre-Chorus', color:'#9b59b6', key:'p'},
   {id:'chorus',    label:'Chorus',     color:'#e8c547', key:'c'},
   {id:'bridge',    label:'Bridge',     color:'#e87d47', key:'b'},
   {id:'solo',      label:'Solo',       color:'#c85a5a', key:'s'},
@@ -870,6 +932,21 @@ const TYPES = [
 ];
 const TM = {};
 TYPES.forEach(t => TM[t.id] = t);
+// legacy fallback so old "pre-chorus" data still renders before migration runs
+TM['pre'] = {id:'pre', label:'Chorus', color:'#9b59b6', key:'p'};
+
+// colors applied automatically when a section is flagged pre / post (unless it has a custom color)
+const MOD_COLORS = { pre:'#9b59b6', post:'#4a90d9' };
+
+// effective display color: explicit custom color > pre/post modifier color > section-type color
+function effColor(sec){
+  if(!sec) return '#888';
+  if(sec.color) return sec.color;
+  if(sec.mod === 'pre')  return MOD_COLORS.pre;
+  if(sec.mod === 'post') return MOD_COLORS.post;
+  const t = TM[sec.typeId];
+  return t ? t.color : '#888';
+}
 
 // ─── AUTH CORE ───────────────────────────────────────
 window.handleAuth = async (mode) => {
@@ -904,16 +981,30 @@ onAuthStateChanged(auth, async (user) => {
     const vLib = document.getElementById('view-library');
     if (user) {
         currentUser = user;
-        vAuth.classList.remove('active');
-        vLib.classList.add('active');
         const docSnap = await getDoc(doc(db, "users", user.uid));
         if (docSnap.exists()) {
             library = docSnap.data().library || [];
         }
         library.forEach(migrateSong);
+        // a shared chart was waiting to be saved until login
+        if (pendingSharedImport) {
+            library.push(pendingSharedImport);
+            const importedId = pendingSharedImport.id;
+            pendingSharedImport = null;
+            await window.save();
+            vAuth.classList.remove('active');
+            window.openSong(importedId);
+            showToast('✓ Saved to your charts');
+            return;
+        }
+        // viewing a shared link — stay on the read-only view, don't jump to the library
+        if (sharedSong) return;
+        vAuth.classList.remove('active');
+        vLib.classList.add('active');
         renderLibrary();
     } else {
         currentUser = null;
+        if (sharedSong) return;   // keep showing the shared view for logged-out visitors
         vLib.classList.remove('active');
         vAuth.classList.add('active');
     }
@@ -970,7 +1061,7 @@ window.importLibrary = function(e){
 
 // ─── APP LOGIC ───────────────────────────────────────
 function makeSong(){ return { id: idCounter++, name: '', bpm: 120, ts: 4, tsd: 4, notes: '', sections: [], created: Date.now(), autoNumber:true, audio:null }; }
-function currentSong(){ return library.find(s => s.id === currentSongId) || null; }
+function currentSong(){ if(sharedSong) return sharedSong; return library.find(s => s.id === currentSongId) || null; }
 
 // Ensure older saved songs/sections have the newer fields
 function migrateSong(song){
@@ -988,6 +1079,9 @@ function migrateSong(song){
     if(s.num === undefined)  s.num = null;   // manual instance number (used when auto-numbering is off)
     if(s.ts === undefined)   s.ts = null;    // per-section time-sig override: numerator (null = inherit song)
     if(s.tsd === undefined)  s.tsd = null;   // per-section time-sig override: denominator (null = inherit song)
+    if(s.color === undefined) s.color = null;// custom per-section color override (null = use type/modifier color)
+    // the old "Pre-Chorus" type is gone — fold it into a Chorus flagged "pre"
+    if(s.typeId === 'pre'){ s.typeId = 'chorus'; if(!s.mod) s.mod = 'pre'; }
     if(s.repeats === undefined) s.repeats = 1;
   });
   return song;
@@ -996,6 +1090,114 @@ function migrateSong(song){
 window.showView = function(v){
   document.getElementById('view-library').classList.toggle('active', v==='library');
   document.getElementById('view-editor').classList.toggle('active', v==='editor');
+  document.getElementById('view-shared').classList.toggle('active', v==='shared');
+}
+
+// ─── SHAREABLE LINKS (self-contained, no backend) ────
+// The whole chart is encoded into the URL hash, so any link works on static hosting
+// (GitHub Pages etc.) with no login required to view.
+function b64urlEncode(str){
+  return btoa(unescape(encodeURIComponent(str))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function b64urlDecode(b64){
+  b64 = b64.replace(/-/g,'+').replace(/_/g,'/');
+  while(b64.length % 4) b64 += '=';
+  return decodeURIComponent(escape(atob(b64)));
+}
+
+window.shareSong = function(){
+  const song = currentSong(); if(!song) return;
+  window.saveSongMeta();
+  const payload = JSON.parse(JSON.stringify(song));
+  delete payload.id; delete payload.created;
+  if(payload.audio && payload.audio.type === 'file') payload.audio = null; // a local file can't travel in a link
+  const link = location.origin + location.pathname + '#s=' + b64urlEncode(JSON.stringify(payload));
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(link).then(
+      () => showToast('🔗 Link copied to clipboard'),
+      () => window.prompt('Copy this shareable link:', link)
+    );
+  } else {
+    window.prompt('Copy this shareable link:', link);
+  }
+}
+
+// On load: if the URL carries a shared chart, decode and show the read-only viewer
+function checkSharedLink(){
+  const m = (location.hash || '').match(/^#s=(.+)$/);
+  if(!m) return false;
+  try {
+    const song = migrateSong(JSON.parse(b64urlDecode(m[1])));
+    song.id = 'shared-' + Date.now();
+    sharedSong = song;
+    // a shared YouTube track is fine; a shared local-file ref can't play
+    if(sharedSong.audio && sharedSong.audio.type === 'file') sharedSong.audio = null;
+    if(sharedSong.audio && sharedSong.audio.type === 'youtube') localAudioURL = null;
+    renderSharedView();
+    return true;
+  } catch(e){ console.warn('Bad share link', e); return false; }
+}
+
+function renderSharedView(){
+  const song = sharedSong; if(!song) return;
+  document.getElementById('shared-title').textContent = song.name || 'Untitled Song';
+  const totalBars = song.sections.reduce((a,s)=>a+(s.bars*s.repeats),0);
+  document.getElementById('shared-meta').textContent =
+    `${song.bpm} BPM · ${song.ts}/${song.tsd||4} · ${song.sections.length} sections · ${totalBars} bars`
+    + (song.audio && song.audio.type==='youtube' ? ' · ♪ track' : '');
+
+  const nums = computeInstanceNumbers(song);
+  document.getElementById('shared-chart').innerHTML = song.sections.map((sec,i) => {
+    const ec = effColor(sec);
+    const n = (song.autoNumber !== false ? nums[i] : (sec.num||0));
+    const numHtml = n ? `<span class="sv-num" style="color:${ec}">${n}</span>` : '';
+    const fill = sec.fill ? `<span class="sv-fill">🥁 fill · ${sec.fill.len} beats</span>` : '';
+    return `
+      <div class="sv-row" style="animation-delay:${i*0.04}s">
+        <div class="sv-bar" style="background:${ec}"></div>
+        <div class="sv-body">
+          <div class="sv-row1">
+            <span class="sv-name" style="color:${ec}">${esc(baseLabel(sec))}</span>${numHtml}
+            <span class="sv-meta">${fill} ${sec.bars} bars ${sec.repeats>1?'×'+sec.repeats:''} · ${tsLabel(song,sec)}</span>
+          </div>
+          ${sec.notes ? `<div class="sv-notes">${esc(sec.notes)}</div>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+
+  document.getElementById('view-auth').classList.remove('active');
+  window.showView('shared');
+}
+
+window.copySharedToLibrary = function(){
+  if(!sharedSong) return;
+  const copy = JSON.parse(JSON.stringify(sharedSong));
+  copy.id = idCounter++; copy.created = Date.now();
+  if(!currentUser){
+    // stash it and send them to log in; it gets imported right after auth
+    pendingSharedImport = copy;
+    sharedSong = null;
+    history.replaceState(null, '', location.pathname);  // drop the #s= hash
+    document.getElementById('view-shared').classList.remove('active');
+    document.getElementById('view-auth').classList.add('active');
+    showToast('Log in or sign up to save this chart');
+    return;
+  }
+  library.push(copy);
+  window.save();
+  sharedSong = null;
+  history.replaceState(null, '', location.pathname);
+  window.openSong(copy.id);
+  showToast('✓ Saved to your charts');
+}
+
+window.exitShared = function(){
+  sharedSong = null;
+  history.replaceState(null, '', location.pathname);
+  document.getElementById('view-shared').classList.remove('active');
+  // hand off to the normal auth/library flow
+  if(currentUser){ window.showView('library'); window.renderLibrary(); }
+  else document.getElementById('view-auth').classList.add('active');
 }
 
 window.renderLibrary = function(){
@@ -1006,7 +1208,7 @@ window.renderLibrary = function(){
   empty.style.display = 'none';
   [...library].reverse().forEach((song, i) => {
     const totalBars = song.sections.reduce((a,s)=>a+(s.bars*s.repeats),0);
-    const strips = song.sections.map(s => `<div class="song-card-strip" style="background:${TM[s.typeId]?.color || '#555'};width:14px"></div>`).join('');
+    const strips = song.sections.map(s => `<div class="song-card-strip" style="background:${effColor(s)};width:14px"></div>`).join('');
     const card = document.createElement('div');
     card.className = 'song-card';
     card.style.animationDelay = (i * 0.05) + 's';
@@ -1089,6 +1291,7 @@ window.openAndPerform = function(id){ window.openSong(id); setTimeout(window.sta
 window.goLibrary = function(){ window.saveSongMeta(); window.showView('library'); window.renderLibrary(); }
 
 window.saveSongMeta = function(){
+  if(sharedSong) return;        // read-only shared view: never write back from the (hidden) editor
   const song = currentSong(); if(!song) return;
   song.name = document.getElementById('song-name-input').value;
   song.bpm  = parseInt(document.getElementById('bpm-input').value)||120;
@@ -1107,7 +1310,7 @@ window.clearChart = function(){ if(confirm('Clear?')){ currentSong().sections = 
 // ─── EDITOR ──────────────────────────────────────────
 window.addSection = function(typeId){
   const song = currentSong(); if(!song) return;
-  song.sections.push({id:idCounter++, typeId, bars:8, notes:'', repeats:1, mod:null, fill:null, time:null, num:null, ts:null, tsd:null});
+  song.sections.push({id:idCounter++, typeId, bars:8, notes:'', repeats:1, mod:null, fill:null, time:null, num:null, ts:null, tsd:null, color:null});
   window.save(); window.renderChart();
 }
 
@@ -1139,6 +1342,10 @@ window.updateSecTS = (i, which, v) => {
   window.save(); window.renderChart();
 }
 
+// per-section custom color
+window.setSecColor = (i, v) => { currentSong().sections[i].color = v; window.save(); window.renderChart(); }
+window.resetSecColor = (i) => { currentSong().sections[i].color = null; window.save(); window.renderChart(); }
+
 let animateChartOnce = false; // true only right after opening a song, so the bounce-in plays once
 window.renderChart = function(){
   const animate = animateChartOnce; animateChartOnce = false;
@@ -1153,10 +1360,11 @@ window.renderChart = function(){
   const hasAudio = !!song.audio;
   song.sections.forEach((sec, i) => {
     const t = TM[sec.typeId];
+    const ec = effColor(sec);   // honours custom color + pre/post modifier
     // auto-numbering on → read-only computed number; off → editable per-section number
     const num = (song.autoNumber !== false)
-      ? (nums[i] ? `<span class="sec-instance-num" style="color:${t.color}">${nums[i]}</span>` : '')
-      : `<input class="sec-num-input" type="number" min="1" value="${sec.num??''}" placeholder="#" title="Section number" onchange="updateNum(${i},this.value)" style="color:${t.color}">`;
+      ? (nums[i] ? `<span class="sec-instance-num" style="color:${ec}">${nums[i]}</span>` : '')
+      : `<input class="sec-num-input" type="number" min="1" value="${sec.num??''}" placeholder="#" title="Section number" onchange="updateNum(${i},this.value)" style="color:${ec}">`;
     const modPrefix = sec.mod === 'pre' ? '<span class="sec-mod-label">Pre-</span>'
                     : sec.mod === 'post' ? '<span class="sec-mod-label">Post-</span>' : '';
     const cuePill = hasAudio
@@ -1185,12 +1393,16 @@ window.renderChart = function(){
     if(animate) el.style.animationDelay = (i * 0.04) + 's';
     el.draggable = true;
     el.innerHTML = `
-      <div class="sec-bar" style="background:${t.color}"></div>
+      <div class="sec-bar" style="background:${ec}"></div>
       <div class="sec-body">
         <div class="sec-row1">
-          <span class="sec-type-label" style="color:${t.color}">${modPrefix}${t.label}</span>
+          <span class="sec-type-label" style="color:${ec}">${modPrefix}${t.label}</span>
           ${num}
           <div class="sec-row1-right">
+            <span class="sec-color-wrap">
+              <input type="color" class="sec-color-input" value="${ec}" onchange="setSecColor(${i},this.value)" title="Pick a custom color for this section">
+              ${sec.color ? `<button class="sec-color-reset" onclick="resetSecColor(${i})" title="Reset to default color">⟲</button>` : ''}
+            </span>
             <div class="mod-toggle-wrap">
               <span class="mod-btn ${sec.mod==='pre'?'active':''}"  onclick="setMod(${i},'pre')"  title="Mark as a pre- section">Pre</span>
               <span class="mod-btn ${sec.mod==='post'?'active':''}" onclick="setMod(${i},'post')" title="Mark as a post- section">Post</span>
@@ -1373,6 +1585,7 @@ function setupPerfAudio(song){
     const mount = document.createElement('div'); holder.appendChild(mount);
     ensureYouTubeAPI(() => {
       ytPlayer = new YT.Player(mount, {
+        width:'256', height:'144',
         videoId: song.audio.videoId,
         playerVars:{ controls:1, modestbranding:1, rel:0 },
         events:{ onReady:()=>{ ytReady = true; updatePlayBtn(); }, onStateChange:updatePlayBtn }
@@ -1543,10 +1756,11 @@ function updateRing(prog){
 
 window.renderPerf = function(){
   const song = currentSong(); const sec = song.sections[perfIdx]; const t = TM[sec.typeId];
+  const ec = effColor(sec);
 
   document.getElementById('perf-section-name').textContent = sectionDisplay(song, perfIdx).toUpperCase();
-  document.getElementById('perf-section-name').style.color = t.color;
-  document.getElementById('perf-stripe').style.background = t.color;
+  document.getElementById('perf-section-name').style.color = ec;
+  document.getElementById('perf-stripe').style.background = ec;
   document.getElementById('perf-section-sub').textContent = `${sec.bars} bars ${sec.repeats > 1 ? '×'+sec.repeats : ''} · ${tsLabel(song, sec)}`;
   document.getElementById('perf-notes-disp').textContent = sec.notes;
   // top-bar shows the current section's time sig (which may differ from the song default)
@@ -1573,16 +1787,16 @@ function renderPerfList(){
   const wrap = document.getElementById('perf-list-view');
   const song = currentSong(); if(!song) return;
   wrap.innerHTML = song.sections.map((sec,i) => {
-    const t = TM[sec.typeId];
+    const t = TM[sec.typeId]; const ec = effColor(sec);
     const cls = i===perfIdx ? 'pl-current' : (i<perfIdx ? 'pl-done' : '');
     const fillTag = sec.fill ? `<span class="pl-fill-tag">🥁 ${sec.fill.len}</span>` : '';
     const cue = sec.time!=null ? `<span class="pl-bar-live">⏱ ${fmtTime(sec.time)}</span>` : `<span class="pl-bar-live">${sec.bars}×${sec.repeats}</span>`;
     return `
       <div class="pl-row ${cls}" data-i="${i}" onclick="perfJump(${i})">
-        <div class="pl-swatch" style="background:${t.color}"></div>
+        <div class="pl-swatch" style="background:${ec}"></div>
         <div class="pl-num">${i+1}</div>
         <div class="pl-body">
-          <div class="pl-name" style="color:${i===perfIdx?t.color:''}">${esc(sectionDisplay(song,i))}</div>
+          <div class="pl-name" style="color:${i===perfIdx?ec:''}">${esc(sectionDisplay(song,i))}</div>
           <div class="pl-meta-col">${sec.bars} bars ${sec.repeats>1?'×'+sec.repeats:''}</div>
           <div class="pl-notes-col">${esc(sec.notes||'')}</div>
           <div class="pl-right">${fillTag}<span class="pl-badge">NOW</span>${cue}</div>
@@ -1680,6 +1894,9 @@ document.addEventListener('keydown', e => {
   if(e.key==='t'||e.key==='T'){ e.preventDefault(); window.tapCue(); }
   if(e.key==='f'||e.key==='F') window.setDisplayMode(displayMode==='focus'?'list':'focus');
 });
+
+// All functions are now defined — if the page was opened via a share link, render the read-only viewer
+checkSharedLink();
 </script>
 </body>
 </html>
