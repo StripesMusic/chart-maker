@@ -597,27 +597,59 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 
 /* ── audio bar (editor) ── */
 #audio-bar{
-  display:flex;align-items:center;gap:14px;padding:10px 24px;
+  display:flex;align-items:center;gap:14px;padding:12px 24px;
   border-bottom:1px solid var(--border);background:var(--bg);flex-shrink:0;
   animation:fadeSlideUp .3s ease;
 }
 #audio-bar.empty{background:var(--bg2)}
+#audio-setup{display:flex;align-items:center;gap:14px;width:100%}
+#audio-bar:not(.empty) #audio-setup{display:none}
 .audio-label{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;flex-shrink:0}
 #audio-url-input{
   flex:1;min-width:0;background:var(--bg3);border:1px solid var(--border2);color:var(--text);
   font-family:inherit;font-size:13px;padding:7px 10px;border-radius:5px;outline:none;
 }
 #audio-url-input:focus{border-color:var(--accent)}
+
+/* ── track panel (video on the left, controls + sync on the right) ── */
+#audio-panel{display:none}
+#audio-bar:not(.empty) #audio-panel{display:flex;gap:18px;align-items:stretch;width:100%}
+#audio-bar-player{flex-shrink:0;width:240px;height:135px}
+#audio-bar-player iframe{border-radius:8px;display:block;width:240px;height:135px}
+#audio-bar-player audio{width:100%}
+.ed-noplay{display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:var(--muted2);font-size:12px;border:1px dashed var(--border2);border-radius:8px;text-align:center;padding:8px}
+#audio-side{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:12px}
 .audio-chip{
-  display:flex;align-items:center;gap:8px;font-size:12px;color:var(--blue);
+  display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--blue);
   background:var(--bg3);border:1px solid var(--blue);padding:6px 12px;border-radius:5px;
-  letter-spacing:1px;max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  letter-spacing:1px;align-self:flex-start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .audio-chip .x{cursor:pointer;color:var(--muted2)}
 .audio-chip .x:hover{color:var(--red)}
-#audio-bar-player{display:none;flex-shrink:0}
-#audio-bar-player iframe{border-radius:6px;display:block}
-#audio-bar-player audio{vertical-align:middle}
+
+/* ── editor sync panel ── */
+#sync-panel{display:flex;flex-direction:column;gap:8px}
+.sync-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--blue)}
+.sync-row{display:flex;align-items:center;gap:10px}
+.sync-play{
+  background:var(--bg3);border:1px solid var(--border2);color:var(--text);width:38px;height:38px;
+  border-radius:50%;cursor:pointer;font-size:14px;flex-shrink:0;transition:all .15s;
+}
+.sync-play:hover{border-color:var(--accent);color:var(--accent)}
+.sync-tap{
+  background:transparent;border:1px solid var(--blue);color:var(--blue);
+  padding:9px 18px;font-family:inherit;font-size:12px;letter-spacing:2px;text-transform:uppercase;
+  border-radius:6px;cursor:pointer;transition:all .15s;
+}
+.sync-tap:hover:not(:disabled){background:rgba(90,175,200,.14)}
+.sync-tap:disabled{opacity:.4;cursor:default;border-color:var(--border2);color:var(--muted2)}
+.sync-time{font-size:13px;color:var(--muted);letter-spacing:1px;font-variant-numeric:tabular-nums}
+.sync-status{font-size:13px;color:var(--muted)}
+.sync-status b{color:var(--text)}
+.sync-links{font-size:11px;color:var(--muted2);letter-spacing:1px}
+.sync-links a{color:var(--muted);cursor:pointer;text-decoration:underline}
+.sync-links a:hover{color:var(--accent)}
+#perf-sync-note{font-size:11px;color:#777;letter-spacing:1px}
 
 /* ── perf audio + fill highlight ── */
 #perf-audio-wrap{
@@ -722,6 +754,9 @@ html{ -webkit-text-size-adjust:100%; }
   /* ── Track / audio bar ── */
   #audio-bar{ flex-wrap:wrap; padding:10px 14px; gap:8px; }
   #audio-url-input{ flex:1 1 100%; }
+  #audio-setup{ flex-wrap:wrap; }
+  #audio-bar:not(.empty) #audio-panel{ flex-direction:column; gap:12px; }
+  #audio-bar-player, #audio-bar-player iframe{ width:100%; max-width:360px; height:auto; aspect-ratio:16/9; }
 
   /* ── Editor body: stack the sidebar on top, chart below ── */
   #ed-main{ flex-direction:column; overflow-y:auto; }
@@ -745,7 +780,6 @@ html{ -webkit-text-size-adjust:100%; }
   .sec-row1-right{ margin-left:0; width:100%; flex-wrap:wrap; justify-content:flex-start; gap:8px; }
   .fill-item{ flex-wrap:wrap; }
   .fill-note-input{ flex:1 1 100%; min-width:0; }
-  #audio-bar-player iframe{ width:100%; max-width:320px; height:auto; aspect-ratio:16/9; }
 
   #ed-footer{ flex-wrap:wrap; gap:10px; padding:10px 14px; }
   #chart-stats{ flex:1 1 100%; }
@@ -867,12 +901,19 @@ html{ -webkit-text-size-adjust:100%; }
   </div>
 
   <div id="audio-bar" class="empty">
-    <span class="audio-label">♪ Track</span>
-    <input id="audio-url-input" placeholder="Paste a YouTube link to sync playback…" onchange="attachYouTube(this.value)">
-    <button class="btn" onclick="document.getElementById('audio-file-input').click()">⬆ Audio file</button>
-    <input type="file" id="audio-file-input" accept="audio/*" style="display:none" onchange="attachAudioFile(event)">
-    <span id="audio-current" style="display:none"></span>
-    <div id="audio-bar-player"></div>
+    <div id="audio-setup">
+      <span class="audio-label">♪ Track</span>
+      <input id="audio-url-input" placeholder="Paste a YouTube link to play & sync…" onchange="attachYouTube(this.value)">
+      <button class="btn" onclick="document.getElementById('audio-file-input').click()">⬆ Audio file</button>
+      <input type="file" id="audio-file-input" accept="audio/*" style="display:none" onchange="attachAudioFile(event)">
+    </div>
+    <div id="audio-panel">
+      <div id="audio-bar-player"></div>
+      <div id="audio-side">
+        <div id="audio-chip" class="audio-chip"></div>
+        <div id="sync-panel"></div>
+      </div>
+    </div>
   </div>
 
   <div id="ed-main">
@@ -932,7 +973,7 @@ html{ -webkit-text-size-adjust:100%; }
     <div id="yt-player-holder"></div>
     <button class="perf-audio-btn" id="perf-play-btn" onclick="toggleAudioPlay()">▶</button>
     <span id="perf-audio-time">0:00 / 0:00</span>
-    <button id="tap-cue-btn" onclick="tapCue()" title="While listening, tap on the downbeat of each section to record its start time">⊙ TAP CUE</button>
+    <span id="perf-sync-note">SYNC follows the cue points you set in the editor</span>
   </div>
 
   <div id="perf-mode-bar">
@@ -990,7 +1031,7 @@ html{ -webkit-text-size-adjust:100%; }
     <button class="p-btn" onclick="perfBack()">← BACK</button>
     <button class="p-btn big" onclick="perfNext()">NEXT →</button>
   </div>
-  <div id="key-hint">SPACE = next / tap-cue &nbsp;·&nbsp; ← → = back / next &nbsp;·&nbsp; T = tap cue &nbsp;·&nbsp; P = play/pause &nbsp;·&nbsp; F = focus/list &nbsp;·&nbsp; ESC = exit</div>
+  <div id="key-hint">SPACE / → = next &nbsp;·&nbsp; ← = back &nbsp;·&nbsp; P = play/pause &nbsp;·&nbsp; F = focus / list &nbsp;·&nbsp; ESC = exit</div>
 </div>
 
 <div id="save-toast"></div>
@@ -1042,6 +1083,10 @@ let htmlAudio = null;        // <audio> element for local files
 let localAudioURL = null;    // object URL (session only)
 let syncRAF = null;          // requestAnimationFrame id for the sync follow-loop
 let audioTimeRAF = null;     // clock display loop
+// editor-side player (so you can listen + tap cues right in the chart editor)
+let edYtPlayer = null, edYtReady = false, edAudioEl = null, edTimeRAF = null;
+let edLoadedKey = '';        // identity of the track currently loaded in the editor player
+let edCueIdx = 0;            // next section to stamp while tapping cues
 
 const TYPES = [
   {id:'intro',     label:'Intro',      color:'#5bc0de', key:'i'},
@@ -1442,6 +1487,7 @@ window.openSong = function(id){
   ed.classList.remove('just-opened'); void ed.offsetWidth; ed.classList.add('just-opened');
   ed.addEventListener('animationend', () => ed.classList.remove('just-opened'), { once:true });
   animateChartOnce = true;
+  edCueIdx = 0; edLoadedKey = '';   // fresh editor player + cue cursor for this song
   renderAudioBar();
   window.renderChart();
   // reflect this chart's shareable link in the address bar (request: "show the link in the URL bar")
@@ -1719,45 +1765,120 @@ window.removeAudio = function(){
 
 function renderAudioBar(){
   const song = currentSong(); if(!song) return;
-  const bar    = document.getElementById('audio-bar');
-  const input  = document.getElementById('audio-url-input');
-  const cur    = document.getElementById('audio-current');
-  const player = document.getElementById('audio-bar-player');
+  const bar  = document.getElementById('audio-bar');
+  const chip = document.getElementById('audio-chip');
   if(song.audio){
     bar.classList.remove('empty');
-    input.style.display = 'none';
-    cur.style.display = 'inline-flex';
     const label = song.audio.type === 'youtube'
-      ? '▶ YouTube linked'
+      ? '▶ YouTube'
       : (localAudioURL ? '♪ '+song.audio.name : '♪ '+song.audio.name+' (re-load file to play)');
-    cur.className = 'audio-chip';
-    cur.innerHTML = `${esc(label)} <span class="x" onclick="removeAudio()" title="Remove track">✕</span>`;
-    // an inline player so you can listen to the track while charting
-    if(song.audio.type === 'youtube'){
-      if(player.dataset.vid !== song.audio.videoId){
-        player.dataset.vid = song.audio.videoId;
-        player.innerHTML = `<iframe width="240" height="135" src="https://www.youtube.com/embed/${esc(song.audio.videoId)}?rel=0" title="track preview" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
-      }
-      player.style.display = 'block';
-    } else if(song.audio.type === 'file' && localAudioURL){
-      if(player.dataset.vid !== 'file'){
-        player.dataset.vid = 'file';
-        player.innerHTML = `<audio controls src="${localAudioURL}" style="height:36px"></audio>`;
-      }
-      player.style.display = 'block';
-    } else { player.innerHTML=''; player.dataset.vid=''; player.style.display='none'; }
+    chip.innerHTML = `${esc(label)} <span class="x" onclick="removeAudio()" title="Remove track">✕</span>`;
+    setupEditorAudio();
+    renderSyncPanel();
   } else {
     bar.classList.add('empty');
-    input.style.display = '';
-    input.value = '';
-    cur.style.display = 'none';
-    player.innerHTML = ''; player.dataset.vid=''; player.style.display='none';
+    document.getElementById('audio-url-input').value = '';
+    teardownEditorAudio();
   }
 }
-// stop the editor's inline player (called when entering performance so audio doesn't double up)
-function stopEditorPlayer(){
-  const player = document.getElementById('audio-bar-player');
-  if(player){ player.innerHTML=''; player.dataset.vid=''; }
+
+// Build the editor's inline player (YouTube IFrame API so we can read currentTime for cue tapping)
+function setupEditorAudio(){
+  const song = currentSong();
+  const holder = document.getElementById('audio-bar-player');
+  const key = song.audio.type === 'youtube' ? 'yt:'+song.audio.videoId : (localAudioURL ? 'file' : 'none');
+  if(key === edLoadedKey) return;     // already loaded — don't rebuild (would interrupt playback)
+  teardownEditorAudio();
+  edLoadedKey = key; edCueIdx = 0;
+  if(song.audio.type === 'youtube'){
+    const mount = document.createElement('div'); holder.appendChild(mount);
+    ensureYouTubeAPI(() => {
+      edYtPlayer = new YT.Player(mount, {
+        width:'240', height:'135', videoId: song.audio.videoId,
+        playerVars:{ controls:1, rel:0, modestbranding:1 },
+        events:{ onReady:()=>{ edYtReady = true; startEdClock(); }, onStateChange:()=>updateEdPlayBtn() }
+      });
+    });
+  } else if(song.audio.type === 'file' && localAudioURL){
+    holder.innerHTML = `<audio id="ed-audio-el" controls src="${localAudioURL}"></audio>`;
+    edAudioEl = document.getElementById('ed-audio-el');
+    edAudioEl.addEventListener('play', updateEdPlayBtn);
+    edAudioEl.addEventListener('pause', updateEdPlayBtn);
+    startEdClock();
+  } else {
+    holder.innerHTML = `<div class="ed-noplay">Re-load the audio file to play it</div>`;
+  }
+}
+function teardownEditorAudio(){
+  cancelAnimationFrame(edTimeRAF);
+  if(edYtPlayer){ try{ edYtPlayer.destroy(); }catch(e){} edYtPlayer = null; edYtReady = false; }
+  edAudioEl = null; edLoadedKey = '';
+  const holder = document.getElementById('audio-bar-player'); if(holder) holder.innerHTML = '';
+}
+// called when entering performance so the editor player doesn't play over the perf player
+function stopEditorPlayer(){ teardownEditorAudio(); }
+
+// ── editor audio controls ──
+function edAvailable(){ const s=currentSong(); return !!(s&&s.audio&&(s.audio.type==='youtube'||(s.audio.type==='file'&&localAudioURL))); }
+function edGetTime(){ if(edYtPlayer&&edYtReady&&edYtPlayer.getCurrentTime) return edYtPlayer.getCurrentTime(); if(edAudioEl) return edAudioEl.currentTime||0; return 0; }
+function edGetDur(){ if(edYtPlayer&&edYtReady&&edYtPlayer.getDuration) return edYtPlayer.getDuration()||0; if(edAudioEl) return edAudioEl.duration||0; return 0; }
+function edPlaying(){ if(edYtPlayer&&edYtReady&&edYtPlayer.getPlayerState) return edYtPlayer.getPlayerState()===1; if(edAudioEl) return !edAudioEl.paused; return false; }
+window.edPlayPause = function(){
+  if(edYtPlayer&&edYtReady){ edPlaying()?edYtPlayer.pauseVideo():edYtPlayer.playVideo(); }
+  else if(edAudioEl){ edPlaying()?edAudioEl.pause():edAudioEl.play(); }
+  setTimeout(updateEdPlayBtn, 120);
+}
+function updateEdPlayBtn(){ const b=document.querySelector('.sync-play'); if(b) b.textContent = edPlaying()?'❚❚':'▶'; }
+function startEdClock(){
+  cancelAnimationFrame(edTimeRAF);
+  const tick = () => {
+    const t = document.querySelector('.sync-time');
+    if(t) t.textContent = fmtTime(edGetTime()) + ' / ' + fmtTime(edGetDur());
+    updateEdPlayBtn();
+    edTimeRAF = requestAnimationFrame(tick);
+  };
+  tick();
+}
+
+// ── cue tapping in the editor: play the track, tap on each section's downbeat ──
+function renderSyncPanel(){
+  const panel = document.getElementById('sync-panel');
+  const song = currentSong(); if(!panel || !song) return;
+  if(!edAvailable()){ panel.innerHTML = ''; return; }
+  const total = song.sections.length;
+  const cued = song.sections.filter(s => s.time != null).length;
+  if(edCueIdx > total) edCueIdx = total;
+  const done = edCueIdx >= total;
+  const nextName = done ? '' : sectionDisplay(song, edCueIdx).toUpperCase();
+  panel.innerHTML = `
+    <div class="sync-title">⏱ Sync to track</div>
+    <div class="sync-row">
+      <button class="sync-play" onclick="edPlayPause()" title="Play / pause">▶</button>
+      <button class="sync-tap" onclick="editTapCue()" ${done?'disabled':''} title="Tap on the section's downbeat">⊙ TAP CUE</button>
+      <span class="sync-time">0:00 / 0:00</span>
+    </div>
+    <div class="sync-status">${ done
+        ? `✓ All ${total} sections cued`
+        : `Next: <b>${esc(nextName)}</b> &nbsp;·&nbsp; ${cued}/${total} cued` }</div>
+    <div class="sync-links"><a onclick="editResetCueCursor()">Start over</a> &nbsp;·&nbsp; <a onclick="clearAllCues()">Clear all cues</a></div>`;
+}
+window.editTapCue = function(){
+  const song = currentSong(); if(!edAvailable()) return;
+  if(edCueIdx >= song.sections.length) return;
+  song.sections[edCueIdx].time = edGetTime();
+  edCueIdx++;
+  window.save();
+  renderSyncPanel();
+  window.renderChart();   // refresh the cue pills on the sections
+  showToast('⏱ Cue set');
+}
+window.editResetCueCursor = function(){ edCueIdx = 0; renderSyncPanel(); }
+window.clearAllCues = function(){
+  const song = currentSong();
+  song.sections.forEach(s => s.time = null);
+  edCueIdx = 0;
+  window.save(); renderSyncPanel(); window.renderChart();
+  showToast('Cues cleared');
 }
 
 // Load the YouTube IFrame API once
@@ -1860,15 +1981,7 @@ function startAudioClock(){
   tick();
 }
 
-// TAP CUE — while a track plays, tap on each section's downbeat to record its start
-window.tapCue = function(){
-  const song = currentSong(); const sec = song.sections[perfIdx]; if(!sec) return;
-  sec.time = getAudioTime();
-  window.save();
-  // advance focus to the next section to be stamped
-  if(perfIdx < song.sections.length-1){ perfIdx++; window.renderPerf(); }
-  showToast('⏱ Cue set @ '+fmtTime(sec.time));
-}
+// (cue tapping now lives in the editor — see editTapCue)
 
 // ─── PERFORMANCE CORE ────────────────────────────────
 window.startPerf = function(){
@@ -1904,8 +2017,6 @@ window.setMode = function(m){
   document.getElementById('mode-auto').classList.toggle('active', m==='auto');
   document.getElementById('mode-manual').classList.toggle('active', m==='manual');
   document.getElementById('mode-sync').classList.toggle('active', m==='sync');
-  const tapBtn = document.getElementById('tap-cue-btn');
-  if(tapBtn) tapBtn.classList.toggle('armed', m==='sync');
   clearAuto(); stopSyncLoop();
   const status = document.getElementById('auto-status');
   const ring = document.getElementById('countdown-ring-wrap');
@@ -2170,17 +2281,12 @@ function reorderSection(from, to){
 
 document.addEventListener('keydown', e => {
   if(!document.getElementById('perf-overlay').classList.contains('active')) return;
-  if(e.key===' ' || e.key==='Enter'){
-    e.preventDefault();
-    // in SYNC mode, space taps the next cue; otherwise it advances
-    if(perfMode==='sync') window.tapCue(); else window.perfNext();
-  }
+  if(e.key===' ' || e.key==='Enter'){ e.preventDefault(); window.perfNext(); }
   if(e.key==='Backspace'){ e.preventDefault(); window.perfBack(); }
   if(e.key==='Escape') window.stopPerf();
   if(e.key==='ArrowRight') window.perfNext();
   if(e.key==='ArrowLeft')  window.perfBack();
   if((e.key==='p'||e.key==='P') && audioAvailable()){ e.preventDefault(); window.toggleAudioPlay(); }
-  if(e.key==='t'||e.key==='T'){ e.preventDefault(); window.tapCue(); }
   if(e.key==='f'||e.key==='F') window.setDisplayMode(displayMode==='focus'?'list':'focus');
 });
 
