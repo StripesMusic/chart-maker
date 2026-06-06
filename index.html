@@ -529,33 +529,45 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 .mod-btn:hover{border-color:var(--accent);color:var(--accent)}
 .mod-btn.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700}
 
-/* ── drum fill layer ── */
-.fill-add-btn{
-  font-size:10px;background:transparent;border:1px dashed var(--border2);color:var(--muted2);
-  padding:3px 9px;border-radius:9px;cursor:pointer;letter-spacing:1px;text-transform:uppercase;
+/* ── drum fills: bar grid + fill list ── */
+.fills-section{ margin-top:9px; }
+.fills-head{ display:flex;align-items:center;gap:10px;margin-bottom:6px; }
+.fills-label{ font-size:11px;font-weight:700;letter-spacing:2px;color:#e87d47;text-transform:uppercase; }
+.fills-hint{ font-size:10px;color:var(--muted2);letter-spacing:1px; }
+.bar-grid{ display:flex;flex-wrap:wrap;gap:4px; }
+.bar-cell{
+  position:relative;min-width:30px;height:30px;flex:0 0 auto;
+  background:var(--bg4);border:1px solid var(--border2);border-radius:5px;
+  color:var(--muted2);font-family:inherit;font-size:12px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .12s;user-select:none;
 }
-.fill-add-btn:hover{border-color:#e87d47;color:#e87d47}
-.fill-layer{
-  display:flex;align-items:center;gap:10px;margin-top:8px;padding:7px 10px;
-  background:linear-gradient(90deg, rgba(232,125,71,.12), rgba(232,125,71,.03));
-  border:1px solid rgba(232,125,71,.35);border-left:3px solid #e87d47;border-radius:5px;
-  animation:fadeSlideUp .25s ease;
+.bar-cell:hover{ border-color:#e87d47;color:#e87d47; }
+.bar-cell .bar-cell-n{ font-variant-numeric:tabular-nums; }
+.bar-cell.has-fill{
+  background:linear-gradient(180deg, rgba(232,125,71,.32), rgba(232,125,71,.14));
+  border-color:#e87d47;color:#ffcaa0;
 }
-.fill-layer .fill-icon{font-size:13px;color:#e87d47}
-.fill-layer .fill-title{font-size:11px;font-weight:700;letter-spacing:2px;color:#e87d47;text-transform:uppercase}
-.fill-len-input{
-  width:46px;background:var(--bg);border:1px solid rgba(232,125,71,.5);color:#f0a878;
-  font-family:inherit;font-size:13px;padding:3px 5px;border-radius:4px;text-align:center;outline:none;
+.bar-cell.has-fill .bar-cell-n{ position:absolute;top:1px;left:3px;font-size:9px;opacity:.8; }
+.bar-cell-mark{ font-size:13px;line-height:1; }
+.fills-list{ display:flex;flex-direction:column;gap:5px;margin-top:8px; }
+.fill-item{
+  display:flex;align-items:center;gap:7px;padding:5px 9px;border-radius:5px;
+  background:rgba(232,125,71,.08);border:1px solid rgba(232,125,71,.28);border-left:3px solid #e87d47;
 }
-.fill-len-input:focus{border-color:#e87d47}
-.fill-layer .fill-unit{font-size:11px;color:var(--muted2);letter-spacing:1px;text-transform:uppercase}
-.fill-notes-input{
-  flex:1;background:transparent;border:none;border-bottom:1px solid rgba(232,125,71,.25);
+.fill-item-bar{ font-size:12px;font-weight:700;letter-spacing:1px;flex-shrink:0; }
+.fill-item-lbl{ font-size:10px;color:var(--muted2);letter-spacing:1px;text-transform:uppercase;flex-shrink:0; }
+.fill-pos-input{
+  width:42px;background:var(--bg);border:1px solid rgba(232,125,71,.5);color:#f0a878;
+  font-family:inherit;font-size:13px;padding:3px 4px;border-radius:4px;text-align:center;outline:none;
+}
+.fill-pos-input:focus{ border-color:#e87d47; }
+.fill-note-input{
+  flex:1;min-width:90px;background:transparent;border:none;border-bottom:1px solid rgba(232,125,71,.25);
   color:#d9a583;font-family:inherit;font-size:12px;padding:3px 0;outline:none;
 }
-.fill-notes-input::placeholder{color:#7a5540}
-.fill-del{background:transparent;border:none;color:#7a5540;cursor:pointer;font-size:14px;padding:2px 5px}
-.fill-del:hover{color:#e87d47}
+.fill-note-input::placeholder{ color:#7a5540; }
+.fill-del{ background:transparent;border:none;color:#7a5540;cursor:pointer;font-size:14px;padding:2px 5px;flex-shrink:0; }
+.fill-del:hover{ color:#e87d47; }
 
 /* ── cue point pill (audio sync) ── */
 .cue-pill{
@@ -603,6 +615,9 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 }
 .audio-chip .x{cursor:pointer;color:var(--muted2)}
 .audio-chip .x:hover{color:var(--red)}
+#audio-bar-player{display:none;flex-shrink:0}
+#audio-bar-player iframe{border-radius:6px;display:block}
+#audio-bar-player audio{vertical-align:middle}
 
 /* ── perf audio + fill highlight ── */
 #perf-audio-wrap{
@@ -728,8 +743,9 @@ html{ -webkit-text-size-adjust:100%; }
   .sec-body{ padding:11px 13px; }
   .sec-row1{ flex-wrap:wrap; gap:8px; }
   .sec-row1-right{ margin-left:0; width:100%; flex-wrap:wrap; justify-content:flex-start; gap:8px; }
-  .fill-layer{ flex-wrap:wrap; }
-  .fill-notes-input{ flex:1 1 100%; }
+  .fill-item{ flex-wrap:wrap; }
+  .fill-note-input{ flex:1 1 100%; min-width:0; }
+  #audio-bar-player iframe{ width:100%; max-width:320px; height:auto; aspect-ratio:16/9; }
 
   #ed-footer{ flex-wrap:wrap; gap:10px; padding:10px 14px; }
   #chart-stats{ flex:1 1 100%; }
@@ -856,6 +872,7 @@ html{ -webkit-text-size-adjust:100%; }
     <button class="btn" onclick="document.getElementById('audio-file-input').click()">⬆ Audio file</button>
     <input type="file" id="audio-file-input" accept="audio/*" style="display:none" onchange="attachAudioFile(event)">
     <span id="audio-current" style="display:none"></span>
+    <div id="audio-bar-player"></div>
   </div>
 
   <div id="ed-main">
@@ -1201,7 +1218,6 @@ function migrateSong(song){
   if(song.audio && song.audio.type === 'file') song.audio = null;
   (song.sections||[]).forEach(s => {
     if(s.mod === undefined)  s.mod = null;   // null | 'pre' | 'post'
-    if(s.fill === undefined) s.fill = null;  // null | { len:<beats>, notes:'' }
     if(s.time === undefined) s.time = null;  // cue point in seconds (audio sync)
     if(s.num === undefined)  s.num = null;   // manual instance number (used when auto-numbering is off)
     if(s.ts === undefined)   s.ts = null;    // per-section time-sig override: numerator (null = inherit song)
@@ -1210,6 +1226,15 @@ function migrateSong(song){
     // the old "Pre-Chorus" type is gone — fold it into a Chorus flagged "pre"
     if(s.typeId === 'pre'){ s.typeId = 'chorus'; if(!s.mod) s.mod = 'pre'; }
     if(s.repeats === undefined) s.repeats = 1;
+    // fills: now an array of positioned fills [{bar, beat, len, notes}]; migrate the old single fill
+    if(s.fills === undefined){
+      if(s.fill){
+        const n = s.ts || song.ts || 4;
+        const len = Math.min(s.fill.len||2, n);
+        s.fills = [{ bar: Math.max(1, s.bars||1), beat: Math.max(1, n - len + 1), len, notes: s.fill.notes||'' }];
+      } else s.fills = [];
+    }
+    delete s.fill;
   });
   return song;
 }
@@ -1319,7 +1344,7 @@ function renderSharedView(){
     const ec = effColor(sec);
     const n = (song.autoNumber !== false ? nums[i] : (sec.num||0));
     const numHtml = n ? `<span class="sv-num" style="color:${ec}">${n}</span>` : '';
-    const fill = sec.fill ? `<span class="sv-fill">🥁 fill · ${sec.fill.len} beats</span>` : '';
+    const fill = (sec.fills && sec.fills.length) ? `<span class="sv-fill">🥁 ${sec.fills.length} fill${sec.fills.length>1?'s':''} · bar ${sec.fills.slice().sort((a,b)=>a.bar-b.bar).map(f=>f.bar).join(', ')}</span>` : '';
     return `
       <div class="sv-row" style="animation-delay:${i*0.04}s">
         <div class="sv-bar" style="background:${ec}"></div>
@@ -1492,7 +1517,7 @@ window.clearChart = function(){ if(confirm('Clear?')){ currentSong().sections = 
 // ─── EDITOR ──────────────────────────────────────────
 window.addSection = function(typeId){
   const song = currentSong(); if(!song) return;
-  song.sections.push({id:idCounter++, typeId, bars:8, notes:'', repeats:1, mod:null, fill:null, time:null, num:null, ts:null, tsd:null, color:null});
+  song.sections.push({id:idCounter++, typeId, bars:8, notes:'', repeats:1, mod:null, fills:[], time:null, num:null, ts:null, tsd:null, color:null});
   window.save(); window.renderChart();
 }
 
@@ -1552,16 +1577,35 @@ window.renderChart = function(){
     const cuePill = hasAudio
       ? `<span class="cue-pill ${sec.time!=null?'set':''}" onclick="clearCue(${i})" title="Cue point — set by tapping in SYNC mode. Click to clear.">${sec.time!=null?'⏱ '+fmtTime(sec.time):'⏱ —'}</span>`
       : '';
-    const fillBlock = sec.fill
-      ? `<div class="fill-layer">
-           <span class="fill-icon">🥁</span><span class="fill-title">Fill</span>
-           <input class="fill-len-input" type="number" min="1" max="32" value="${sec.fill.len}" onchange="updateFillLen(${i},this.value)">
-           <span class="fill-unit">beats</span>
-           <input class="fill-notes-input" type="text" value="${esc(sec.fill.notes)}" placeholder="fill idea — e.g. tom roll into crash" onchange="updateFillNotes(${i},this.value)">
-           <button class="fill-del" onclick="toggleFill(${i})" title="Remove fill">✕</button>
-         </div>`
-      : `<button class="fill-add-btn" onclick="toggleFill(${i})">+ Drum Fill</button>`;
     const ets = effTS(song, sec);
+    // ── fills: a clickable bar grid (place a fill on any bar) + a list to fine-tune beat/length/notes ──
+    const fillBlock = `
+      <div class="fills-section">
+        <div class="fills-head">
+          <span class="fills-label">🥁 Fills</span>
+          <span class="fills-hint">${sec.fills.length ? sec.fills.length+' placed · click a bar to toggle' : 'click a bar to drop a fill'}</span>
+        </div>
+        <div class="bar-grid">
+          ${Array.from({length: sec.bars}, (_,b) => {
+            const bar = b+1;
+            const has = sec.fills.some(f => f.bar === bar);
+            return `<button class="bar-cell ${has?'has-fill':''}" onclick="toggleFillAtBar(${i},${bar})" title="Bar ${bar}${has?' — fill here (click to remove)':' — click to add a fill'}"><span class="bar-cell-n">${bar}</span>${has?'<span class="bar-cell-mark">🥁</span>':''}</button>`;
+          }).join('')}
+        </div>
+        ${sec.fills.length ? `<div class="fills-list">
+          ${sec.fills.slice().sort((a,b)=>a.bar-b.bar||a.beat-b.beat).map(f => { const fi = sec.fills.indexOf(f); return `
+            <div class="fill-item">
+              <span class="fill-item-bar" style="color:#e87d47">Bar ${f.bar}</span>
+              <span class="fill-item-lbl">starts beat</span>
+              <input class="fill-pos-input" type="number" min="1" max="${ets.n}" value="${f.beat}" onchange="updateFillField(${i},${fi},'beat',this.value)" title="Which beat of the bar the fill starts on">
+              <span class="fill-item-lbl">·</span>
+              <input class="fill-pos-input" type="number" min="1" max="64" value="${f.len}" onchange="updateFillField(${i},${fi},'len',this.value)" title="Fill length in beats">
+              <span class="fill-item-lbl">beats long</span>
+              <input class="fill-note-input" type="text" value="${esc(f.notes)}" placeholder="fill idea — tom roll into crash…" onchange="updateFillField(${i},${fi},'notes',this.value)">
+              <button class="fill-del" onclick="removeFill(${i},${fi})" title="Remove this fill">✕</button>
+            </div>`; }).join('')}
+        </div>` : ''}
+      </div>`;
     const tsCtrl = `<span class="ts-mini ${sectionHasTSOverride(sec)?'custom':''}" title="Time signature for this section (blank = follow song)">
         <input class="ts-mini-num" type="number" min="1" max="15" value="${ets.n}" onchange="updateSecTS(${i},'n',this.value)">
         <span class="ts-mini-slash">/</span>
@@ -1628,7 +1672,7 @@ window.renderChart = function(){
   });
 
   const totalBars = song.sections.reduce((a,s)=>a+(s.bars*s.repeats),0);
-  const fillCount = song.sections.filter(s=>s.fill).length;
+  const fillCount = song.sections.reduce((a,s)=>a+(s.fills?s.fills.length:0),0);
   document.getElementById('chart-stats').textContent =
     `${song.sections.length} sections · ${totalBars} bars` + (fillCount?` · ${fillCount} fill${fillCount>1?'s':''}`:'');
 }
@@ -1675,9 +1719,10 @@ window.removeAudio = function(){
 
 function renderAudioBar(){
   const song = currentSong(); if(!song) return;
-  const bar   = document.getElementById('audio-bar');
-  const input = document.getElementById('audio-url-input');
-  const cur   = document.getElementById('audio-current');
+  const bar    = document.getElementById('audio-bar');
+  const input  = document.getElementById('audio-url-input');
+  const cur    = document.getElementById('audio-current');
+  const player = document.getElementById('audio-bar-player');
   if(song.audio){
     bar.classList.remove('empty');
     input.style.display = 'none';
@@ -1687,12 +1732,32 @@ function renderAudioBar(){
       : (localAudioURL ? '♪ '+song.audio.name : '♪ '+song.audio.name+' (re-load file to play)');
     cur.className = 'audio-chip';
     cur.innerHTML = `${esc(label)} <span class="x" onclick="removeAudio()" title="Remove track">✕</span>`;
+    // an inline player so you can listen to the track while charting
+    if(song.audio.type === 'youtube'){
+      if(player.dataset.vid !== song.audio.videoId){
+        player.dataset.vid = song.audio.videoId;
+        player.innerHTML = `<iframe width="240" height="135" src="https://www.youtube.com/embed/${esc(song.audio.videoId)}?rel=0" title="track preview" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>`;
+      }
+      player.style.display = 'block';
+    } else if(song.audio.type === 'file' && localAudioURL){
+      if(player.dataset.vid !== 'file'){
+        player.dataset.vid = 'file';
+        player.innerHTML = `<audio controls src="${localAudioURL}" style="height:36px"></audio>`;
+      }
+      player.style.display = 'block';
+    } else { player.innerHTML=''; player.dataset.vid=''; player.style.display='none'; }
   } else {
     bar.classList.add('empty');
     input.style.display = '';
     input.value = '';
     cur.style.display = 'none';
+    player.innerHTML = ''; player.dataset.vid=''; player.style.display='none';
   }
+}
+// stop the editor's inline player (called when entering performance so audio doesn't double up)
+function stopEditorPlayer(){
+  const player = document.getElementById('audio-bar-player');
+  if(player){ player.innerHTML=''; player.dataset.vid=''; }
 }
 
 // Load the YouTube IFrame API once
@@ -1815,6 +1880,7 @@ window.startPerf = function(){
   document.getElementById('perf-song').textContent = song.name || 'UNTITLED';
   document.getElementById('perf-bpm-disp').textContent = song.bpm+' BPM';
   document.getElementById('perf-ts-disp').textContent = tsLabel(song, null);
+  stopEditorPlayer();   // silence the editor's inline player so it doesn't double up
   setupPerfAudio(song);
   // If a track is attached, default to SYNC; otherwise AUTO
   window.setMode(audioAvailable() ? 'sync' : 'auto');
@@ -1829,6 +1895,7 @@ window.stopPerf = function(){
   if(ytPlayer){ try{ ytPlayer.destroy(); }catch(e){} ytPlayer = null; ytReady = false; }
   if(htmlAudio){ htmlAudio.pause(); htmlAudio = null; }
   document.getElementById('perf-overlay').classList.remove('active');
+  if(!sharedSong) renderAudioBar();   // restore the editor's inline player when returning to the editor
 }
 
 window.setMode = function(m){
@@ -1924,16 +1991,38 @@ function updateBarTicker(){
   document.getElementById('bar-ticker-label').textContent = 'of '+totalBarTicks;
   // re-trigger the flash animation each bar
   num.classList.remove('flash'); void num.offsetWidth; num.classList.add('flash');
-  // flash the fill badge on the final bar of a section that has a fill
+  // light up the fill badge the moment we hit a bar that has a fill (per repeat)
   const sec = currentSong().sections[perfIdx];
   const fb = document.getElementById('perf-fill-badge');
-  if(sec && sec.fill && currentBarTick >= totalBarTicks) fb.classList.add('imminent');
-  else if(fb) fb.classList.remove('imminent');
+  if(!sec || !fb) return;
+  const barInRepeat = ((currentBarTick - 1) % sec.bars) + 1;
+  const here = (sec.fills || []).filter(f => f.bar === barInRepeat);
+  if(here.length){
+    fb.className = 'show imminent';
+    fb.textContent = `🥁 FILL NOW · bar ${barInRepeat}${here[0].notes ? ' · '+here[0].notes : ''}`;
+  } else {
+    renderFillBadge(sec);   // back to the section summary
+  }
 }
 
 function updateRing(prog){
   const circ = 81.7;
   document.getElementById('ring-arc').setAttribute('stroke-dashoffset', circ - (circ * prog));
+}
+
+// concise summary of a section's fills for the performance badge
+function fillSummaryText(sec){
+  const fs = sec.fills || [];
+  if(!fs.length) return '';
+  if(fs.length === 1){ const f = fs[0]; return `🥁 FILL · bar ${f.bar}${f.notes ? ' · '+f.notes : ''}`; }
+  const bars = fs.slice().sort((a,b)=>a.bar-b.bar).map(f=>f.bar).join(', ');
+  return `🥁 ${fs.length} FILLS · bars ${bars}`;
+}
+function renderFillBadge(sec){
+  const fb = document.getElementById('perf-fill-badge');
+  const txt = fillSummaryText(sec);
+  if(txt){ fb.className = 'show'; fb.textContent = txt; }
+  else { fb.className = ''; fb.textContent = ''; }
 }
 
 window.renderPerf = function(){
@@ -1951,10 +2040,8 @@ window.renderPerf = function(){
   document.getElementById('perf-prev-val').textContent = perfIdx>0 ? sectionDisplay(song, perfIdx-1).toUpperCase() : '—';
   document.getElementById('perf-next-val').textContent = perfIdx<song.sections.length-1 ? sectionDisplay(song, perfIdx+1).toUpperCase() : 'END';
 
-  // fill badge
-  const fb = document.getElementById('perf-fill-badge');
-  if(sec.fill){ fb.className='show'; fb.textContent = `🥁 FILL · ${sec.fill.len} beats${sec.fill.notes? ' · '+sec.fill.notes : ''}`; }
-  else { fb.className=''; fb.textContent=''; }
+  // fill badge — a summary of this section's fills
+  renderFillBadge(sec);
 
   document.getElementById('perf-pos-num').textContent = (perfIdx+1)+'/'+song.sections.length;
   // progress bar (sync mode drives it from the audio clock instead)
@@ -1971,7 +2058,7 @@ function renderPerfList(){
   wrap.innerHTML = song.sections.map((sec,i) => {
     const t = TM[sec.typeId]; const ec = effColor(sec);
     const cls = i===perfIdx ? 'pl-current' : (i<perfIdx ? 'pl-done' : '');
-    const fillTag = sec.fill ? `<span class="pl-fill-tag">🥁 ${sec.fill.len}</span>` : '';
+    const fillTag = (sec.fills && sec.fills.length) ? `<span class="pl-fill-tag">🥁 ${sec.fills.length}</span>` : '';
     const cue = sec.time!=null ? `<span class="pl-bar-live">⏱ ${fmtTime(sec.time)}</span>` : `<span class="pl-bar-live">${sec.bars}×${sec.repeats}</span>`;
     return `
       <div class="pl-row ${cls}" data-i="${i}" onclick="perfJump(${i})">
@@ -2016,7 +2103,12 @@ window.setDisplayMode = (m) => {
 };
 
 // ─── HELPERS ───
-window.updateBars = (i,v) => { currentSong().sections[i].bars = Math.max(1,parseInt(v)||1); window.save(); window.renderChart(); }
+window.updateBars = (i,v) => {
+  const sec = currentSong().sections[i];
+  sec.bars = Math.max(1,parseInt(v)||1);
+  sec.fills = sec.fills.filter(f => f.bar <= sec.bars);   // drop fills that fall past the new bar count
+  window.save(); window.renderChart();
+}
 window.updateNotes = (i,v) => { currentSong().sections[i].notes = v; window.save(); }
 window.removeSection = (i) => { currentSong().sections.splice(i,1); window.save(); window.renderChart(); }
 window.cycleRepeats = (i) => { currentSong().sections[i].repeats = (currentSong().sections[i].repeats % 8) + 1; window.save(); window.renderChart(); }
@@ -2027,14 +2119,29 @@ window.setMod = (i, m) => {
   sec.mod = (sec.mod === m) ? null : m;
   window.save(); window.renderChart();
 }
-// drum fill layer
-window.toggleFill = (i) => {
+// ── drum fills: positioned at a bar, starting on a beat, lasting N beats ──
+// click a bar in the grid to add/remove a fill there
+window.toggleFillAtBar = (i, bar) => {
   const sec = currentSong().sections[i];
-  sec.fill = sec.fill ? null : { len: 4, notes: '' };
+  const idx = sec.fills.findIndex(f => f.bar === bar);
+  if(idx >= 0){ sec.fills.splice(idx, 1); }
+  else {
+    const { n } = effTS(currentSong(), sec);
+    // sensible default: a 2-beat fill landing on the last two beats of the bar
+    const len = Math.min(2, n);
+    sec.fills.push({ bar, beat: Math.max(1, n - len + 1), len, notes: '' });
+  }
   window.save(); window.renderChart();
 }
-window.updateFillLen   = (i,v) => { const f=currentSong().sections[i].fill; if(f){ f.len = Math.min(32,Math.max(1,parseInt(v)||1)); window.save(); window.renderChart(); } }
-window.updateFillNotes = (i,v) => { const f=currentSong().sections[i].fill; if(f){ f.notes = v; window.save(); } }
+window.removeFill = (i, fi) => { currentSong().sections[i].fills.splice(fi, 1); window.save(); window.renderChart(); }
+window.updateFillField = (i, fi, field, v) => {
+  const sec = currentSong().sections[i]; const f = sec.fills[fi]; if(!f) return;
+  if(field === 'notes'){ f.notes = v; window.save(); return; }
+  const num = parseInt(v) || 1;
+  if(field === 'beat'){ const { n } = effTS(currentSong(), sec); f.beat = Math.min(n, Math.max(1, num)); }
+  else if(field === 'len'){ f.len = Math.min(64, Math.max(1, num)); }
+  window.save(); window.renderChart();
+}
 // cue points
 window.clearCue = (i) => { currentSong().sections[i].time = null; window.save(); window.renderChart(); }
 
