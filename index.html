@@ -529,26 +529,32 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 .mod-btn:hover{border-color:var(--accent);color:var(--accent)}
 .mod-btn.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700}
 
-/* ── drum fills: bar grid + fill list ── */
+/* ── drum fills: 16th-note timeline + fill list ── */
 .fills-section{ margin-top:9px; }
 .fills-head{ display:flex;align-items:center;gap:10px;margin-bottom:6px; }
 .fills-label{ font-size:11px;font-weight:700;letter-spacing:2px;color:#e87d47;text-transform:uppercase; }
 .fills-hint{ font-size:10px;color:var(--muted2);letter-spacing:1px; }
-.bar-grid{ display:flex;flex-wrap:wrap;gap:4px; }
-.bar-cell{
-  position:relative;min-width:30px;height:30px;flex:0 0 auto;
-  background:var(--bg4);border:1px solid var(--border2);border-radius:5px;
-  color:var(--muted2);font-family:inherit;font-size:12px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;transition:all .12s;user-select:none;
+.fill-timeline-wrap{ overflow-x:auto; padding-bottom:4px; }
+.fill-timeline-wrap::-webkit-scrollbar{ height:5px; }
+.fill-timeline-wrap::-webkit-scrollbar-thumb{ background:var(--border2); }
+.fill-timeline{
+  position:relative; height:42px; touch-action:none; user-select:none;
+  background:var(--bg4); border:1px solid var(--border2); border-radius:6px; cursor:crosshair;
 }
-.bar-cell:hover{ border-color:#e87d47;color:#e87d47; }
-.bar-cell .bar-cell-n{ font-variant-numeric:tabular-nums; }
-.bar-cell.has-fill{
-  background:linear-gradient(180deg, rgba(232,125,71,.32), rgba(232,125,71,.14));
-  border-color:#e87d47;color:#ffcaa0;
+.ftl-measure{ position:absolute; top:0; bottom:0; border-left:1px solid var(--border2); }
+.ftl-measure:first-child{ border-left:none; }
+.ftl-measure-n{ position:absolute; top:2px; left:4px; font-size:9px; color:var(--muted2); font-variant-numeric:tabular-nums; }
+.ftl-beat{ position:absolute; top:55%; bottom:0; width:1px; background:rgba(255,255,255,.06); }
+.ftl-fill{
+  position:absolute; top:15px; height:24px; border-radius:4px; cursor:grab;
+  background:linear-gradient(180deg, rgba(232,125,71,.85), rgba(232,125,71,.6));
+  border:1px solid #ffb98a; box-shadow:0 1px 4px rgba(0,0,0,.3); overflow:hidden; min-width:7px;
+  display:flex; align-items:center;
 }
-.bar-cell.has-fill .bar-cell-n{ position:absolute;top:1px;left:3px;font-size:9px;opacity:.8; }
-.bar-cell-mark{ font-size:13px;line-height:1; }
+.ftl-fill:active{ cursor:grabbing; }
+.ftl-ghost{ opacity:.6; pointer-events:none; }
+.ftl-fill-label{ font-size:10px; color:#1a1a1a; font-weight:700; padding:0 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; pointer-events:none; }
+.ftl-fill-resize{ position:absolute; right:0; top:0; bottom:0; width:9px; cursor:ew-resize; background:rgba(0,0,0,.18); border-radius:0 4px 4px 0; }
 .fills-list{ display:flex;flex-direction:column;gap:5px;margin-top:8px; }
 .fill-item{
   display:flex;align-items:center;gap:7px;padding:5px 9px;border-radius:5px;
@@ -556,11 +562,6 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 }
 .fill-item-bar{ font-size:12px;font-weight:700;letter-spacing:1px;flex-shrink:0; }
 .fill-item-lbl{ font-size:10px;color:var(--muted2);letter-spacing:1px;text-transform:uppercase;flex-shrink:0; }
-.fill-pos-input{
-  width:42px;background:var(--bg);border:1px solid rgba(232,125,71,.5);color:#f0a878;
-  font-family:inherit;font-size:13px;padding:3px 4px;border-radius:4px;text-align:center;outline:none;
-}
-.fill-pos-input:focus{ border-color:#e87d47; }
 .fill-note-input{
   flex:1;min-width:90px;background:transparent;border:none;border-bottom:1px solid rgba(232,125,71,.25);
   color:#d9a583;font-family:inherit;font-size:12px;padding:3px 0;outline:none;
@@ -676,11 +677,32 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 
 /* fill badge in perf focus view */
 #perf-fill-badge{
-  margin-top:18px;font-size:14px;letter-spacing:3px;text-transform:uppercase;color:#e87d47;
-  border:1px solid rgba(232,125,71,.4);border-radius:6px;padding:8px 18px;display:none;
+  margin-top:18px;display:none;flex-wrap:wrap;gap:8px;justify-content:center;max-width:760px;
 }
-#perf-fill-badge.show{display:inline-block;animation:fadeSlideUp .3s ease}
-#perf-fill-badge.imminent{animation:fillFlash .5s infinite;color:#000;border-color:#e87d47}
+#perf-fill-badge.show{display:flex;animation:fadeSlideUp .3s ease}
+.pfb-item{
+  font-size:15px;color:#f0a878;letter-spacing:1px;
+  border:1px solid rgba(232,125,71,.45);border-radius:6px;padding:6px 14px;
+}
+.pfb-item b{color:#ffcaa0}
+.pfb-now{
+  font-size:20px;letter-spacing:3px;text-transform:uppercase;color:#000;font-weight:700;
+  background:#e87d47;border-radius:6px;padding:8px 22px;animation:fillFlash .5s infinite;
+}
+
+/* ── count-in before a section / fill ── */
+#perf-countin{
+  position:absolute;top:0;left:0;right:0;bottom:0;z-index:5;
+  display:none;flex-direction:column;align-items:center;justify-content:center;
+  pointer-events:none;background:radial-gradient(circle at center, rgba(0,0,0,.30), rgba(0,0,0,.62));
+}
+#perf-countin.show{display:flex}
+#perf-countin.fill #ci-num{color:#e87d47}
+#ci-label{font-size:22px;letter-spacing:6px;text-transform:uppercase;color:#ddd;margin-bottom:4px}
+#perf-countin.fill #ci-label{color:#f0a878}
+#ci-num{font-size:190px;font-weight:700;line-height:1;color:#fff;font-variant-numeric:tabular-nums;text-shadow:0 4px 30px rgba(0,0,0,.6)}
+@keyframes ciPop{ from{transform:scale(.6);opacity:.2} to{transform:scale(1);opacity:1} }
+#ci-num.beat{animation:ciPop .18s ease-out}
 
 /* fill marker in list view */
 .pl-fill-tag{
@@ -992,6 +1014,10 @@ html{ -webkit-text-size-adjust:100%; }
   </div>
 
   <div id="perf-body">
+    <div id="perf-countin">
+      <div id="ci-label">GET READY</div>
+      <div id="ci-num">4</div>
+    </div>
     <div id="perf-prev-wrap">
       <div id="perf-prev-label">PREVIOUS</div>
       <div id="perf-prev-val">—</div>
@@ -1072,6 +1098,7 @@ let perfIdx = 0;
 let perfMode = 'auto'; 
 let autoRAF = null;   // single requestAnimationFrame loop driving AUTO mode
 let autoGen = 0;       // generation token so stale loops cancel themselves
+let lastCountNum = 0;  // last count-in beat shown (so we only re-flash on change)
 let currentBarTick = 0;
 let totalBarTicks  = 0;
 let displayMode = 'focus';
@@ -1271,14 +1298,26 @@ function migrateSong(song){
     // the old "Pre-Chorus" type is gone — fold it into a Chorus flagged "pre"
     if(s.typeId === 'pre'){ s.typeId = 'chorus'; if(!s.mod) s.mod = 'pre'; }
     if(s.repeats === undefined) s.repeats = 1;
-    // fills: now an array of positioned fills [{bar, beat, len, notes}]; migrate the old single fill
+    // fills: array of {start16, len16, notes} — position & length in 16th-notes from the section start
+    const d0 = s.tsd || song.tsd || 4, n0 = s.ts || song.ts || 4;
+    const spb0 = n0 * 16 / d0;   // 16ths per bar
+    const s16b = 16 / d0;        // 16ths per beat
     if(s.fills === undefined){
       if(s.fill){
-        const n = s.ts || song.ts || 4;
-        const len = Math.min(s.fill.len||2, n);
-        s.fills = [{ bar: Math.max(1, s.bars||1), beat: Math.max(1, n - len + 1), len, notes: s.fill.notes||'' }];
+        const len = Math.min(s.fill.len||2, n0);
+        const bar = Math.max(1, s.bars||1), beat = Math.max(1, n0 - len + 1);
+        s.fills = [{ start16: (bar-1)*spb0 + (beat-1)*s16b, len16: Math.max(1, Math.round(len*s16b)), notes: s.fill.notes||'' }];
       } else s.fills = [];
     }
+    // convert any older beat-based fills {bar,beat,len} to 16th-based
+    s.fills.forEach(f => {
+      if(f.start16 === undefined){
+        const bar = f.bar||1, beat = f.beat||1, len = f.len||2;
+        f.start16 = (bar-1)*spb0 + (beat-1)*s16b;
+        f.len16 = Math.max(1, Math.round(len*s16b));
+      }
+      delete f.bar; delete f.beat; delete f.len;
+    });
     delete s.fill;
   });
   return song;
@@ -1533,6 +1572,23 @@ function tsLabel(song, sec){ const {n,d} = effTS(song, sec); return n + '/' + d;
 // ms per bar: a bar holds n notes of value 1/d; a 1/d note = (4/d) quarter notes; quarter = 60000/bpm
 function barMsFor(song, sec){ const {n,d} = effTS(song, sec); return n * (4/d) * (60000 / song.bpm); }
 function sectionHasTSOverride(sec){ return sec.ts != null || sec.tsd != null; }
+// ── 16th-note geometry for fills ──
+function sixteenthsPerBar(ets){ return ets.n * 16 / ets.d; }   // n beats × (16/d) 16ths per beat
+function sixteenthsPerBeat(ets){ return 16 / ets.d; }
+function msPer16(song){ return (60000 / song.bpm) / 4; }       // a 16th note is always a quarter ÷ 4
+// where (bar, beat) a fill's start16 lands, for labels
+function fillBarBeat(ets, start16){
+  const spb = sixteenthsPerBar(ets), s16b = sixteenthsPerBeat(ets);
+  const bar = Math.floor(start16 / spb) + 1;
+  const beat = Math.floor((start16 % spb) / s16b) + 1;
+  const sub = Math.round((start16 % s16b) / (s16b/4));   // 0..3 sixteenth within the beat (for "e & a")
+  return { bar, beat, sub };
+}
+function fmtFillLen(ets, len16){
+  const s16b = sixteenthsPerBeat(ets);
+  const beats = len16 / s16b;
+  return Number.isInteger(beats) ? `${beats} beat${beats!==1?'s':''}` : `${beats.toFixed(2).replace(/0+$/,'').replace(/\.$/,'')} beats`;
+}
 
 window.openAndPerform = function(id){ window.openSong(id); setTimeout(window.startPerf, 80); }
 window.goLibrary = function(){
@@ -1624,29 +1680,36 @@ window.renderChart = function(){
       ? `<span class="cue-pill ${sec.time!=null?'set':''}" onclick="clearCue(${i})" title="Cue point — set by tapping in SYNC mode. Click to clear.">${sec.time!=null?'⏱ '+fmtTime(sec.time):'⏱ —'}</span>`
       : '';
     const ets = effTS(song, sec);
-    // ── fills: a clickable bar grid (place a fill on any bar) + a list to fine-tune beat/length/notes ──
+    // ── fills: a 16th-note timeline you drag across to draw fills (they stretch across bars) ──
+    const spb = sixteenthsPerBar(ets), s16b = sixteenthsPerBeat(ets);
+    const PX = 7;                       // px per 16th note
+    const totalW = sec.bars * spb * PX;
+    const measures = Array.from({length: sec.bars}, (_,b) => {
+      const beats = Array.from({length: ets.n-1}, (_,k) => `<div class="ftl-beat" style="left:${(k+1)*s16b*PX}px"></div>`).join('');
+      return `<div class="ftl-measure" style="left:${b*spb*PX}px;width:${spb*PX}px"><span class="ftl-measure-n">${b+1}</span>${beats}</div>`;
+    }).join('');
+    const fillBars = sec.fills.map((f,fi) => {
+      const bb = fillBarBeat(ets, f.start16);
+      return `<div class="ftl-fill" data-fi="${fi}" style="left:${f.start16*PX}px;width:${Math.max(PX,f.len16*PX)}px" title="bar ${bb.bar}, beat ${bb.beat} · ${fmtFillLen(ets,f.len16)}">
+                <span class="ftl-fill-label">${f.notes ? esc(f.notes) : '🥁'}</span><span class="ftl-fill-resize"></span>
+              </div>`;
+    }).join('');
     const fillBlock = `
       <div class="fills-section">
         <div class="fills-head">
           <span class="fills-label">🥁 Fills</span>
-          <span class="fills-hint">${sec.fills.length ? sec.fills.length+' placed · click a bar to toggle' : 'click a bar to drop a fill'}</span>
+          <span class="fills-hint">${sec.fills.length ? sec.fills.length+' placed · drag a fill to move, drag its right edge to resize' : 'drag across the bars to draw a fill — snaps to 16th notes'}</span>
         </div>
-        <div class="bar-grid">
-          ${Array.from({length: sec.bars}, (_,b) => {
-            const bar = b+1;
-            const has = sec.fills.some(f => f.bar === bar);
-            return `<button class="bar-cell ${has?'has-fill':''}" onclick="toggleFillAtBar(${i},${bar})" title="Bar ${bar}${has?' — fill here (click to remove)':' — click to add a fill'}"><span class="bar-cell-n">${bar}</span>${has?'<span class="bar-cell-mark">🥁</span>':''}</button>`;
-          }).join('')}
+        <div class="fill-timeline-wrap">
+          <div class="fill-timeline" data-i="${i}" data-px="${PX}" data-spb="${spb}" data-total="${sec.bars*spb}" style="width:${totalW}px">
+            ${measures}${fillBars}
+          </div>
         </div>
         ${sec.fills.length ? `<div class="fills-list">
-          ${sec.fills.slice().sort((a,b)=>a.bar-b.bar||a.beat-b.beat).map(f => { const fi = sec.fills.indexOf(f); return `
+          ${sec.fills.map((f,fi) => { const bb = fillBarBeat(ets, f.start16); return `
             <div class="fill-item">
-              <span class="fill-item-bar" style="color:#e87d47">Bar ${f.bar}</span>
-              <span class="fill-item-lbl">starts beat</span>
-              <input class="fill-pos-input" type="number" min="1" max="${ets.n}" value="${f.beat}" onchange="updateFillField(${i},${fi},'beat',this.value)" title="Which beat of the bar the fill starts on">
-              <span class="fill-item-lbl">·</span>
-              <input class="fill-pos-input" type="number" min="1" max="64" value="${f.len}" onchange="updateFillField(${i},${fi},'len',this.value)" title="Fill length in beats">
-              <span class="fill-item-lbl">beats long</span>
+              <span class="fill-item-bar" style="color:#e87d47">Bar ${bb.bar} · beat ${bb.beat}</span>
+              <span class="fill-item-lbl">${fmtFillLen(ets,f.len16)}</span>
               <input class="fill-note-input" type="text" value="${esc(f.notes)}" placeholder="fill idea — tom roll into crash…" onchange="updateFillField(${i},${fi},'notes',this.value)">
               <button class="fill-del" onclick="removeFill(${i},${fi})" title="Remove this fill">✕</button>
             </div>`; }).join('')}
@@ -1699,6 +1762,9 @@ window.renderChart = function(){
       inp.addEventListener('mouseup',   () => el.draggable = true);
       inp.addEventListener('blur',      () => el.draggable = true);
     });
+    // wire up the fill timeline (drag to draw / move / resize fills)
+    const tl = el.querySelector('.fill-timeline');
+    if(tl) attachFillTimeline(tl, el);
     el.addEventListener('dragstart', e => { dragSrc = i; el.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
     el.addEventListener('dragend',   () => { el.classList.remove('dragging'); document.querySelectorAll('.section-block').forEach(b=>b.classList.remove('drag-over-top','drag-over-bot')); });
     el.addEventListener('dragover',  e => {
@@ -2025,25 +2091,53 @@ window.setMode = function(m){
   else { status.textContent='MANUAL'; ring.classList.remove('visible'); }
 }
 
-function stopSyncLoop(){ if(syncRAF){ cancelAnimationFrame(syncRAF); syncRAF = null; } }
+function stopSyncLoop(){ if(syncRAF){ cancelAnimationFrame(syncRAF); syncRAF = null; } syncFillFlash = false; hideCountIn(); }
 
-// Follow the audio clock: highlight whichever cued section we're inside of
+// absolute-time events (section starts + fills) for SYNC count-in / fill flashing
+function buildSyncEvents(song){
+  const evs = [];
+  song.sections.forEach((s,i) => {
+    if(s.time == null) return;
+    evs.push({ time:s.time, type:'section', label:sectionDisplay(song,i).toUpperCase(), si:i });
+    const barS = barMsFor(song,s)/1000, m16 = msPer16(song)/1000;
+    for(let r=0;r<s.repeats;r++) (s.fills||[]).forEach(f => evs.push({ time:s.time + r*s.bars*barS + f.start16*m16, type:'fill', label:f.notes||'FILL', si:i }));
+  });
+  return evs.sort((a,b)=>a.time-b.time);
+}
+let syncFillFlash = false;
+// Follow the audio clock: highlight whichever cued section we're inside of, count in, flash fills
 function startSyncLoop(){
   stopSyncLoop();
   const song = currentSong();
+  const events = buildSyncEvents(song);
   const follow = () => {
     if(perfMode !== 'sync'){ syncRAF = null; return; }
     const t = getAudioTime();
-    // sections that have a cue, in order
     const cued = song.sections.map((s,i)=>({i,time:s.time})).filter(o=>o.time!=null);
     if(cued.length){
       let target = cued[0].i;
       for(const o of cued){ if(t >= o.time - 0.15) target = o.i; else break; }
       if(target !== perfIdx){ perfIdx = target; window.renderPerf(); }
-      // progress bar follows audio position within the song
       const dur = getAudioDuration();
       if(dur) document.getElementById('perf-progress-fill').style.width = Math.min(100,(t/dur)*100)+'%';
     }
+    // flash FILL NOW for ~0.4s when a fill hits
+    const nowFill = events.find(e => e.type==='fill' && t >= e.time && t < e.time + 0.4);
+    if(nowFill && !syncFillFlash){
+      syncFillFlash = true;
+      const fb = document.getElementById('perf-fill-badge');
+      fb.className = 'show imminent';
+      fb.innerHTML = `<span class="pfb-now">🥁 FILL NOW${nowFill.label && nowFill.label!=='FILL' ? ' — '+esc(nowFill.label) : ''}</span>`;
+    } else if(!nowFill && syncFillFlash){
+      syncFillFlash = false;
+      renderFillBadge(song.sections[perfIdx]);
+    }
+    // count-in to the next event
+    const next = events.find(e => e.time - t > 0.001);
+    if(next){
+      const evSec = song.sections[next.si]; const ets = effTS(song, evSec);
+      updateCountIn((next.time - t)*1000, barMsFor(song,evSec)/ets.n, ets.n, next);
+    } else hideCountIn();
     syncRAF = requestAnimationFrame(follow);
   };
   follow();
@@ -2052,17 +2146,58 @@ function startSyncLoop(){
 function clearAuto(){
   autoGen++;                                  // invalidate any running loop
   if(autoRAF){ cancelAnimationFrame(autoRAF); autoRAF = null; }
+  hideCountIn();
 }
 
 // AUTO advance — one rAF loop anchored to performance.now().
 // Bar number and progress are recomputed from real elapsed time every frame,
 // so the ticker can never drift or lag; section boundaries are carried forward
 // exactly (startAnchor) so timing stays tight across the whole song.
+// build the timeline of "events" inside a section (fills + the next-section change),
+// in ms relative to the section start, for the count-in
+function sectionEvents(song, sec, secIdx){
+  const barMs = barMsFor(song, sec);
+  const m16 = msPer16(song);
+  const totalMs = sec.bars * sec.repeats * barMs;
+  const evs = [];
+  for(let r = 0; r < sec.repeats; r++){
+    (sec.fills || []).forEach(f => evs.push({ ms: r*sec.bars*barMs + f.start16*m16, type:'fill', label: f.notes || 'FILL' }));
+  }
+  const nextName = secIdx < song.sections.length-1 ? sectionDisplay(song, secIdx+1).toUpperCase() : 'END';
+  evs.push({ ms: totalMs, type:'section', label: nextName });
+  return evs.sort((a,b)=>a.ms-b.ms);
+}
+// show a 1-2-3-4 count-in when an event is within `beatMs` * (beats of the bar) away
+function updateCountIn(msToEvent, beatMs, totalBeats, ev){
+  const ci = document.getElementById('perf-countin');
+  if(msToEvent == null || msToEvent <= 0 || msToEvent > totalBeats * beatMs){
+    if(ci.classList.contains('show')){ ci.classList.remove('show','fill'); lastCountNum = 0; }
+    return;
+  }
+  const beatsLeft = Math.ceil(msToEvent / beatMs);          // n..1
+  const n = totalBeats - beatsLeft + 1;                     // counts up 1..n
+  ci.classList.add('show');
+  ci.classList.toggle('fill', ev.type === 'fill');
+  if(n !== lastCountNum){
+    lastCountNum = n;
+    const numEl = document.getElementById('ci-num');
+    numEl.textContent = n;
+    numEl.classList.remove('beat'); void numEl.offsetWidth; numEl.classList.add('beat');
+    document.getElementById('ci-label').textContent = ev.type==='fill'
+      ? '🥁 FILL' + (ev.label && ev.label!=='FILL' ? ' · '+ev.label : '')
+      : '→ ' + ev.label;
+  }
+}
+function hideCountIn(){ const ci=document.getElementById('perf-countin'); if(ci){ ci.classList.remove('show','fill'); } lastCountNum=0; }
+
 function scheduleAuto(startAnchor){
   const song = currentSong(); const sec = song.sections[perfIdx]; if(!sec) return;
+  const ets = effTS(song, sec);
   const barMs = barMsFor(song, sec);              // ms per bar, honouring this section's time sig
+  const beatMs = barMs / ets.n;                   // one beat of this section
   totalBarTicks = sec.bars * sec.repeats;
   const totalMs = totalBarTicks * barMs;
+  const events = sectionEvents(song, sec, perfIdx);
 
   document.getElementById('countdown-ring-wrap').classList.add('visible');
   currentBarTick = 1;
@@ -2077,7 +2212,7 @@ function scheduleAuto(startAnchor){
     const elapsed = now - start;
 
     if(elapsed >= totalMs){                        // section finished
-      currentBarTick = totalBarTicks; updateBarTicker(); updateRing(1);
+      currentBarTick = totalBarTicks; updateBarTicker(); updateRing(1); hideCountIn();
       if(perfIdx < song.sections.length - 1){
         perfIdx++;
         window.renderPerf();
@@ -2091,6 +2226,9 @@ function scheduleAuto(startAnchor){
     updateRing(elapsed / totalMs);
     const bar = Math.min(totalBarTicks, Math.floor(elapsed / barMs) + 1);
     if(bar !== currentBarTick){ currentBarTick = bar; updateBarTicker(); }
+    // count-in to the next event
+    const next = events.find(e => e.ms - elapsed > 0.0001);
+    updateCountIn(next ? next.ms - elapsed : null, beatMs, ets.n, next || {});
     autoRAF = requestAnimationFrame(frame);
   }
   autoRAF = requestAnimationFrame(frame);
@@ -2106,11 +2244,13 @@ function updateBarTicker(){
   const sec = currentSong().sections[perfIdx];
   const fb = document.getElementById('perf-fill-badge');
   if(!sec || !fb) return;
+  const ets = effTS(currentSong(), sec);
+  const spb = sixteenthsPerBar(ets);
   const barInRepeat = ((currentBarTick - 1) % sec.bars) + 1;
-  const here = (sec.fills || []).filter(f => f.bar === barInRepeat);
+  const here = (sec.fills || []).filter(f => Math.floor(f.start16 / spb) + 1 === barInRepeat);
   if(here.length){
     fb.className = 'show imminent';
-    fb.textContent = `🥁 FILL NOW · bar ${barInRepeat}${here[0].notes ? ' · '+here[0].notes : ''}`;
+    fb.innerHTML = `<span class="pfb-now">🥁 FILL NOW${here[0].notes ? ' — '+esc(here[0].notes) : ''}</span>`;
   } else {
     renderFillBadge(sec);   // back to the section summary
   }
@@ -2122,18 +2262,18 @@ function updateRing(prog){
 }
 
 // concise summary of a section's fills for the performance badge
-function fillSummaryText(sec){
-  const fs = sec.fills || [];
-  if(!fs.length) return '';
-  if(fs.length === 1){ const f = fs[0]; return `🥁 FILL · bar ${f.bar}${f.notes ? ' · '+f.notes : ''}`; }
-  const bars = fs.slice().sort((a,b)=>a.bar-b.bar).map(f=>f.bar).join(', ');
-  return `🥁 ${fs.length} FILLS · bars ${bars}`;
+// each fill as "bar.beat — note" (description visible in focus mode)
+function fillLineHTML(ets, f){
+  const bb = fillBarBeat(ets, f.start16);
+  return `<span class="pfb-item">🥁 <b>${bb.bar}.${bb.beat}</b>${f.notes ? ' — '+esc(f.notes) : ' · '+fmtFillLen(ets, f.len16)}</span>`;
 }
 function renderFillBadge(sec){
   const fb = document.getElementById('perf-fill-badge');
-  const txt = fillSummaryText(sec);
-  if(txt){ fb.className = 'show'; fb.textContent = txt; }
-  else { fb.className = ''; fb.textContent = ''; }
+  const fs = (sec.fills || []).slice().sort((a,b)=>a.start16-b.start16);
+  if(!fs.length){ fb.className = ''; fb.innerHTML = ''; return; }
+  const ets = effTS(currentSong(), sec);
+  fb.className = 'show';
+  fb.innerHTML = fs.map(f => fillLineHTML(ets, f)).join('');
 }
 
 window.renderPerf = function(){
@@ -2169,7 +2309,10 @@ function renderPerfList(){
   wrap.innerHTML = song.sections.map((sec,i) => {
     const t = TM[sec.typeId]; const ec = effColor(sec);
     const cls = i===perfIdx ? 'pl-current' : (i<perfIdx ? 'pl-done' : '');
-    const fillTag = (sec.fills && sec.fills.length) ? `<span class="pl-fill-tag">🥁 ${sec.fills.length}</span>` : '';
+    const etsL = effTS(song, sec);
+    const fillTag = (sec.fills && sec.fills.length)
+      ? `<span class="pl-fill-tag" title="${sec.fills.slice().sort((a,b)=>a.start16-b.start16).map(f=>{const bb=fillBarBeat(etsL,f.start16);return 'bar '+bb.bar+'.'+bb.beat+(f.notes?': '+f.notes:'');}).join(' · ')}">🥁 ${sec.fills.map(f=>{const bb=fillBarBeat(etsL,f.start16);return bb.bar+'.'+bb.beat+(f.notes?' '+f.notes:'');}).join(' · ')}</span>`
+      : '';
     const cue = sec.time!=null ? `<span class="pl-bar-live">⏱ ${fmtTime(sec.time)}</span>` : `<span class="pl-bar-live">${sec.bars}×${sec.repeats}</span>`;
     return `
       <div class="pl-row ${cls}" data-i="${i}" onclick="perfJump(${i})">
@@ -2232,26 +2375,76 @@ window.setMod = (i, m) => {
 }
 // ── drum fills: positioned at a bar, starting on a beat, lasting N beats ──
 // click a bar in the grid to add/remove a fill there
-window.toggleFillAtBar = (i, bar) => {
-  const sec = currentSong().sections[i];
-  const idx = sec.fills.findIndex(f => f.bar === bar);
-  if(idx >= 0){ sec.fills.splice(idx, 1); }
-  else {
-    const { n } = effTS(currentSong(), sec);
-    // sensible default: a 2-beat fill landing on the last two beats of the bar
-    const len = Math.min(2, n);
-    sec.fills.push({ bar, beat: Math.max(1, n - len + 1), len, notes: '' });
-  }
-  window.save(); window.renderChart();
-}
 window.removeFill = (i, fi) => { currentSong().sections[i].fills.splice(fi, 1); window.save(); window.renderChart(); }
 window.updateFillField = (i, fi, field, v) => {
-  const sec = currentSong().sections[i]; const f = sec.fills[fi]; if(!f) return;
-  if(field === 'notes'){ f.notes = v; window.save(); return; }
-  const num = parseInt(v) || 1;
-  if(field === 'beat'){ const { n } = effTS(currentSong(), sec); f.beat = Math.min(n, Math.max(1, num)); }
-  else if(field === 'len'){ f.len = Math.min(64, Math.max(1, num)); }
-  window.save(); window.renderChart();
+  const f = currentSong().sections[i].fills[fi]; if(!f) return;
+  if(field === 'notes'){ f.notes = v; window.save(); }
+}
+
+// drag-to-draw fill timeline (pointer events → mouse + touch); snaps to 16th notes
+function attachFillTimeline(tl, blockEl){
+  const i = +tl.dataset.i, PX = +tl.dataset.px, total = +tl.dataset.total;
+  const snap = clientX => {
+    const rect = tl.getBoundingClientRect();
+    return Math.max(0, Math.min(total, Math.round((clientX - rect.left) / PX)));
+  };
+  tl.addEventListener('pointerdown', e => {
+    if(e.button) return;
+    blockEl.draggable = false;
+    const sec = currentSong().sections[i];
+    const fillEl = e.target.closest('.ftl-fill');
+    const isResize = e.target.classList.contains('ftl-fill-resize');
+    const down16 = snap(e.clientX); let moved = false, ghost, mode, fi, origStart, origLen;
+    if(fillEl && !fillEl.classList.contains('ftl-ghost')){
+      fi = +fillEl.dataset.fi; mode = isResize ? 'resize' : 'move';
+      origStart = sec.fills[fi].start16; origLen = sec.fills[fi].len16; ghost = fillEl;
+    } else {
+      mode = 'create';
+      ghost = document.createElement('div'); ghost.className = 'ftl-fill ftl-ghost';
+      ghost.style.left = down16*PX+'px'; ghost.style.width = PX+'px';
+      ghost.dataset.a = down16; ghost.dataset.b = down16+1; tl.appendChild(ghost);
+    }
+    try{ tl.setPointerCapture(e.pointerId); }catch(_){}
+    const onMove = ev => {
+      const cur16 = snap(ev.clientX);
+      if(Math.abs(ev.clientX - e.clientX) > 2) moved = true;
+      if(mode === 'create'){
+        const a = Math.min(down16, cur16), b = Math.max(a+1, Math.max(down16, cur16));
+        ghost.style.left = a*PX+'px'; ghost.style.width = (b-a)*PX+'px';
+        ghost.dataset.a = a; ghost.dataset.b = b;
+      } else if(mode === 'move'){
+        const ns = Math.max(0, Math.min(total - origLen, origStart + (cur16 - down16)));
+        ghost.style.left = ns*PX+'px'; ghost.dataset.ns = ns;
+      } else {
+        const nl = Math.max(1, Math.min(total - origStart, cur16 - origStart));
+        ghost.style.width = nl*PX+'px'; ghost.dataset.nl = nl;
+      }
+    };
+    const onUp = () => {
+      tl.removeEventListener('pointermove', onMove);
+      tl.removeEventListener('pointerup', onUp);
+      blockEl.draggable = true;
+      const s2 = currentSong().sections[i];
+      if(mode === 'create'){
+        let a = +ghost.dataset.a, b = +ghost.dataset.b;
+        if(!moved){   // a tap → default one-beat fill snapped to the nearest beat
+          const ets = effTS(currentSong(), s2), s16b = sixteenthsPerBeat(ets);
+          a = Math.round(down16 / s16b) * s16b; b = Math.min(total, a + s16b);
+          if(b <= a){ a = Math.max(0, total - s16b); b = total; }
+        }
+        s2.fills.push({ start16: a, len16: Math.max(1, b - a), notes: '' });
+        ghost.remove();
+      } else if(mode === 'move' && ghost.dataset.ns !== undefined){
+        s2.fills[fi].start16 = +ghost.dataset.ns;
+      } else if(mode === 'resize' && ghost.dataset.nl !== undefined){
+        s2.fills[fi].len16 = +ghost.dataset.nl;
+      }
+      window.save(); window.renderChart();
+    };
+    tl.addEventListener('pointermove', onMove);
+    tl.addEventListener('pointerup', onUp);
+    e.preventDefault();
+  });
 }
 // cue points
 window.clearCue = (i) => { currentSong().sections[i].time = null; window.save(); window.renderChart(); }
