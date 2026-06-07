@@ -538,17 +538,16 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 .fill-timeline-wrap::-webkit-scrollbar{ height:5px; }
 .fill-timeline-wrap::-webkit-scrollbar-thumb{ background:var(--border2); }
 .fill-timeline{
-  position:relative; height:42px; touch-action:none; user-select:none;
+  position:relative; height:60px; touch-action:none; user-select:none;
   background:var(--bg4); border:1px solid var(--border2); border-radius:6px; cursor:crosshair;
 }
-.ftl-measure{ position:absolute; top:0; bottom:0; border-left:1px solid var(--border2); }
+.ftl-measure{ position:absolute; top:0; bottom:0; border-left:2px solid var(--border2); }
 .ftl-measure:first-child{ border-left:none; }
-.ftl-measure-n{ position:absolute; top:2px; left:4px; font-size:9px; color:var(--muted2); font-variant-numeric:tabular-nums; }
-.ftl-beat{ position:absolute; top:55%; bottom:0; width:1px; background:rgba(255,255,255,.06); }
+.ftl-measure-n{ position:absolute; top:3px; left:5px; font-size:11px; font-weight:700; color:var(--muted); font-variant-numeric:tabular-nums; }
 .ftl-fill{
-  position:absolute; top:15px; height:24px; border-radius:4px; cursor:grab;
-  background:linear-gradient(180deg, rgba(232,125,71,.85), rgba(232,125,71,.6));
-  border:1px solid #ffb98a; box-shadow:0 1px 4px rgba(0,0,0,.3); overflow:hidden; min-width:7px;
+  position:absolute; top:22px; height:32px; border-radius:4px; cursor:grab;
+  background:linear-gradient(180deg, rgba(232,125,71,.9), rgba(232,125,71,.65));
+  border:1px solid #ffb98a; box-shadow:0 1px 4px rgba(0,0,0,.3); overflow:hidden; min-width:8px;
   display:flex; align-items:center;
 }
 .ftl-fill:active{ cursor:grabbing; }
@@ -1011,6 +1010,7 @@ html{ -webkit-text-size-adjust:100%; }
       <span id="countdown-ring-text">-</span>
     </div>
     <div id="auto-status">READY</div>
+    <button class="mode-btn" id="countin-toggle" onclick="cycleCountIn()" title="Count-in before sections / fills">COUNT-IN: ALL</button>
   </div>
 
   <div id="perf-body">
@@ -1275,7 +1275,7 @@ window.importLibrary = function(e){
 }
 
 // ─── APP LOGIC ───────────────────────────────────────
-function makeSong(){ return { id: idCounter++, name: '', bpm: 120, ts: 4, tsd: 4, notes: '', sections: [], created: Date.now(), autoNumber:true, audio:null, shareCode:null }; }
+function makeSong(){ return { id: idCounter++, name: '', bpm: 120, ts: 4, tsd: 4, notes: '', sections: [], created: Date.now(), autoNumber:true, audio:null, shareCode:null, countIn:'all' }; }
 function currentSong(){ if(sharedSong) return sharedSong; return library.find(s => s.id === currentSongId) || null; }
 
 // Ensure older saved songs/sections have the newer fields
@@ -1286,6 +1286,7 @@ function migrateSong(song){
   if(song.tsd === undefined) song.tsd = (song.ts === 6 || song.ts === 7) ? 8 : 4;
   if(song.audio === undefined) song.audio = null;
   if(song.shareCode === undefined) song.shareCode = null; // Firestore short-link code (null = not published)
+  if(song.countIn === undefined) song.countIn = 'all';    // count-in: 'all' | 'sections' | 'off'
   // a local audio-file URL can't survive a reload — drop the dead blob ref, keep cues
   if(song.audio && song.audio.type === 'file') song.audio = null;
   (song.sections||[]).forEach(s => {
@@ -1667,6 +1668,8 @@ window.renderChart = function(){
 
   const nums = computeInstanceNumbers(song);
   const hasAudio = !!song.audio;
+  // width available for the fill timeline → short sections stretch to fill it, long ones keep detail + scroll
+  const chartAvailW = Math.max(300, (document.getElementById('chart-area')?.clientWidth || 880) - 84);
   song.sections.forEach((sec, i) => {
     const t = TM[sec.typeId];
     const ec = effColor(sec);   // honours custom color + pre/post modifier
@@ -1682,18 +1685,20 @@ window.renderChart = function(){
     const ets = effTS(song, sec);
     // ── fills: a 16th-note timeline you drag across to draw fills (they stretch across bars) ──
     const spb = sixteenthsPerBar(ets), s16b = sixteenthsPerBeat(ets);
-    const PX = 7;                       // px per 16th note
-    const totalW = sec.bars * spb * PX;
-    const measures = Array.from({length: sec.bars}, (_,b) => {
-      const beats = Array.from({length: ets.n-1}, (_,k) => `<div class="ftl-beat" style="left:${(k+1)*s16b*PX}px"></div>`).join('');
-      return `<div class="ftl-measure" style="left:${b*spb*PX}px;width:${spb*PX}px"><span class="ftl-measure-n">${b+1}</span>${beats}</div>`;
-    }).join('');
+    const total16 = sec.bars * spb;
+    // px per 16th: stretch to fill the chart for short sections, but never below 14px (so you keep fine control)
+    const PX = Math.max(14, Math.floor(chartAvailW / total16));
+    const totalW = total16 * PX;
+    const measures = Array.from({length: sec.bars}, (_,b) =>
+      `<div class="ftl-measure" style="left:${b*spb*PX}px;width:${spb*PX}px"><span class="ftl-measure-n">${b+1}</span></div>`).join('');
     const fillBars = sec.fills.map((f,fi) => {
       const bb = fillBarBeat(ets, f.start16);
       return `<div class="ftl-fill" data-fi="${fi}" style="left:${f.start16*PX}px;width:${Math.max(PX,f.len16*PX)}px" title="bar ${bb.bar}, beat ${bb.beat} · ${fmtFillLen(ets,f.len16)}">
                 <span class="ftl-fill-label">${f.notes ? esc(f.notes) : '🥁'}</span><span class="ftl-fill-resize"></span>
               </div>`;
     }).join('');
+    // light 16th gridlines + stronger beat lines, drawn as a background so dragging snaps are visible
+    const gridBg = `background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 1px ${PX}px),repeating-linear-gradient(90deg,rgba(255,255,255,.13) 0 1px,transparent 1px ${s16b*PX}px)`;
     const fillBlock = `
       <div class="fills-section">
         <div class="fills-head">
@@ -1701,7 +1706,7 @@ window.renderChart = function(){
           <span class="fills-hint">${sec.fills.length ? sec.fills.length+' placed · drag a fill to move, drag its right edge to resize' : 'drag across the bars to draw a fill — snaps to 16th notes'}</span>
         </div>
         <div class="fill-timeline-wrap">
-          <div class="fill-timeline" data-i="${i}" data-px="${PX}" data-spb="${spb}" data-total="${sec.bars*spb}" style="width:${totalW}px">
+          <div class="fill-timeline" data-i="${i}" data-px="${PX}" data-spb="${spb}" data-total="${total16}" style="width:${totalW}px;${gridBg}">
             ${measures}${fillBars}
           </div>
         </div>
@@ -2061,6 +2066,7 @@ window.startPerf = function(){
   document.getElementById('perf-ts-disp').textContent = tsLabel(song, null);
   stopEditorPlayer();   // silence the editor's inline player so it doesn't double up
   setupPerfAudio(song);
+  updateCountInToggle();
   // If a track is attached, default to SYNC; otherwise AUTO
   window.setMode(audioAvailable() ? 'sync' : 'auto');
   window.setDisplayMode('focus');
@@ -2132,8 +2138,8 @@ function startSyncLoop(){
       syncFillFlash = false;
       renderFillBadge(song.sections[perfIdx]);
     }
-    // count-in to the next event
-    const next = events.find(e => e.time - t > 0.001);
+    // count-in to the next event (respecting the count-in setting)
+    const next = nextCountInEvent(events, t, 'time');
     if(next){
       const evSec = song.sections[next.si]; const ets = effTS(song, evSec);
       updateCountIn((next.time - t)*1000, barMsFor(song,evSec)/ets.n, ets.n, next);
@@ -2189,6 +2195,25 @@ function updateCountIn(msToEvent, beatMs, totalBeats, ev){
   }
 }
 function hideCountIn(){ const ci=document.getElementById('perf-countin'); if(ci){ ci.classList.remove('show','fill'); } lastCountNum=0; }
+function countInMode(){ const s = currentSong(); return (s && s.countIn) || 'all'; }
+// pick the next event to count in to, honouring the count-in setting
+function nextCountInEvent(events, pos, key){
+  const m = countInMode();
+  if(m === 'off') return null;
+  return events.find(e => e[key] - pos > 0.0001 && (m === 'all' || e.type === 'section')) || null;
+}
+function updateCountInToggle(){
+  const b = document.getElementById('countin-toggle'); if(!b) return;
+  const m = countInMode();
+  b.textContent = 'COUNT-IN: ' + (m==='all' ? 'ALL' : m==='sections' ? 'SECTIONS' : 'OFF');
+  b.classList.toggle('active', m !== 'off');
+}
+window.cycleCountIn = function(){
+  const s = currentSong(); if(!s) return;
+  s.countIn = s.countIn === 'all' ? 'sections' : s.countIn === 'sections' ? 'off' : 'all';
+  window.save(); updateCountInToggle();
+  if(s.countIn === 'off') hideCountIn();
+}
 
 function scheduleAuto(startAnchor){
   const song = currentSong(); const sec = song.sections[perfIdx]; if(!sec) return;
@@ -2226,8 +2251,8 @@ function scheduleAuto(startAnchor){
     updateRing(elapsed / totalMs);
     const bar = Math.min(totalBarTicks, Math.floor(elapsed / barMs) + 1);
     if(bar !== currentBarTick){ currentBarTick = bar; updateBarTicker(); }
-    // count-in to the next event
-    const next = events.find(e => e.ms - elapsed > 0.0001);
+    // count-in to the next event (respecting the count-in setting)
+    const next = nextCountInEvent(events, elapsed, 'ms');
     updateCountIn(next ? next.ms - elapsed : null, beatMs, ets.n, next || {});
     autoRAF = requestAnimationFrame(frame);
   }
