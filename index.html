@@ -212,6 +212,10 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 .sec-body:hover{background:var(--bg3)}
 .sec-row1{display:flex;align-items:center;gap:12px}
 .sec-type-label{font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;flex-shrink:0}
+.sec-type-label[data-seek]{cursor:pointer}
+.sec-type-label[data-seek]:hover{text-decoration:underline}
+.seek-ico{font-size:10px;color:var(--blue);margin-right:6px;opacity:.65}
+.sec-type-label[data-seek]:hover .seek-ico{opacity:1}
 .sec-instance{font-size:12px;opacity:.6;flex-shrink:0}
 .sec-row1-right{display:flex;align-items:center;gap:10px;margin-left:auto}
 .repeat-pill{
@@ -1663,6 +1667,11 @@ window.renderChart = function(){
   const list = document.getElementById('chart-list');
   const hint = document.getElementById('drop-hint');
   if(!song){ list.innerHTML=''; return; }
+  // remember scroll so editing a section (e.g. dragging a fill) doesn't jump to the top
+  const chartArea = document.getElementById('chart-area');
+  const edMain = document.getElementById('ed-main');
+  const savedTop = chartArea ? chartArea.scrollTop : 0;
+  const savedMainTop = edMain ? edMain.scrollTop : 0;
   hint.style.display = song.sections.length ? 'none' : 'block';
   list.innerHTML = '';
 
@@ -1736,7 +1745,7 @@ window.renderChart = function(){
       <div class="sec-bar" style="background:${ec}"></div>
       <div class="sec-body">
         <div class="sec-row1">
-          <span class="sec-type-label" style="color:${ec}">${modPrefix}${t.label}</span>
+          <span class="sec-type-label" style="color:${ec}" ${hasAudio?`data-seek="1" onclick="seekEditorToSection(${i})" title="Jump the track to this section"`:''}>${hasAudio?'<span class="seek-ico">▶</span>':''}${modPrefix}${t.label}</span>
           ${num}
           <div class="sec-row1-right">
             <span class="sec-color-wrap">
@@ -1792,6 +1801,11 @@ window.renderChart = function(){
   const fillCount = song.sections.reduce((a,s)=>a+(s.fills?s.fills.length:0),0);
   document.getElementById('chart-stats').textContent =
     `${song.sections.length} sections · ${totalBars} bars` + (fillCount?` · ${fillCount} fill${fillCount>1?'s':''}`:'');
+  // restore scroll position (unless we just opened the song and want the bounce-in from the top)
+  if(!animate){
+    if(chartArea) chartArea.scrollTop = savedTop;
+    if(edMain) edMain.scrollTop = savedMainTop;
+  }
 }
 
 // escape values placed into HTML attributes / text
@@ -1900,6 +1914,32 @@ window.edPlayPause = function(){
   setTimeout(updateEdPlayBtn, 120);
 }
 function updateEdPlayBtn(){ const b=document.querySelector('.sync-play'); if(b) b.textContent = edPlaying()?'❚❚':'▶'; }
+function edSeek(t){
+  if(edYtPlayer&&edYtReady){ edYtPlayer.seekTo(t, true); edYtPlayer.playVideo(); }
+  else if(edAudioEl){ edAudioEl.currentTime = t; edAudioEl.play(); }
+  setTimeout(updateEdPlayBtn, 200);
+}
+// where a section starts in the track: its own cue, or estimated from the nearest earlier cue + bar lengths
+function sectionTrackTime(song, i){
+  if(song.sections[i].time != null) return song.sections[i].time;
+  for(let j=i-1; j>=0; j--){
+    if(song.sections[j].time != null){
+      let t = song.sections[j].time;
+      for(let k=j; k<i; k++){ const s=song.sections[k]; t += (barMsFor(song,s) * s.bars * s.repeats) / 1000; }
+      return t;
+    }
+  }
+  return null;
+}
+// click a section → jump the editor's track to that part of the song
+window.seekEditorToSection = (i) => {
+  if(!edAvailable()){ return; }
+  const song = currentSong();
+  const t = sectionTrackTime(song, i);
+  if(t == null){ showToast('Set a cue point first (Sync panel)', 'error'); return; }
+  edSeek(t);
+  showToast('▶ ' + sectionDisplay(song, i) + ' @ ' + fmtTime(t));
+}
 function startEdClock(){
   cancelAnimationFrame(edTimeRAF);
   const tick = () => {
@@ -2464,7 +2504,10 @@ function attachFillTimeline(tl, blockEl){
       } else if(mode === 'resize' && ghost.dataset.nl !== undefined){
         s2.fills[fi].len16 = +ghost.dataset.nl;
       }
+      const wrap = tl.closest('.fill-timeline-wrap'); const sl = wrap ? wrap.scrollLeft : 0;
       window.save(); window.renderChart();
+      const newWrap = document.querySelectorAll('.fill-timeline-wrap')[i];   // keep the timeline scrolled where it was
+      if(newWrap) newWrap.scrollLeft = sl;
     };
     tl.addEventListener('pointermove', onMove);
     tl.addEventListener('pointerup', onUp);
