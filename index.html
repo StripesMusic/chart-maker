@@ -580,6 +580,8 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 }
 .cue-pill.set{border-color:var(--blue);color:var(--blue)}
 .cue-pill:hover{border-color:var(--blue);color:var(--blue)}
+.cue-clear{margin-left:6px;color:var(--muted2);font-weight:700}
+.cue-clear:hover{color:var(--red)}
 
 /* ── numbering toggle in header ── */
 .toggle-chip{
@@ -1689,7 +1691,7 @@ window.renderChart = function(){
     const modPrefix = sec.mod === 'pre' ? '<span class="sec-mod-label">Pre-</span>'
                     : sec.mod === 'post' ? '<span class="sec-mod-label">Post-</span>' : '';
     const cuePill = hasAudio
-      ? `<span class="cue-pill ${sec.time!=null?'set':''}" onclick="clearCue(${i})" title="Cue point — set by tapping in SYNC mode. Click to clear.">${sec.time!=null?'⏱ '+fmtTime(sec.time):'⏱ —'}</span>`
+      ? `<span class="cue-pill ${sec.time!=null?'set':''}" onclick="setCueHere(${i})" title="Set this section's cue to the current play time of the track">${sec.time!=null?'⏱ '+fmtTime(sec.time):'⏱ set cue'}${sec.time!=null?`<span class="cue-clear" onclick="event.stopPropagation();clearCue(${i})" title="Clear this cue">✕</span>`:''}</span>`
       : '';
     const ets = effTS(song, sec);
     // ── fills: a 16th-note timeline you drag across to draw fills (they stretch across bars) ──
@@ -2515,7 +2517,16 @@ function attachFillTimeline(tl, blockEl){
   });
 }
 // cue points
-window.clearCue = (i) => { currentSong().sections[i].time = null; window.save(); window.renderChart(); }
+window.clearCue = (i) => { currentSong().sections[i].time = null; window.save(); window.renderChart(); renderSyncPanel(); }
+// set this section's cue to the track's current play time (while the YouTube/audio is playing)
+window.setCueHere = (i) => {
+  if(!edAvailable()){ showToast('Add a track first', 'error'); return; }
+  const sec = currentSong().sections[i];
+  sec.time = edGetTime();
+  edCueIdx = Math.max(edCueIdx, i + 1);   // keep the sequential TAP-CUE cursor past this one
+  window.save(); window.renderChart(); renderSyncPanel();
+  showToast('⏱ ' + sectionDisplay(currentSong(), i) + ' cued @ ' + fmtTime(sec.time));
+}
 
 // drag reorder
 function reorderSection(from, to){
