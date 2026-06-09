@@ -1691,7 +1691,7 @@ window.renderChart = function(){
     const modPrefix = sec.mod === 'pre' ? '<span class="sec-mod-label">Pre-</span>'
                     : sec.mod === 'post' ? '<span class="sec-mod-label">Post-</span>' : '';
     const cuePill = hasAudio
-      ? `<span class="cue-pill ${sec.time!=null?'set':''}" onclick="setCueHere(${i})" title="Set this section's cue to the current play time of the track">${sec.time!=null?'⏱ '+fmtTime(sec.time):'⏱ set cue'}${sec.time!=null?`<span class="cue-clear" onclick="event.stopPropagation();clearCue(${i})" title="Clear this cue">✕</span>`:''}</span>`
+      ? `<span class="cue-pill ${sec.time!=null?'set':''}" onclick="setCueHere(${i})" title="${sec.time!=null?'Cue set — click to clear it':'Click to cue this section at the current play time'}">${sec.time!=null?'⏱ '+fmtTime(sec.time):'⏱ set cue'}</span>`
       : '';
     const ets = effTS(song, sec);
     // ── fills: a 16th-note timeline you drag across to draw fills (they stretch across bars) ──
@@ -2518,10 +2518,16 @@ function attachFillTimeline(tl, blockEl){
 }
 // cue points
 window.clearCue = (i) => { currentSong().sections[i].time = null; window.save(); window.renderChart(); renderSyncPanel(); }
-// set this section's cue to the track's current play time (while the YouTube/audio is playing)
+// toggle this section's cue: set it to the track's current play time, or clear it if already set
 window.setCueHere = (i) => {
-  if(!edAvailable()){ showToast('Add a track first', 'error'); return; }
   const sec = currentSong().sections[i];
+  if(sec.time != null){            // already cued → clear it
+    sec.time = null;
+    window.save(); window.renderChart(); renderSyncPanel();
+    showToast('Cue cleared');
+    return;
+  }
+  if(!edAvailable()){ showToast('Add a track first', 'error'); return; }
   sec.time = edGetTime();
   edCueIdx = Math.max(edCueIdx, i + 1);   // keep the sequential TAP-CUE cursor past this one
   window.save(); window.renderChart(); renderSyncPanel();
