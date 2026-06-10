@@ -2738,9 +2738,33 @@ function showCtx(x, y, items){
     el.onclick = () => { const act = items.find(it => it && it.id === el.dataset.act); hideCtx(); if(act && act.run) act.run(); };
   });
 }
+function cycleMode(){
+  const order = audioAvailable() ? ['auto','manual','sync'] : ['auto','manual'];
+  window.setMode(order[(order.indexOf(perfMode) + 1) % order.length]);
+}
 document.addEventListener('contextmenu', e => {
   // let text inputs keep their native copy/paste menu
   if(e.target.closest('input, textarea, select')) { hideCtx(); return; }
+  // performance mode menu (overlay is on top of everything)
+  if(document.getElementById('perf-overlay').classList.contains('active')){
+    e.preventDefault();
+    const song = currentSong(); const items = [];
+    const row = e.target.closest('.pl-row');
+    if(row && row.dataset.i != null){ const i = +row.dataset.i;
+      items.push({id:'jump', icon:'▶', label:'Jump to '+sectionDisplay(song,i), run:()=>window.perfJump(i)}, '---'); }
+    if(perfIdx < song.sections.length-1) items.push({id:'nx', icon:'→', label:'Next section', run:()=>window.perfNext()});
+    if(perfIdx > 0) items.push({id:'pv', icon:'←', label:'Previous section', run:()=>window.perfBack()});
+    items.push({id:'rs', icon:'↺', label:'Restart from top', run:()=>window.perfJump(0)});
+    if(audioAvailable()) items.push({id:'pp', icon:isAudioPlaying()?'❚❚':'▶', label:isAudioPlaying()?'Pause track':'Play track', run:()=>window.toggleAudioPlay()});
+    items.push('---');
+    items.push({id:'dp', icon: displayMode==='focus'?'≡':'⊡', label: displayMode==='focus'?'List view':'Focus view', run:()=>window.setDisplayMode(displayMode==='focus'?'list':'focus')});
+    items.push({id:'md', icon:'◷', label:'Mode: '+perfMode.toUpperCase()+'  (next)', run:()=>cycleMode()});
+    items.push({id:'ci', icon:'⏱', label:'Count-in: '+countInMode().toUpperCase(), run:()=>window.cycleCountIn()});
+    items.push('---');
+    items.push({id:'ex', icon:'✕', label:'Exit performance', danger:true, run:()=>window.stopPerf()});
+    showCtx(e.clientX, e.clientY, items);
+    return;
+  }
   const block = e.target.closest('.section-block');
   const fillEl = e.target.closest('.ftl-fill');
   const card = e.target.closest('.song-card');
