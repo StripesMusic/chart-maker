@@ -154,20 +154,20 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 /* ── EDITOR MAIN ── */
 #ed-main{display:flex;flex:1;overflow:hidden}
 #sidebar{
-  width:240px;background:var(--bg2);border-right:1px solid var(--border);
+  width:256px;background:var(--bg2);border-right:1px solid var(--border);
   display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;
 }
 #sidebar::-webkit-scrollbar{width:4px}
 #sidebar::-webkit-scrollbar-thumb{background:var(--border2)}
 .sidebar-section-label{
-  padding:14px 16px 10px;font-size:11px;letter-spacing:2px;
+  padding:16px 18px 11px;font-size:12px;letter-spacing:2px;
   color:var(--muted);text-transform:uppercase;border-bottom:1px solid var(--border);
 }
-#section-palette{padding:12px 12px 0}
+#section-palette{padding:14px 14px 0}
 .palette-item{
-  display:flex;align-items:center;gap:12px;padding:10px 12px;
-  margin-bottom:4px;border-radius:5px;cursor:pointer;
-  font-size:13px;letter-spacing:1px;text-transform:uppercase;
+  display:flex;align-items:center;gap:13px;padding:11px 13px;
+  margin-bottom:5px;border-radius:6px;cursor:pointer;
+  font-size:14px;letter-spacing:1px;text-transform:uppercase;
   border:1px solid transparent;transition:all .12s;user-select:none;
 }
 .palette-item:hover{background:var(--bg3);border-color:var(--border)}
@@ -189,7 +189,7 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 #global-notes::placeholder{color:var(--muted2)}
 
 /* ── CHART ── */
-#chart-area{flex:1;overflow-y:auto;padding:22px}
+#chart-area{flex:1;overflow-y:auto;padding:26px 28px}
 #chart-area::-webkit-scrollbar{width:5px}
 #chart-area::-webkit-scrollbar-thumb{background:var(--border2)}
 #drop-hint{
@@ -198,7 +198,7 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
   border:1px dashed var(--border2);border-radius:8px;
 }
 .section-block{
-  display:flex;margin-bottom:8px;border-radius:6px;overflow:hidden;
+  display:flex;margin-bottom:12px;border-radius:8px;overflow:hidden;
   border:1px solid var(--border);cursor:grab; transition: all 0.2s;
 }
 /* bounce-in only when the chart is first opened (class added in JS), not on every re-render */
@@ -208,10 +208,10 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 .section-block.drag-over-top{border-top:2px solid var(--accent)}
 .section-block.drag-over-bot{border-bottom:2px solid var(--accent)}
 .sec-bar{width:8px;flex-shrink:0}
-.sec-body{flex:1;padding:12px 16px;background:var(--bg2);min-width:0}
+.sec-body{flex:1;padding:15px 18px;background:var(--bg2);min-width:0}
 .sec-body:hover{background:var(--bg3)}
 .sec-row1{display:flex;align-items:center;gap:12px}
-.sec-type-label{font-size:15px;font-weight:700;letter-spacing:2px;text-transform:uppercase;flex-shrink:0}
+.sec-type-label{font-size:16px;font-weight:700;letter-spacing:2px;text-transform:uppercase;flex-shrink:0}
 .sec-type-label[data-seek]{cursor:pointer}
 .sec-type-label[data-seek]:hover{text-decoration:underline}
 .seek-ico{font-size:10px;color:var(--blue);margin-right:6px;opacity:.65}
@@ -219,8 +219,8 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 .sec-instance{font-size:12px;opacity:.6;flex-shrink:0}
 .sec-row1-right{display:flex;align-items:center;gap:10px;margin-left:auto}
 .repeat-pill{
-  font-size:11px;background:var(--bg4);border:1px solid var(--border2);
-  color:var(--muted);padding:3px 10px;border-radius:10px;cursor:pointer;
+  font-size:12px;background:var(--bg4);border:1px solid var(--border2);
+  color:var(--muted);padding:4px 11px;border-radius:10px;cursor:pointer;
   letter-spacing:0;white-space:nowrap;transition:all .12s;
 }
 .repeat-pill:hover{border-color:var(--accent);color:var(--accent)}
@@ -244,8 +244,8 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 .sec-notes-input{
   width:100%;background:transparent;border:none;
   border-bottom:1px solid var(--border2);color:#bbb;
-  font-family:'Courier New',monospace;font-size:13px;
-  padding:4px 0;outline:none;transition:border-color .12s;
+  font-family:'Courier New',monospace;font-size:14px;
+  padding:6px 0;outline:none;transition:border-color .12s;margin-top:4px;
 }
 .sec-notes-input:focus{border-color:var(--border2)}
 .sec-notes-input::placeholder{color:var(--muted2)}
@@ -334,6 +334,8 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 #perf-section-sub{
   font-size:46px;font-weight:700;color:#d0d0d0;letter-spacing:4px;margin-top:22px;
 }
+#perf-section-progress{ height:6px;background:#1a1a1a;border-radius:3px;margin:18px auto 0;max-width:420px;overflow:hidden }
+#perf-section-progress-fill{ height:100%;width:0%;background:var(--green);transition:width .1s linear }
 #perf-notes-disp{
   font-size:32px;color:#b0b0b0;margin-top:16px;letter-spacing:1px;
   font-style:italic;min-height:40px;
@@ -458,6 +460,23 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 #save-toast.show{opacity:1;transform:translateY(0)}
 #save-toast.saved{border-color:var(--green);color:var(--green)}
 #save-toast.error{border-color:var(--red);color:var(--red)}
+
+/* ── right-click context menu ── */
+#ctx-menu{
+  position:fixed;z-index:1000;display:none;min-width:200px;
+  background:var(--bg3);border:1px solid var(--border2);border-radius:10px;
+  box-shadow:0 16px 40px rgba(0,0,0,.55);padding:6px;
+  animation:popIn .12s ease;
+}
+.ctx-item{display:flex;align-items:center;gap:11px;padding:9px 13px;border-radius:6px;cursor:pointer;color:var(--text);white-space:nowrap;font-size:14px}
+.ctx-item:hover{background:var(--bg4)}
+.ctx-item.disabled{opacity:.38;cursor:default}
+.ctx-item.disabled:hover{background:transparent}
+.ctx-item.ctx-danger{color:var(--red)}
+.ctx-ico{width:18px;text-align:center;opacity:.9;font-size:13px}
+.ctx-key{margin-left:auto;font-size:11px;color:var(--muted2);letter-spacing:1px}
+.ctx-sep{height:1px;background:var(--border);margin:5px 8px}
+.section-block.selected{box-shadow:0 0 0 2px var(--accent)}
 .lib-save-row{
   display:flex;align-items:center;gap:10px;
   padding:12px 36px;border-top:1px solid var(--border);
@@ -526,18 +545,18 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 /* ── pre/post modifier toggles ── */
 .mod-toggle-wrap{display:flex;gap:3px;margin-right:4px}
 .mod-btn{
-  font-size:10px;background:var(--bg4);border:1px solid var(--border2);color:var(--muted2);
-  padding:2px 7px;border-radius:9px;cursor:pointer;letter-spacing:1px;text-transform:uppercase;
+  font-size:11px;background:var(--bg4);border:1px solid var(--border2);color:var(--muted2);
+  padding:3px 9px;border-radius:9px;cursor:pointer;letter-spacing:1px;text-transform:uppercase;
   line-height:1.4;user-select:none;
 }
 .mod-btn:hover{border-color:var(--accent);color:var(--accent)}
 .mod-btn.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700}
 
 /* ── drum fills: 16th-note timeline + fill list ── */
-.fills-section{ margin-top:9px; }
-.fills-head{ display:flex;align-items:center;gap:10px;margin-bottom:6px; }
-.fills-label{ font-size:11px;font-weight:700;letter-spacing:2px;color:#e87d47;text-transform:uppercase; }
-.fills-hint{ font-size:10px;color:var(--muted2);letter-spacing:1px; }
+.fills-section{ margin-top:13px; }
+.fills-head{ display:flex;align-items:center;gap:10px;margin-bottom:8px; }
+.fills-label{ font-size:12px;font-weight:700;letter-spacing:2px;color:#e87d47;text-transform:uppercase; }
+.fills-hint{ font-size:11.5px;color:var(--muted2);letter-spacing:.5px; }
 .fill-timeline-wrap{ overflow-x:auto; padding-bottom:4px; }
 .fill-timeline-wrap::-webkit-scrollbar{ height:5px; }
 .fill-timeline-wrap::-webkit-scrollbar-thumb{ background:var(--border2); }
@@ -558,13 +577,21 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 .ftl-ghost{ opacity:.6; pointer-events:none; }
 .ftl-fill-label{ font-size:10px; color:#1a1a1a; font-weight:700; padding:0 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; pointer-events:none; }
 .ftl-fill-resize{ position:absolute; right:0; top:0; bottom:0; width:9px; cursor:ew-resize; background:rgba(0,0,0,.18); border-radius:0 4px 4px 0; }
+.ftl-playhead{ position:absolute; top:-2px; bottom:-2px; width:2px; background:var(--green); box-shadow:0 0 8px var(--green); display:none; pointer-events:none; z-index:3; }
+.ftl-playhead::before{ content:''; position:absolute; top:-4px; left:-4px; width:10px; height:10px; border-radius:50%; background:var(--green); }
+.section-block.playing{ box-shadow:0 0 0 1px var(--green); }
 .fills-list{ display:flex;flex-direction:column;gap:5px;margin-top:8px; }
 .fill-item{
-  display:flex;align-items:center;gap:7px;padding:5px 9px;border-radius:5px;
+  display:flex;align-items:center;gap:9px;padding:7px 11px;border-radius:6px;
   background:rgba(232,125,71,.08);border:1px solid rgba(232,125,71,.28);border-left:3px solid #e87d47;
+  transition:box-shadow .12s;
 }
-.fill-item-bar{ font-size:12px;font-weight:700;letter-spacing:1px;flex-shrink:0; }
-.fill-item-lbl{ font-size:10px;color:var(--muted2);letter-spacing:1px;text-transform:uppercase;flex-shrink:0; }
+.fill-item.dragging{ opacity:.4; }
+.fill-item.fdrag-over{ box-shadow:0 -2px 0 var(--accent); }
+.fill-drag{ cursor:grab;color:var(--muted2);font-size:14px;flex-shrink:0;user-select:none; }
+.fill-drag:hover{ color:#e87d47; }
+.fill-item-bar{ font-size:13px;font-weight:700;letter-spacing:1px;flex-shrink:0; }
+.fill-item-lbl{ font-size:11px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;flex-shrink:0; }
 .fill-note-input{
   flex:1;min-width:90px;background:transparent;border:none;border-bottom:1px solid rgba(232,125,71,.25);
   color:#d9a583;font-family:inherit;font-size:12px;padding:3px 0;outline:none;
@@ -575,8 +602,8 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 
 /* ── cue point pill (audio sync) ── */
 .cue-pill{
-  font-size:10px;background:var(--bg4);border:1px solid var(--border2);color:var(--muted2);
-  padding:3px 9px;border-radius:9px;cursor:pointer;letter-spacing:1px;white-space:nowrap;
+  font-size:12px;background:var(--bg4);border:1px solid var(--border2);color:var(--muted2);
+  padding:4px 11px;border-radius:9px;cursor:pointer;letter-spacing:1px;white-space:nowrap;
 }
 .cue-pill.set{border-color:var(--blue);color:var(--blue)}
 .cue-pill:hover{border-color:var(--blue);color:var(--blue)}
@@ -603,59 +630,62 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 
 /* ── audio bar (editor) ── */
 #audio-bar{
-  display:flex;align-items:center;gap:14px;padding:12px 24px;
+  display:flex;align-items:center;gap:16px;padding:16px 28px;
   border-bottom:1px solid var(--border);background:var(--bg);flex-shrink:0;
   animation:fadeSlideUp .3s ease;
 }
-#audio-bar.empty{background:var(--bg2)}
+#audio-bar.empty{background:var(--bg2);padding:14px 28px}
 #audio-setup{display:flex;align-items:center;gap:14px;width:100%}
 #audio-bar:not(.empty) #audio-setup{display:none}
-.audio-label{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;flex-shrink:0}
+.audio-label{font-size:12px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;flex-shrink:0}
 #audio-url-input{
   flex:1;min-width:0;background:var(--bg3);border:1px solid var(--border2);color:var(--text);
-  font-family:inherit;font-size:13px;padding:7px 10px;border-radius:5px;outline:none;
+  font-family:inherit;font-size:14px;padding:9px 12px;border-radius:6px;outline:none;
 }
 #audio-url-input:focus{border-color:var(--accent)}
 
 /* ── track panel (video on the left, controls + sync on the right) ── */
 #audio-panel{display:none}
-#audio-bar:not(.empty) #audio-panel{display:flex;gap:18px;align-items:stretch;width:100%}
-#audio-bar-player{flex-shrink:0;width:240px;height:135px}
-#audio-bar-player iframe{border-radius:8px;display:block;width:240px;height:135px}
+#audio-bar:not(.empty) #audio-panel{display:flex;gap:24px;align-items:stretch;width:100%}
+#audio-bar-player{flex-shrink:0;width:264px;height:148px}
+#audio-bar-player iframe{border-radius:10px;display:block;width:264px;height:148px}
 #audio-bar-player audio{width:100%}
-.ed-noplay{display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:var(--muted2);font-size:12px;border:1px dashed var(--border2);border-radius:8px;text-align:center;padding:8px}
-#audio-side{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:12px}
+.ed-noplay{display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:var(--muted2);font-size:13px;border:1px dashed var(--border2);border-radius:10px;text-align:center;padding:8px}
+#audio-side{
+  flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:14px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 20px;
+}
 .audio-chip{
-  display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--blue);
-  background:var(--bg3);border:1px solid var(--blue);padding:6px 12px;border-radius:5px;
+  display:inline-flex;align-items:center;gap:9px;font-size:13px;color:var(--blue);
+  background:var(--bg3);border:1px solid var(--blue);padding:7px 14px;border-radius:6px;
   letter-spacing:1px;align-self:flex-start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
-.audio-chip .x{cursor:pointer;color:var(--muted2)}
+.audio-chip .x{cursor:pointer;color:var(--muted2);font-size:14px}
 .audio-chip .x:hover{color:var(--red)}
 
 /* ── editor sync panel ── */
-#sync-panel{display:flex;flex-direction:column;gap:8px}
-.sync-title{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--blue)}
-.sync-row{display:flex;align-items:center;gap:10px}
+#sync-panel{display:flex;flex-direction:column;gap:12px}
+.sync-title{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--blue);font-weight:700}
+.sync-row{display:flex;align-items:center;gap:14px}
 .sync-play{
-  background:var(--bg3);border:1px solid var(--border2);color:var(--text);width:38px;height:38px;
-  border-radius:50%;cursor:pointer;font-size:14px;flex-shrink:0;transition:all .15s;
+  background:var(--bg3);border:1px solid var(--border2);color:var(--text);width:44px;height:44px;
+  border-radius:50%;cursor:pointer;font-size:15px;flex-shrink:0;transition:all .15s;
 }
-.sync-play:hover{border-color:var(--accent);color:var(--accent)}
+.sync-play:hover{border-color:var(--accent);color:var(--accent);transform:scale(1.05)}
 .sync-tap{
   background:transparent;border:1px solid var(--blue);color:var(--blue);
-  padding:9px 18px;font-family:inherit;font-size:12px;letter-spacing:2px;text-transform:uppercase;
-  border-radius:6px;cursor:pointer;transition:all .15s;
+  padding:11px 22px;font-family:inherit;font-size:13px;letter-spacing:2px;text-transform:uppercase;
+  border-radius:7px;cursor:pointer;transition:all .15s;font-weight:700;
 }
-.sync-tap:hover:not(:disabled){background:rgba(90,175,200,.14)}
+.sync-tap:hover:not(:disabled){background:rgba(90,175,200,.16)}
 .sync-tap:disabled{opacity:.4;cursor:default;border-color:var(--border2);color:var(--muted2)}
-.sync-time{font-size:13px;color:var(--muted);letter-spacing:1px;font-variant-numeric:tabular-nums}
-.sync-status{font-size:13px;color:var(--muted)}
+.sync-time{font-size:15px;color:var(--text);letter-spacing:1px;font-variant-numeric:tabular-nums}
+.sync-status{font-size:14px;color:var(--muted)}
 .sync-status b{color:var(--text)}
-.sync-links{font-size:11px;color:var(--muted2);letter-spacing:1px}
+.sync-links{font-size:12px;color:var(--muted2);letter-spacing:1px}
 .sync-links a{color:var(--muted);cursor:pointer;text-decoration:underline}
 .sync-links a:hover{color:var(--accent)}
-#perf-sync-note{font-size:11px;color:#777;letter-spacing:1px}
+#perf-sync-note{font-size:12px;color:#999;letter-spacing:1px}
 
 /* ── perf audio + fill highlight ── */
 #perf-audio-wrap{
@@ -1034,6 +1064,7 @@ html{ -webkit-text-size-adjust:100%; }
       <div id="perf-current-center">
         <div id="perf-section-name">—</div>
         <div id="perf-section-sub"></div>
+        <div id="perf-section-progress"><div id="perf-section-progress-fill"></div></div>
         <div id="perf-notes-disp"></div>
         <div id="perf-fill-badge"></div>
       </div>
@@ -1067,6 +1098,7 @@ html{ -webkit-text-size-adjust:100%; }
 </div>
 
 <div id="save-toast"></div>
+<div id="ctx-menu"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -1093,6 +1125,7 @@ let currentUser = null;
 let currentSongId = null;
 let idCounter = Date.now();
 let dragSrc = null;
+let fillDragSrc = null;         // visual index of the fill card being reordered
 let sharedSong = null;          // when viewing a shared link (read-only)
 let pendingSharedImport = null; // a shared chart waiting to be saved once the user logs in
 // true (sync) if the URL is a share link, so the auth handler doesn't yank us to the library before it loads
@@ -1117,7 +1150,7 @@ let localAudioURL = null;    // object URL (session only)
 let syncRAF = null;          // requestAnimationFrame id for the sync follow-loop
 let audioTimeRAF = null;     // clock display loop
 // editor-side player (so you can listen + tap cues right in the chart editor)
-let edYtPlayer = null, edYtReady = false, edAudioEl = null, edTimeRAF = null;
+let edYtPlayer = null, edYtReady = false, edAudioEl = null, edTimeRAF = null, edPlayheadRAF = null;
 let edLoadedKey = '';        // identity of the track currently loaded in the editor player
 let edCueIdx = 0;            // next section to stamp while tapping cues
 
@@ -1496,6 +1529,7 @@ window.renderLibrary = function(){
     const strips = song.sections.map(s => `<div class="song-card-strip" style="background:${effColor(s)};width:14px"></div>`).join('');
     const card = document.createElement('div');
     card.className = 'song-card';
+    card.dataset.id = song.id;
     card.style.animationDelay = (i * 0.05) + 's';
     card.innerHTML = `
       <div class="song-card-left" onclick="openSong(${song.id})">
@@ -1621,6 +1655,12 @@ window.saveSongMeta = function(){
 
 window.deleteSong = function(){ if(confirm('Delete?')){ library = library.filter(s => s.id !== currentSongId); window.save(); window.goLibrary(); } }
 window.deleteSongById = function(id){ if(confirm('Delete?')){ library = library.filter(s => s.id !== id); window.save(); window.renderLibrary(); } }
+window.duplicateSongById = function(id){
+  const s = library.find(x => x.id === id); if(!s) return;
+  const c = JSON.parse(JSON.stringify(s));
+  c.id = idCounter++; c.created = Date.now(); c.shareCode = null; c.name = (c.name || 'Untitled') + ' (copy)';
+  library.push(c); window.save(); renderLibrary(); showToast('Song duplicated');
+}
 window.clearChart = function(){ if(confirm('Clear?')){ currentSong().sections = []; window.save(); window.renderChart(); } }
 
 // ─── EDITOR ──────────────────────────────────────────
@@ -1718,16 +1758,17 @@ window.renderChart = function(){
         </div>
         <div class="fill-timeline-wrap">
           <div class="fill-timeline" data-i="${i}" data-px="${PX}" data-spb="${spb}" data-total="${total16}" style="width:${totalW}px;${gridBg}">
-            ${measures}${fillBars}
+            ${measures}${fillBars}<div class="ftl-playhead"></div>
           </div>
         </div>
         ${sec.fills.length ? `<div class="fills-list">
-          ${sec.fills.map((f,fi) => { const bb = fillBarBeat(ets, f.start16); return `
-            <div class="fill-item">
+          ${sec.fills.map((f,fi)=>({f,fi})).sort((a,b)=>a.f.start16-b.f.start16).map((o,pos) => { const bb = fillBarBeat(ets, o.f.start16); return `
+            <div class="fill-item" data-pos="${pos}">
+              <span class="fill-drag" title="Drag to reorder">⠿</span>
               <span class="fill-item-bar" style="color:#e87d47">Bar ${bb.bar} · beat ${bb.beat}</span>
-              <span class="fill-item-lbl">${fmtFillLen(ets,f.len16)}</span>
-              <input class="fill-note-input" type="text" value="${esc(f.notes)}" placeholder="fill idea — tom roll into crash…" onchange="updateFillField(${i},${fi},'notes',this.value)">
-              <button class="fill-del" onclick="removeFill(${i},${fi})" title="Remove this fill">✕</button>
+              <span class="fill-item-lbl">${fmtFillLen(ets,o.f.len16)}</span>
+              <input class="fill-note-input" type="text" value="${esc(o.f.notes)}" placeholder="fill idea — tom roll into crash…" onchange="updateFillField(${i},${o.fi},'notes',this.value)">
+              <button class="fill-del" onclick="removeFill(${i},${o.fi})" title="Remove this fill">✕</button>
             </div>`; }).join('')}
         </div>` : ''}
       </div>`;
@@ -1765,7 +1806,8 @@ window.renderChart = function(){
               <input class="bars-input" type="number" value="${sec.bars}" onchange="updateBars(${i},this.value)">
               <span>bars</span>
             </div>
-            <button class="ico-btn del" onclick="removeSection(${i})">✕</button>
+            <button class="ico-btn" onclick="duplicateSection(${i})" title="Duplicate section">⧉</button>
+            <button class="ico-btn del" onclick="removeSection(${i})" title="Delete section">✕</button>
           </div>
         </div>
         <input class="sec-notes-input" type="text" value="${esc(sec.notes)}" placeholder="Notes..." onchange="updateNotes(${i},this.value)">
@@ -1781,6 +1823,24 @@ window.renderChart = function(){
     // wire up the fill timeline (drag to draw / move / resize fills)
     const tl = el.querySelector('.fill-timeline');
     if(tl) attachFillTimeline(tl, el);
+    // select the section when clicking neutral areas (for keyboard shortcuts + right-click)
+    el.addEventListener('pointerdown', ev => {
+      if(ev.target.closest('input, select, button, .ftl-fill, .fill-timeline, .cue-pill, .repeat-pill, .mod-btn, .ts-mini, .sec-color-input, .sec-type-label, .fill-item')) return;
+      setSelectedSection(i);
+    });
+    // drag-reorder the fill cards (grab the ⠿ handle)
+    el.querySelectorAll('.fill-item').forEach(item => {
+      const handle = item.querySelector('.fill-drag');
+      if(handle){
+        handle.addEventListener('mousedown', () => item.draggable = true);
+        handle.addEventListener('touchstart', () => item.draggable = true, {passive:true});
+      }
+      item.addEventListener('dragstart', ev => { ev.stopPropagation(); fillDragSrc = +item.dataset.pos; item.classList.add('dragging'); ev.dataTransfer.effectAllowed='move'; });
+      item.addEventListener('dragend',   () => { item.draggable=false; item.classList.remove('dragging'); el.querySelectorAll('.fill-item').forEach(x=>x.classList.remove('fdrag-over')); });
+      item.addEventListener('dragover',  ev => { ev.preventDefault(); ev.stopPropagation(); item.classList.add('fdrag-over'); });
+      item.addEventListener('dragleave', () => item.classList.remove('fdrag-over'));
+      item.addEventListener('drop',      ev => { ev.preventDefault(); ev.stopPropagation(); window.reorderFills(i, fillDragSrc, +item.dataset.pos); });
+    });
     el.addEventListener('dragstart', e => { dragSrc = i; el.classList.add('dragging'); e.dataTransfer.effectAllowed='move'; });
     el.addEventListener('dragend',   () => { el.classList.remove('dragging'); document.querySelectorAll('.section-block').forEach(b=>b.classList.remove('drag-over-top','drag-over-bot')); });
     el.addEventListener('dragover',  e => {
@@ -1807,6 +1867,11 @@ window.renderChart = function(){
   if(!animate){
     if(chartArea) chartArea.scrollTop = savedTop;
     if(edMain) edMain.scrollTop = savedMainTop;
+  }
+  // re-apply the section selection highlight after the rebuild
+  if(typeof selectedSectionIdx !== 'undefined' && selectedSectionIdx != null){
+    const sb = list.children[selectedSectionIdx];
+    if(sb) sb.classList.add('selected'); else selectedSectionIdx = null;
   }
 }
 
@@ -1881,9 +1946,9 @@ function setupEditorAudio(){
     const mount = document.createElement('div'); holder.appendChild(mount);
     ensureYouTubeAPI(() => {
       edYtPlayer = new YT.Player(mount, {
-        width:'240', height:'135', videoId: song.audio.videoId,
+        width:'264', height:'148', videoId: song.audio.videoId,
         playerVars:{ controls:1, rel:0, modestbranding:1 },
-        events:{ onReady:()=>{ edYtReady = true; startEdClock(); }, onStateChange:()=>updateEdPlayBtn() }
+        events:{ onReady:()=>{ edYtReady = true; startEdClock(); startEdPlayhead(); }, onStateChange:()=>updateEdPlayBtn() }
       });
     });
   } else if(song.audio.type === 'file' && localAudioURL){
@@ -1891,13 +1956,15 @@ function setupEditorAudio(){
     edAudioEl = document.getElementById('ed-audio-el');
     edAudioEl.addEventListener('play', updateEdPlayBtn);
     edAudioEl.addEventListener('pause', updateEdPlayBtn);
-    startEdClock();
+    startEdClock(); startEdPlayhead();
   } else {
     holder.innerHTML = `<div class="ed-noplay">Re-load the audio file to play it</div>`;
   }
 }
 function teardownEditorAudio(){
-  cancelAnimationFrame(edTimeRAF);
+  cancelAnimationFrame(edTimeRAF); cancelAnimationFrame(edPlayheadRAF);
+  document.querySelectorAll('.ftl-playhead').forEach(p=>p.style.display='none');
+  document.querySelectorAll('.section-block.playing').forEach(b=>b.classList.remove('playing'));
   if(edYtPlayer){ try{ edYtPlayer.destroy(); }catch(e){} edYtPlayer = null; edYtReady = false; }
   edAudioEl = null; edLoadedKey = '';
   const holder = document.getElementById('audio-bar-player'); if(holder) holder.innerHTML = '';
@@ -1951,6 +2018,36 @@ function startEdClock(){
     edTimeRAF = requestAnimationFrame(tick);
   };
   tick();
+}
+// editor playhead: a moving line on the currently-playing section's timeline
+function startEdPlayhead(){
+  cancelAnimationFrame(edPlayheadRAF);
+  const tick = () => { updateEdPlayhead(); edPlayheadRAF = requestAnimationFrame(tick); };
+  tick();
+}
+function updateEdPlayhead(){
+  document.querySelectorAll('.ftl-playhead').forEach(p => p.style.display='none');
+  document.querySelectorAll('.section-block.playing').forEach(b => b.classList.remove('playing'));
+  const song = currentSong();
+  if(!song || !edAvailable() || !edPlaying()) return;
+  const t = edGetTime();
+  const cued = song.sections.map((s,i)=>({s,i})).filter(o=>o.s.time!=null).sort((a,b)=>a.s.time-b.s.time);
+  if(!cued.length) return;
+  let cur = null;
+  for(const o of cued){ if(t >= o.s.time - 0.05) cur = o; else break; }
+  if(!cur) return;
+  const block = document.querySelectorAll('.section-block')[cur.i]; if(!block) return;
+  block.classList.add('playing');
+  const tl = block.querySelector('.fill-timeline'), ph = block.querySelector('.ftl-playhead');
+  if(!tl || !ph) return;
+  const ets = effTS(song, cur.s);
+  const total16 = cur.s.bars * sixteenthsPerBar(ets);
+  const pos16 = Math.max(0, Math.min(total16, (t - cur.s.time) * 1000 / msPer16(song)));
+  const PX = +tl.dataset.px;
+  ph.style.left = (pos16 * PX) + 'px';
+  ph.style.display = 'block';
+  const wrap = tl.closest('.fill-timeline-wrap');
+  if(wrap){ const x = pos16*PX; if(x < wrap.scrollLeft+30 || x > wrap.scrollLeft+wrap.clientWidth-30) wrap.scrollLeft = Math.max(0, x - wrap.clientWidth/2); }
 }
 
 // ── cue tapping in the editor: play the track, tap on each section's downbeat ──
@@ -2136,7 +2233,7 @@ window.setMode = function(m){
   const ring = document.getElementById('countdown-ring-wrap');
   if(m==='auto'){ status.textContent='AUTO · BPM TIMED'; scheduleAuto(); }
   else if(m==='sync'){ status.textContent='SYNC · FOLLOWING TRACK'; ring.classList.remove('visible'); startSyncLoop(); }
-  else { status.textContent='MANUAL'; ring.classList.remove('visible'); }
+  else { status.textContent='MANUAL'; ring.classList.remove('visible'); setSectionProgress(0); }
 }
 
 function stopSyncLoop(){ if(syncRAF){ cancelAnimationFrame(syncRAF); syncRAF = null; } syncFillFlash = false; hideCountIn(); }
@@ -2168,6 +2265,12 @@ function startSyncLoop(){
       if(target !== perfIdx){ perfIdx = target; window.renderPerf(); }
       const dur = getAudioDuration();
       if(dur) document.getElementById('perf-progress-fill').style.width = Math.min(100,(t/dur)*100)+'%';
+      // section playhead: progress through the current cued section
+      const cs = song.sections[target];
+      const secDur = barMsFor(song, cs) * cs.bars * cs.repeats / 1000;
+      const nextCue = cued.find(o => o.time > cs.time);
+      const endT = nextCue ? nextCue.time : cs.time + secDur;
+      setSectionProgress((t - cs.time) / Math.max(0.01, endT - cs.time));
     }
     // flash FILL NOW for ~0.4s when a fill hits
     const nowFill = events.find(e => e.type==='fill' && t >= e.time && t < e.time + 0.4);
@@ -2291,6 +2394,7 @@ function scheduleAuto(startAnchor){
     }
 
     updateRing(elapsed / totalMs);
+    setSectionProgress(elapsed / totalMs);
     const bar = Math.min(totalBarTicks, Math.floor(elapsed / barMs) + 1);
     if(bar !== currentBarTick){ currentBarTick = bar; updateBarTicker(); }
     // count-in to the next event (respecting the count-in setting)
@@ -2326,6 +2430,10 @@ function updateBarTicker(){
 function updateRing(prog){
   const circ = 81.7;
   document.getElementById('ring-arc').setAttribute('stroke-dashoffset', circ - (circ * prog));
+}
+function setSectionProgress(prog){
+  const f = document.getElementById('perf-section-progress-fill');
+  if(f) f.style.width = Math.max(0, Math.min(100, prog*100)) + '%';
 }
 
 // concise summary of a section's fills for the performance badge
@@ -2434,6 +2542,42 @@ window.updateNotes = (i,v) => { currentSong().sections[i].notes = v; window.save
 window.removeSection = (i) => { currentSong().sections.splice(i,1); window.save(); window.renderChart(); }
 window.cycleRepeats = (i) => { currentSong().sections[i].repeats = (currentSong().sections[i].repeats % 8) + 1; window.save(); window.renderChart(); }
 
+// ── section copy / cut / paste / duplicate ──
+let sectionClipboard = null;
+let selectedSectionIdx = null;
+function cloneSection(sec){ const c = JSON.parse(JSON.stringify(sec)); c.id = idCounter++; c.time = null; return c; }
+window.duplicateSection = (i) => {
+  const secs = currentSong().sections;
+  secs.splice(i+1, 0, cloneSection(secs[i]));
+  window.save(); window.renderChart();
+}
+window.copySection = (i) => { sectionClipboard = JSON.parse(JSON.stringify(currentSong().sections[i])); showToast('Section copied'); }
+window.cutSection  = (i) => { sectionClipboard = JSON.parse(JSON.stringify(currentSong().sections[i])); currentSong().sections.splice(i,1); window.save(); window.renderChart(); showToast('Section cut'); }
+window.pasteSection = (i) => {
+  if(!sectionClipboard){ showToast('Nothing to paste', 'error'); return; }
+  const at = (i==null) ? currentSong().sections.length : i+1;
+  currentSong().sections.splice(at, 0, cloneSection(sectionClipboard));
+  window.save(); window.renderChart(); showToast('Section pasted');
+}
+window.moveSection = (i, dir) => {
+  const secs = currentSong().sections; const j = i + dir;
+  if(j < 0 || j >= secs.length) return;
+  [secs[i], secs[j]] = [secs[j], secs[i]];
+  window.save(); window.renderChart();
+}
+// reorder fill cards: keep the timeline slots, move the notes/ideas to match the new order
+window.reorderFills = (i, from, to) => {
+  if(from === to || from == null) return;
+  const sec = currentSong().sections[i];
+  const order = sec.fills.map((f,k)=>k).sort((a,b)=> sec.fills[a].start16 - sec.fills[b].start16); // visual order
+  const slots = order.map(k => ({ start16: sec.fills[k].start16, len16: sec.fills[k].len16 }));
+  const moved = order.splice(from, 1)[0];
+  order.splice(to, 0, moved);
+  // reassign the (sorted) slots to the new note order
+  order.forEach((fillIdx, pos) => { sec.fills[fillIdx].start16 = slots[pos].start16; sec.fills[fillIdx].len16 = slots[pos].len16; });
+  window.save(); window.renderChart();
+}
+
 // pre/post modifier — clicking the active one turns it back off
 window.setMod = (i, m) => {
   const sec = currentSong().sections[i];
@@ -2443,6 +2587,13 @@ window.setMod = (i, m) => {
 // ── drum fills: positioned at a bar, starting on a beat, lasting N beats ──
 // click a bar in the grid to add/remove a fill there
 window.removeFill = (i, fi) => { currentSong().sections[i].fills.splice(fi, 1); window.save(); window.renderChart(); }
+window.duplicateFill = (i, fi) => {
+  const sec = currentSong().sections[i]; const f = sec.fills[fi];
+  const total = sec.bars * sixteenthsPerBar(effTS(currentSong(), sec));
+  const start = Math.min(total - 1, f.start16 + f.len16);
+  sec.fills.push({ start16: start, len16: Math.min(f.len16, total - start), notes: f.notes });
+  window.save(); window.renderChart();
+}
 window.updateFillField = (i, fi, field, v) => {
   const f = currentSong().sections[i].fills[fi]; if(!f) return;
   if(field === 'notes'){ f.notes = v; window.save(); }
@@ -2566,6 +2717,86 @@ document.addEventListener('keydown', e => {
   if(e.key==='ArrowLeft')  window.perfBack();
   if((e.key==='p'||e.key==='P') && audioAvailable()){ e.preventDefault(); window.toggleAudioPlay(); }
   if(e.key==='f'||e.key==='F') window.setDisplayMode(displayMode==='focus'?'list':'focus');
+});
+
+// ─── RIGHT-CLICK CONTEXT MENU + SECTION SELECTION ───
+function setSelectedSection(i){
+  selectedSectionIdx = i;
+  document.querySelectorAll('.section-block').forEach(b => b.classList.toggle('selected', +b.dataset.idx === i));
+}
+const ctxEl = document.getElementById('ctx-menu');
+function hideCtx(){ ctxEl.style.display='none'; ctxEl.innerHTML=''; }
+function showCtx(x, y, items){
+  ctxEl.innerHTML = items.map(it => it === '---'
+    ? '<div class="ctx-sep"></div>'
+    : `<div class="ctx-item ${it.disabled?'disabled':''} ${it.danger?'ctx-danger':''}" data-act="${it.id}"><span class="ctx-ico">${it.icon||''}</span><span>${it.label}</span>${it.key?`<span class="ctx-key">${it.key}</span>`:''}</div>`).join('');
+  ctxEl.style.display='block';
+  const mw = ctxEl.offsetWidth, mh = ctxEl.offsetHeight;
+  ctxEl.style.left = Math.min(x, innerWidth - mw - 8) + 'px';
+  ctxEl.style.top  = Math.min(y, innerHeight - mh - 8) + 'px';
+  ctxEl.querySelectorAll('.ctx-item:not(.disabled)').forEach(el => {
+    el.onclick = () => { const act = items.find(it => it && it.id === el.dataset.act); hideCtx(); if(act && act.run) act.run(); };
+  });
+}
+document.addEventListener('contextmenu', e => {
+  // let text inputs keep their native copy/paste menu
+  if(e.target.closest('input, textarea, select')) { hideCtx(); return; }
+  const block = e.target.closest('.section-block');
+  const fillEl = e.target.closest('.ftl-fill');
+  const card = e.target.closest('.song-card');
+  if(fillEl && block){
+    e.preventDefault(); const i = +block.dataset.idx, fi = +fillEl.dataset.fi;
+    showCtx(e.clientX, e.clientY, [
+      {id:'fd', icon:'⧉', label:'Duplicate fill', run:()=>window.duplicateFill(i,fi)},
+      {id:'fx', icon:'🗑', label:'Delete fill', danger:true, run:()=>window.removeFill(i,fi)},
+    ]); return;
+  }
+  if(block){
+    e.preventDefault(); const i = +block.dataset.idx; setSelectedSection(i);
+    showCtx(e.clientX, e.clientY, [
+      {id:'dup', icon:'⧉', label:'Duplicate', key:'Ctrl+D', run:()=>window.duplicateSection(i)},
+      {id:'copy', icon:'⎘', label:'Copy', key:'Ctrl+C', run:()=>window.copySection(i)},
+      {id:'cut', icon:'✂', label:'Cut', key:'Ctrl+X', run:()=>window.cutSection(i)},
+      {id:'paste', icon:'📋', label:'Paste below', key:'Ctrl+V', disabled:!sectionClipboard, run:()=>window.pasteSection(i)},
+      '---',
+      {id:'up', icon:'↑', label:'Move up', run:()=>window.moveSection(i,-1)},
+      {id:'down', icon:'↓', label:'Move down', run:()=>window.moveSection(i,1)},
+      '---',
+      {id:'del', icon:'🗑', label:'Delete', key:'Del', danger:true, run:()=>window.removeSection(i)},
+    ]); return;
+  }
+  if(card){
+    e.preventDefault();
+    const id = +card.dataset.id;
+    showCtx(e.clientX, e.clientY, [
+      {id:'open', icon:'✎', label:'Open', run:()=>window.openSong(id)},
+      {id:'play', icon:'▶', label:'Perform', run:()=>window.openAndPerform(id)},
+      {id:'dup', icon:'⧉', label:'Duplicate', run:()=>window.duplicateSongById(id)},
+      {id:'share', icon:'🔗', label:'Copy share link', run:()=>{ window.openSong(id); setTimeout(window.shareSong, 200); }},
+      '---',
+      {id:'del', icon:'🗑', label:'Delete', danger:true, run:()=>window.deleteSongById(id)},
+    ]); return;
+  }
+  hideCtx();
+});
+document.addEventListener('click', e => { if(!e.target.closest('#ctx-menu')) hideCtx(); });
+document.addEventListener('scroll', hideCtx, true);
+window.addEventListener('blur', hideCtx);
+window.addEventListener('resize', hideCtx);
+
+// editor keyboard shortcuts act on the selected section
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape') hideCtx();
+  if(!document.getElementById('view-editor').classList.contains('active')) return;
+  if(document.getElementById('perf-overlay').classList.contains('active')) return;
+  if(e.target.closest('input, textarea, select')) return;     // don't hijack typing
+  const i = selectedSectionIdx; if(i == null) return;
+  const meta = e.ctrlKey || e.metaKey;
+  if(meta && e.key.toLowerCase()==='c'){ e.preventDefault(); window.copySection(i); }
+  else if(meta && e.key.toLowerCase()==='x'){ e.preventDefault(); window.cutSection(i); }
+  else if(meta && e.key.toLowerCase()==='v'){ e.preventDefault(); window.pasteSection(i); }
+  else if(meta && e.key.toLowerCase()==='d'){ e.preventDefault(); window.duplicateSection(i); }
+  else if(e.key==='Delete'){ e.preventDefault(); window.removeSection(i); selectedSectionIdx=null; }
 });
 
 // All functions are now defined — if the page was opened via a share link, render the read-only viewer
