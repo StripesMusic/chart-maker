@@ -109,7 +109,7 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
     transform: translateX(8px); box-shadow: -4px 0 0 var(--accent);
 }
 .song-card-left{flex:1;min-width:0}
-.song-card-name{font-size:20px;font-weight:700;letter-spacing:2px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.song-card-name{font-size:20px;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .song-card-meta{font-size:13px;color:var(--muted);letter-spacing:1px;margin-top:6px}
 .song-card-strips{display:flex;gap:4px;margin-top:10px;flex-wrap:wrap}
 .song-card-strip{height:8px;border-radius:2px;min-width:14px}
@@ -558,10 +558,15 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 .mod-btn.active{background:var(--accent);color:#000;border-color:var(--accent);font-weight:700}
 
 /* ── drum fills: 16th-note timeline + fill list ── */
-.fills-section{ margin-top:13px; }
-.fills-head{ display:flex;align-items:center;gap:10px;margin-bottom:8px; }
+.fills-section{ margin-top:13px;border-top:1px solid var(--border);padding-top:10px; }
+.fills-head{ display:flex;align-items:center;gap:9px;width:100%;background:none;border:none;cursor:pointer;text-align:left;padding:5px 4px;border-radius:6px;color:inherit; }
+.fills-head:hover{ background:var(--bg3); }
+.fills-caret{ font-size:11px;color:var(--muted);transition:transform .18s;display:inline-block;flex-shrink:0; }
+.fills-section.open .fills-caret{ transform:rotate(90deg); }
 .fills-label{ font-size:12px;font-weight:700;letter-spacing:2px;color:#e87d47;text-transform:uppercase; }
-.fills-hint{ font-size:11.5px;color:var(--muted2);letter-spacing:.5px; }
+.fills-count{ font-size:11px;font-weight:700;color:#e87d47;background:rgba(232,125,71,.14);border:1px solid rgba(232,125,71,.32);border-radius:9px;padding:1px 9px;font-variant-numeric:tabular-nums; }
+.fills-body{ display:none;margin-top:10px; }
+.fills-section.open .fills-body{ display:block;animation:fadeSlideUp .2s ease; }
 .fill-timeline-wrap{ overflow-x:auto; padding-bottom:4px; }
 .fill-timeline-wrap::-webkit-scrollbar{ height:5px; }
 .fill-timeline-wrap::-webkit-scrollbar-thumb{ background:var(--border2); }
@@ -1307,8 +1312,13 @@ function showToast(msg, type='saved', duration=1800){
 }
 
 window.save = async function(){
+  const json = JSON.stringify(library);
+  // record an undo snapshot of the state *before* this change (skip while restoring)
+  if(!restoringHistory){
+    if(histPrev != null && histPrev !== json){ undoStack.push(histPrev); if(undoStack.length > 50) undoStack.shift(); redoStack.length = 0; }
+    histPrev = json;
+  }
   try {
-    const json = JSON.stringify(library);
     localStorage.setItem('drumcharts_lib', json);
     if(currentUser) {
         await setDoc(doc(db, "users", currentUser.uid), { library });
@@ -1316,6 +1326,57 @@ window.save = async function(){
     showToast('✓ Synced');
   } catch(e) { showToast('Save failed', 'error'); }
 }
+
+// ─── undo / redo (whole-library snapshots) + per-section fills-collapse state ───
+let undoStack = [], redoStack = [], histPrev = null, restoringHistory = false;
+const fillsOpen = new Set();   // section ids whose fills panel is expanded (UI-only, resets per session)
+function histReset(){ undoStack = []; redoStack = []; histPrev = JSON.stringify(library); }
+function refreshEditorFromState(){
+  const song = currentSong();
+  if(song && document.getElementById('view-editor').classList.contains('active')){
+    const g = id => document.getElementById(id);
+    g('song-name-input').value = song.name || '';
+    g('bpm-input').value = song.bpm;
+    g('ts-num').value = song.ts;
+    g('ts-den').value = String(song.tsd || 4);
+    g('global-notes').value = song.notes || '';
+    g('num-toggle').classList.toggle('on', song.autoNumber !== false);
+    renderAudioBar();
+    window.renderChart();
+    renderSyncPanel();
+  }
+  if(document.getElementById('view-library').classList.contains('active')) window.renderLibrary();
+}
+async function applyHistory(json){
+  restoringHistory = true;
+  try {
+    library = JSON.parse(json);
+    library.forEach(migrateSong);
+    histPrev = json;
+    selectedSectionIdx = null;
+    await window.save();
+  } finally { restoringHistory = false; }
+  refreshEditorFromState();
+}
+window.undoEdit = function(){
+  if(!undoStack.length){ showToast('Nothing to undo'); return; }
+  redoStack.push(JSON.stringify(library));
+  applyHistory(undoStack.pop());
+  showToast('↶ Undo');
+};
+window.redoEdit = function(){
+  if(!redoStack.length){ showToast('Nothing to redo'); return; }
+  undoStack.push(JSON.stringify(library));
+  applyHistory(redoStack.pop());
+  showToast('↷ Redo');
+};
+window.toggleFills = function(i){
+  const song = currentSong(); if(!song) return;
+  const sec = song.sections[i]; if(!sec) return;
+  if(fillsOpen.has(sec.id)) fillsOpen.delete(sec.id); else fillsOpen.add(sec.id);
+  const fs = document.querySelector(`.section-block[data-idx="${i}"] .fills-section`);
+  if(fs) fs.classList.toggle('open', fillsOpen.has(sec.id));
+};
 
 window.exportLibrary = function(){
   window.saveSongMeta();
@@ -1362,6 +1423,7 @@ function migrateSong(song){
   // a local audio-file URL can't survive a reload — drop the dead blob ref, keep cues
   if(song.audio && song.audio.type === 'file') song.audio = null;
   (song.sections||[]).forEach(s => {
+    if(s.id === undefined)   s.id = idCounter++; // stable id (used for fills-collapse UI state)
     if(s.mod === undefined)  s.mod = null;   // null | 'pre' | 'post'
     if(s.time === undefined) s.time = null;  // cue point in seconds (audio sync)
     if(s.num === undefined)  s.num = null;   // manual instance number (used when auto-numbering is off)
@@ -1601,6 +1663,7 @@ window.openSong = function(id){
   ed.addEventListener('animationend', () => ed.classList.remove('just-opened'), { once:true });
   animateChartOnce = true;
   edCueIdx = 0; edLoadedKey = '';   // fresh editor player + cue cursor for this song
+  histReset();                      // start a clean undo history for this song
   renderAudioBar();
   window.renderChart();
   // reflect this chart's shareable link in the address bar (request: "show the link in the URL bar")
@@ -1783,27 +1846,31 @@ window.renderChart = function(){
     }).join('');
     // light 16th gridlines + stronger beat lines, drawn as a background so dragging snaps are visible
     const gridBg = `background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 1px ${PX}px),repeating-linear-gradient(90deg,rgba(255,255,255,.13) 0 1px,transparent 1px ${s16b*PX}px)`;
+    const fillsOpenNow = fillsOpen.has(sec.id);
     const fillBlock = `
-      <div class="fills-section">
-        <div class="fills-head">
+      <div class="fills-section ${fillsOpenNow?'open':''}">
+        <button type="button" class="fills-head" onclick="toggleFills(${i})" title="Show / hide drum fills for this section">
+          <span class="fills-caret">▸</span>
           <span class="fills-label">🥁 Fills</span>
-          <span class="fills-hint">${sec.fills.length ? sec.fills.length+' placed · drag a fill to move, drag its right edge to resize' : 'drag across the bars to draw a fill — snaps to 16th notes'}</span>
-        </div>
-        <div class="fill-timeline-wrap">
-          <div class="fill-timeline" data-i="${i}" data-px="${PX}" data-spb="${spb}" data-total="${total16}" style="width:${totalW}px;${gridBg}">
-            ${measures}${fillBars}<div class="ftl-playhead"></div>
+          <span class="fills-count">${sec.fills.length}</span>
+        </button>
+        <div class="fills-body">
+          <div class="fill-timeline-wrap">
+            <div class="fill-timeline" data-i="${i}" data-px="${PX}" data-spb="${spb}" data-total="${total16}" style="width:${totalW}px;${gridBg}">
+              ${measures}${fillBars}<div class="ftl-playhead"></div>
+            </div>
           </div>
+          ${sec.fills.length ? `<div class="fills-list">
+            ${sec.fills.map((f,fi)=>({f,fi})).sort((a,b)=>a.f.start16-b.f.start16).map((o,pos) => { const bb = fillBarBeat(ets, o.f.start16); return `
+              <div class="fill-item" data-pos="${pos}">
+                <span class="fill-drag" title="Drag to reorder">⠿</span>
+                <span class="fill-item-bar" style="color:#e87d47">Bar ${bb.bar} · beat ${bb.beat}</span>
+                <span class="fill-item-lbl">${fmtFillLen(ets,o.f.len16)}</span>
+                <input class="fill-note-input" type="text" value="${esc(o.f.notes)}" placeholder="fill idea — tom roll into crash…" onchange="updateFillField(${i},${o.fi},'notes',this.value)">
+                <button class="fill-del" onclick="removeFill(${i},${o.fi})" title="Remove this fill">✕</button>
+              </div>`; }).join('')}
+          </div>` : ''}
         </div>
-        ${sec.fills.length ? `<div class="fills-list">
-          ${sec.fills.map((f,fi)=>({f,fi})).sort((a,b)=>a.f.start16-b.f.start16).map((o,pos) => { const bb = fillBarBeat(ets, o.f.start16); return `
-            <div class="fill-item" data-pos="${pos}">
-              <span class="fill-drag" title="Drag to reorder">⠿</span>
-              <span class="fill-item-bar" style="color:#e87d47">Bar ${bb.bar} · beat ${bb.beat}</span>
-              <span class="fill-item-lbl">${fmtFillLen(ets,o.f.len16)}</span>
-              <input class="fill-note-input" type="text" value="${esc(o.f.notes)}" placeholder="fill idea — tom roll into crash…" onchange="updateFillField(${i},${o.fi},'notes',this.value)">
-              <button class="fill-del" onclick="removeFill(${i},${o.fi})" title="Remove this fill">✕</button>
-            </div>`; }).join('')}
-        </div>` : ''}
       </div>`;
     const tsCtrl = `<span class="ts-mini ${sectionHasTSOverride(sec)?'custom':''}" title="Time signature for this section (blank = follow song)">
         <input class="ts-mini-num" type="number" min="1" max="15" value="${ets.n}" onchange="updateSecTS(${i},'n',this.value)">
@@ -2814,6 +2881,9 @@ document.addEventListener('contextmenu', e => {
   if(block){
     e.preventDefault(); const i = +block.dataset.idx; setSelectedSection(i);
     showCtx(e.clientX, e.clientY, [
+      {id:'undo', icon:'↶', label:'Undo', key:'Ctrl+Z', disabled:!undoStack.length, run:()=>window.undoEdit()},
+      {id:'redo', icon:'↷', label:'Redo', key:'Ctrl+Y', disabled:!redoStack.length, run:()=>window.redoEdit()},
+      '---',
       {id:'dup', icon:'⧉', label:'Duplicate', key:'Ctrl+D', run:()=>window.duplicateSection(i)},
       {id:'copy', icon:'⎘', label:'Copy', key:'Ctrl+C', run:()=>window.copySection(i)},
       {id:'cut', icon:'✂', label:'Cut', key:'Ctrl+X', run:()=>window.cutSection(i)},
@@ -2837,6 +2907,14 @@ document.addEventListener('contextmenu', e => {
       {id:'del', icon:'🗑', label:'Delete', danger:true, run:()=>window.deleteSongById(id)},
     ]); return;
   }
+  // empty editor area → still offer undo/redo
+  if(document.getElementById('view-editor').classList.contains('active')){
+    e.preventDefault();
+    showCtx(e.clientX, e.clientY, [
+      {id:'undo', icon:'↶', label:'Undo', key:'Ctrl+Z', disabled:!undoStack.length, run:()=>window.undoEdit()},
+      {id:'redo', icon:'↷', label:'Redo', key:'Ctrl+Y', disabled:!redoStack.length, run:()=>window.redoEdit()},
+    ]); return;
+  }
   hideCtx();
 });
 document.addEventListener('click', e => { if(!e.target.closest('#ctx-menu')) hideCtx(); });
@@ -2850,6 +2928,8 @@ document.addEventListener('keydown', e => {
   if(!document.getElementById('view-editor').classList.contains('active')) return;
   if(document.getElementById('perf-overlay').classList.contains('active')) return;
   if(e.target.closest('input, textarea, select')) return;     // don't hijack typing
+  if((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='z' && !e.shiftKey){ e.preventDefault(); window.undoEdit(); return; }
+  if((e.ctrlKey||e.metaKey) && (e.key.toLowerCase()==='y' || (e.shiftKey && e.key.toLowerCase()==='z'))){ e.preventDefault(); window.redoEdit(); return; }
   const i = selectedSectionIdx; if(i == null) return;
   const meta = e.ctrlKey || e.metaKey;
   if(meta && e.key.toLowerCase()==='c'){ e.preventDefault(); window.copySection(i); }
