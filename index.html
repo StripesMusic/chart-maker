@@ -1764,7 +1764,7 @@ window.renderChart = function(){
     const modPrefix = sec.mod === 'pre' ? '<span class="sec-mod-label">Pre-</span>'
                     : sec.mod === 'post' ? '<span class="sec-mod-label">Post-</span>' : '';
     const cuePill = hasAudio
-      ? `<span class="cue-pill ${sec.time!=null?'set':''}" onclick="setCueHere(${i})" title="${sec.time!=null?'Cue set — click to clear it':'Click to cue this section at the current play time'}">${sec.time!=null?'⏱ '+fmtTime(sec.time):'⏱ set cue'}</span>`
+      ? `<span class="cue-pill ${sec.time!=null?'set':''}" onclick="setCueHere(${i})" title="${sec.time!=null?'Cue set — click to clear it':'Click to cue this section at the current play time'}">${sec.time!=null?'⏱ '+fmtCue(sec.time):'⏱ set cue'}</span>`
       : '';
     const ets = effTS(song, sec);
     // ── fills: a 16th-note timeline you drag across to draw fills (they stretch across bars) ──
@@ -1911,6 +1911,8 @@ window.renderChart = function(){
 // escape values placed into HTML attributes / text
 function esc(str){ return String(str==null?'':str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fmtTime(s){ s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
+// like fmtTime but keeps hundredths-of-a-second — cue points are stored as floats, so show that precision
+function fmtCue(s){ s=Math.max(0,s); const cc=Math.floor((s%1)*100); return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0')+'.'+String(cc).padStart(2,'0'); }
 
 // ─── AUDIO / TRACK ───────────────────────────────────
 function parseYouTubeId(url){
@@ -2701,12 +2703,13 @@ function attachFillTimeline(tl, blockEl){
   });
 }
 // cue points
-window.clearCue = (i) => { currentSong().sections[i].time = null; window.save(); window.renderChart(); renderSyncPanel(); }
+window.clearCue = (i) => { currentSong().sections[i].time = null; edCueIdx = Math.min(edCueIdx, i); window.save(); window.renderChart(); renderSyncPanel(); }
 // toggle this section's cue: set it to the track's current play time, or clear it if already set
 window.setCueHere = (i) => {
   const sec = currentSong().sections[i];
   if(sec.time != null){            // already cued → clear it
     sec.time = null;
+    edCueIdx = Math.min(edCueIdx, i);   // rewind the TAP-CUE cursor so the next tap re-stamps THIS section
     window.save(); window.renderChart(); renderSyncPanel();
     showToast('Cue cleared');
     return;
@@ -2715,7 +2718,7 @@ window.setCueHere = (i) => {
   sec.time = edGetTime();
   edCueIdx = Math.max(edCueIdx, i + 1);   // keep the sequential TAP-CUE cursor past this one
   window.save(); window.renderChart(); renderSyncPanel();
-  showToast('⏱ ' + sectionDisplay(currentSong(), i) + ' cued @ ' + fmtTime(sec.time));
+  showToast('⏱ ' + sectionDisplay(currentSong(), i) + ' cued @ ' + fmtCue(sec.time));
 }
 
 // drag reorder
