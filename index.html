@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Drum Chart Pro</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%F0%9F%A5%81</text></svg>">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -1216,9 +1217,14 @@ onAuthStateChanged(auth, async (user) => {
     const vLib = document.getElementById('view-library');
     if (user) {
         currentUser = user;
-        const docSnap = await getDoc(doc(db, "users", user.uid));
-        if (docSnap.exists()) {
-            library = docSnap.data().library || [];
+        try {
+            const docSnap = await getDoc(doc(db, "users", user.uid));
+            if (docSnap.exists()) library = docSnap.data().library || [];
+        } catch(err) {
+            // cloud read denied (e.g. Firestore rules / expired test mode) — fall back to the local copy
+            console.warn('Cloud load failed — using local charts. Update your Firestore rules.', err);
+            try { const local = JSON.parse(localStorage.getItem('drumcharts_lib') || '[]'); if(Array.isArray(local)) library = local; } catch(_){}
+            showToast('Offline — using local charts', 'error', 3500);
         }
         library.forEach(migrateSong);
         // opened via a short link: if it's the user's own chart, open it editable; otherwise read-only
