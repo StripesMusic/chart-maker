@@ -703,6 +703,18 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 .ftl-measure{ position:absolute; top:0; bottom:0; border-left:2px solid var(--border2); }
 .ftl-measure:first-child{ border-left:none; }
 .ftl-measure-n{ position:absolute; top:3px; left:5px; font-size:11px; font-weight:700; color:var(--muted); font-variant-numeric:tabular-nums; }
+/* trailing odd bar (e.g. the 2/4 in "4.5 bars of 4/4") reads as its own measure */
+.ftl-measure.ftl-odd{ background:rgba(255,140,43,.09); border-left-color:var(--accent); }
+.ftl-measure.ftl-odd .ftl-measure-n{ color:var(--accent); }
+.ftl-odd-ts{
+  position:absolute; top:2px; right:4px; font-size:9px; font-weight:700; letter-spacing:.5px;
+  color:#1c1005; background:var(--accent); border-radius:2px; padding:1px 4px;
+  font-family:var(--mono);
+}
+.ftl-beat-n{
+  position:absolute; bottom:3px; font-size:10px; font-weight:700; color:var(--accent);
+  font-variant-numeric:tabular-nums; padding-left:3px; opacity:.9; pointer-events:none;
+}
 .ftl-fill{
   position:absolute; top:22px; height:32px; border-radius:4px; cursor:grab;
   background:linear-gradient(180deg, rgba(232,125,71,.9), rgba(232,125,71,.65));
@@ -1866,7 +1878,7 @@ function renderSharedView(){
         <div class="sv-body">
           <div class="sv-row1">
             <span class="sv-name" style="color:${ec}">${esc(baseLabel(sec))}</span>${numHtml}
-            <span class="sv-meta">${fill} ${fmtBars(sec.bars)} bars ${sec.repeats>1?'×'+sec.repeats:''} · ${tsLabel(song,sec)}</span>
+            <span class="sv-meta">${fill} ${barsLabel(effTS(song,sec), sec.bars)} ${sec.repeats>1?'×'+sec.repeats:''} · ${tsLabel(song,sec)}</span>
           </div>
           ${sec.notes ? `<div class="sv-notes">${esc(sec.notes)}</div>` : ''}
         </div>
@@ -2010,6 +2022,22 @@ function sixteenthsPerBar(ets){ return ets.n * 16 / ets.d; }   // n beats × (16
 // bars can be fractional (4.25) — print without trailing zeros
 function fmtBars(n){ return Number(n).toFixed(2).replace(/\.?0+$/,''); }
 function sixteenthsPerBeat(ets){ return 16 / ets.d; }
+// A fractional bar count means the section ends on a short "odd" bar — e.g. 4.5 bars of 4/4
+// is 4 bars plus a 2/4 bar. These derive that odd bar so it can be drawn, counted and
+// counted-in as a real measure instead of a smear of leftover time.
+function oddBarBeats(ets, bars){
+  const frac = bars - Math.floor(bars + 1e-9);
+  if(frac < 1e-9) return 0;                       // whole bars, no odd bar
+  return Math.max(1, Math.round(frac * ets.n));   // beats in that trailing bar
+}
+function wholeBarsOf(bars){ return Math.floor(bars + 1e-9); }
+// "8 bars" / "4 bars + 2 beats"
+function barsLabel(ets, bars){
+  const w = wholeBarsOf(bars), ob = oddBarBeats(ets, bars);
+  if(!ob) return `${w} bars`;
+  if(!w)  return `${ob} beat${ob!==1?'s':''}`;
+  return `${w} bars + ${ob} beat${ob!==1?'s':''}`;
+}
 function msPer16(song){ return (60000 / song.bpm) / 4; }       // a 16th note is always a quarter ÷ 4
 // where (bar, beat) a fill's start16 lands, for labels
 function fillBarBeat(ets, start16){
@@ -2139,10 +2167,22 @@ window.renderChart = function(){
     // px per 16th: stretch to fill the chart for short sections, but never below 14px (so you keep fine control)
     const PX = Math.max(14, Math.floor(chartAvailW / total16));
     const totalW = total16 * PX;
-    // a partial last bar gets a proportionally narrower measure block
-    const measures = Array.from({length: Math.ceil(sec.bars)}, (_,b) => {
-      const w = Math.min(spb, total16 - b*spb) * PX;
-      return `<div class="ftl-measure" style="left:${b*spb*PX}px;width:${w}px"><span class="ftl-measure-n">${b+1}</span></div>`;
+    // the trailing odd bar (from a fractional bar count) is drawn as a real, labelled measure
+    // in its own meter, with its beats numbered so you can see exactly where they land
+    const oddBeats = oddBarBeats(ets, sec.bars);
+    const measures = Array.from({length: Math.ceil(sec.bars - 1e-9)}, (_,b) => {
+      const rem = total16 - b*spb;
+      const isOdd = rem < spb - 1e-9;
+      const w = Math.min(spb, rem) * PX;
+      const beatNums = isOdd
+        ? Array.from({length: oddBeats}, (_,k) =>
+            `<span class="ftl-beat-n" style="left:${k*s16b*PX}px">${k+1}</span>`).join('')
+        : '';
+      return `<div class="ftl-measure${isOdd?' ftl-odd':''}" style="left:${b*spb*PX}px;width:${w}px">
+                <span class="ftl-measure-n">${b+1}</span>
+                ${isOdd?`<span class="ftl-odd-ts" title="Odd bar — ${oddBeats} beat${oddBeats!==1?'s':''}">${oddBeats}/${ets.d}</span>`:''}
+                ${beatNums}
+              </div>`;
     }).join('');
     const fillBars = sec.fills.map((f,fi) => {
       const bb = fillBarBeat(ets, f.start16);
@@ -2701,7 +2741,15 @@ function startSyncLoop(){
     const next = nextCountInEvent(events, t, 'time');
     if(next){
       const evSec = song.sections[next.si]; const ets = effTS(song, evSec);
-      updateCountIn((next.time - t)*1000, barMsFor(song,evSec)/ets.n, ets.n, next);
+      // the bar leading into a section change belongs to the PREVIOUS section — if that
+      // one ends on an odd bar, count its beats instead of a full bar
+      let cinBeats = ets.n;
+      if(next.type === 'section' && next.si > 0){
+        const prev = song.sections[next.si - 1];
+        const ob = oddBarBeats(effTS(song, prev), prev.bars);
+        if(ob) cinBeats = ob;
+      }
+      updateCountIn((next.time - t)*1000, barMsFor(song,evSec)/ets.n, cinBeats, next);
     } else hideCountIn();
     syncRAF = requestAnimationFrame(follow);
   };
@@ -2780,6 +2828,7 @@ function scheduleAuto(startAnchor){
   const barMs = barMsFor(song, sec);              // ms per bar, honouring this section's time sig
   const beatMs = barMs / ets.n;                   // one beat of this section
   const exactBars = sec.bars * sec.repeats;       // may be fractional (e.g. 4.25)
+  const oddBeatsHere = oddBarBeats(ets, sec.bars);// beats in the trailing odd bar, 0 if none
   totalBarTicks = Math.ceil(exactBars);           // whole bars to *count* on the ticker
   const totalMs = exactBars * barMs;              // but time the section by the exact amount
   const events = sectionEvents(song, sec, perfIdx);
@@ -2812,9 +2861,12 @@ function scheduleAuto(startAnchor){
     setSectionProgress(elapsed / totalMs);
     const bar = Math.min(totalBarTicks, Math.floor(elapsed / barMs) + 1);
     if(bar !== currentBarTick){ currentBarTick = bar; updateBarTicker(); }
-    // count-in to the next event (respecting the count-in setting)
+    // count-in to the next event (respecting the count-in setting).
+    // If this section ends on an odd bar, the lead-in to the next section is that bar,
+    // so count its actual beats (e.g. "1,2" for a 2/4) rather than a full 4.
     const next = nextCountInEvent(events, elapsed, 'ms');
-    updateCountIn(next ? next.ms - elapsed : null, beatMs, ets.n, next || {});
+    const cinBeats = (next && next.type === 'section' && oddBeatsHere) ? oddBeatsHere : ets.n;
+    updateCountIn(next ? next.ms - elapsed : null, beatMs, cinBeats, next || {});
     autoRAF = requestAnimationFrame(frame);
   }
   autoRAF = requestAnimationFrame(frame);
@@ -2880,7 +2932,7 @@ window.renderPerf = function(){
   nameEl.textContent = newName;
   nameEl.style.color = ec;
   document.getElementById('perf-stripe').style.background = ec;
-  document.getElementById('perf-section-sub').textContent = `${fmtBars(sec.bars)} bars ${sec.repeats > 1 ? '×'+sec.repeats : ''} · ${tsLabel(song, sec)}`;
+  document.getElementById('perf-section-sub').textContent = `${barsLabel(effTS(song,sec), sec.bars)} ${sec.repeats > 1 ? '×'+sec.repeats : ''} · ${tsLabel(song, sec)}`;
   document.getElementById('perf-notes-disp').textContent = sec.notes;
   // top-bar shows the current section's time sig (which may differ from the song default)
   document.getElementById('perf-ts-disp').textContent = tsLabel(song, sec);
@@ -2917,7 +2969,7 @@ function renderPerfList(){
         <div class="pl-num">${i+1}</div>
         <div class="pl-body">
           <div class="pl-name" style="color:${i===perfIdx?ec:''}">${esc(sectionDisplay(song,i))}</div>
-          <div class="pl-meta-col">${fmtBars(sec.bars)} bars ${sec.repeats>1?'×'+sec.repeats:''}</div>
+          <div class="pl-meta-col">${barsLabel(etsL, sec.bars)} ${sec.repeats>1?'×'+sec.repeats:''}</div>
           <div class="pl-notes-col">${esc(sec.notes||'')}</div>
           <div class="pl-right">${fillTag}<span class="pl-badge">NOW</span>${cue}</div>
         </div>
