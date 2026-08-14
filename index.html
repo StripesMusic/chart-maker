@@ -180,7 +180,9 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 .palette-item span{flex:1}
 .palette-item .key-hint{
   font-size:11px;background:var(--bg4);border:1px solid var(--border2);
-  color:var(--muted);padding:2px 7px;border-radius:3px;
+  color:var(--muted);padding:2px 0;border-radius:3px;
+  /* override .palette-item span{flex:1} so the chip hugs its single character */
+  flex:0 0 20px;width:20px;text-align:center;font-variant-numeric:tabular-nums;
 }
 #sidebar-footer{padding:14px;border-top:1px solid var(--border);margin-top:auto}
 #sidebar-footer label{font-size:11px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;display:block;margin-bottom:8px}
@@ -617,6 +619,20 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 }
 .cue-pill.set{border-color:var(--blue);color:var(--blue)}
 .cue-pill:hover{border-color:var(--blue);color:var(--blue)}
+/* editable cue: type an exact time like 2:39.42 */
+.cue-box{
+  display:inline-flex;align-items:center;gap:2px;background:var(--bg4);
+  border:1px solid var(--blue);border-radius:9px;padding:2px 4px 2px 8px;flex-shrink:0;
+}
+.cue-box .cue-ico{font-size:11px;color:var(--blue);cursor:pointer}
+.cue-input{
+  width:66px;background:transparent;border:none;color:var(--blue);
+  font-family:inherit;font-size:12px;text-align:center;outline:none;padding:2px 0;
+  font-variant-numeric:tabular-nums;cursor:text;
+}
+.cue-input:focus{background:var(--bg3);border-radius:4px}
+.cue-x{background:transparent;border:none;color:var(--muted2);cursor:pointer;font-size:12px;padding:0 3px;line-height:1}
+.cue-x:hover{color:var(--red)}
 .cue-clear{margin-left:6px;color:var(--muted2);font-weight:700}
 .cue-clear:hover{color:var(--red)}
 
@@ -666,17 +682,28 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
   background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:16px 20px;
 }
 .audio-chip{
-  display:inline-flex;align-items:center;gap:9px;font-size:13px;color:var(--blue);
-  background:var(--bg3);border:1px solid var(--blue);padding:7px 14px;border-radius:6px;
-  letter-spacing:1px;align-self:flex-start;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  display:flex;align-items:center;gap:8px;font-size:13px;color:var(--blue);
+  background:var(--bg3);border:1px solid var(--border2);padding:5px 6px 5px 13px;border-radius:8px;
+  letter-spacing:1px;max-width:100%;
 }
-.audio-chip .x{cursor:pointer;color:var(--muted2);font-size:14px}
-.audio-chip .x:hover{color:var(--red)}
+.audio-chip .chip-label{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.audio-chip .sync-ico{width:28px;height:28px;font-size:12px}
 
 /* ── editor sync panel ── */
-#sync-panel{display:flex;flex-direction:column;gap:12px}
+#sync-panel{display:flex;flex-direction:column;gap:9px}
 .sync-title{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--blue);font-weight:700}
-.sync-row{display:flex;align-items:center;gap:14px}
+.sync-row{display:flex;align-items:center;gap:11px}
+.sync-tap-next{font-weight:400;opacity:.85}
+.sync-tools{display:flex;gap:4px;margin-left:auto}
+.sync-ico{
+  background:transparent;border:1px solid var(--border2);color:var(--muted);
+  width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:13px;
+  transition:all .15s;display:inline-flex;align-items:center;justify-content:center;
+}
+.sync-ico:hover{border-color:var(--accent);color:var(--accent)}
+.sync-ico.danger:hover{border-color:var(--red);color:var(--red)}
+.sync-meter{height:4px;background:var(--bg4);border-radius:2px;overflow:hidden}
+.sync-meter span{display:block;height:100%;background:var(--blue);transition:width .25s}
 .sync-play{
   background:var(--bg3);border:1px solid var(--border2);color:var(--text);width:44px;height:44px;
   border-radius:50%;cursor:pointer;font-size:15px;flex-shrink:0;transition:all .15s;
@@ -873,13 +900,30 @@ html{ -webkit-text-size-adjust:100%; }
   #yt-player-holder{ width:208px; height:117px; }
   #key-hint{ font-size:10px; line-height:1.7; padding:0 12px 8px; }
 
-  /* perf LIST view: let columns wrap */
-  #perf-list-view{ padding:14px 12px; }
-  .pl-num{ width:36px; }
-  .pl-body{ flex-wrap:wrap; gap:4px 14px; padding:12px 14px; }
-  .pl-name{ min-width:0; font-size:17px; }
-  .pl-meta-col{ width:auto; }
-  .pl-notes-col{ flex:1 1 100%; order:4; padding-right:0; }
+  /* perf LIST view: two-line rows that use the full width */
+  #perf-list-view{ padding:10px 10px 18px; }
+  .pl-num{ width:30px; font-size:12px; }
+  .pl-body{
+    display:grid; grid-template-columns:1fr auto; align-items:center;
+    gap:3px 10px; padding:10px 12px;
+  }
+  .pl-name{ min-width:0; font-size:17px; letter-spacing:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pl-meta-col{ width:auto; font-size:12px; grid-column:1; }
+  .pl-notes-col{ grid-column:1 / -1; flex:none; padding-right:0; font-size:12px; white-space:normal; }
+  .pl-right{ grid-column:2; grid-row:1 / span 2; flex-direction:column; align-items:flex-end; gap:4px; }
+  .pl-fill-tag{ max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pl-bar-live{ min-width:0; font-size:12px; }
+  .pl-badge{ display:none; }
+  .pl-row.pl-current .pl-badge{ display:inline-block; }
+  /* reclaim vertical space so more rows fit on a phone screen */
+  #perf-mode-bar{ gap:6px; padding:8px 10px; }
+  .mode-btn{ padding:6px 12px; font-size:11px; letter-spacing:1px; }
+  #auto-status{ font-size:11px; letter-spacing:1px; }
+  #perf-nav{ padding:9px 12px; gap:8px; }
+  #key-hint{ display:none; }
+  #perf-topbar{ padding:8px 12px; }
+  #perf-song{ font-size:12px; letter-spacing:1px; }
+  .perf-meta{ font-size:12px; }
 
   /* shared (read-only) view */
   #shared-header{ padding:20px 18px 16px; }
@@ -917,6 +961,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .toggle-chip:focus-visible,.palette-item:focus-visible,.song-card:focus-visible{
   outline:2px solid var(--accent); outline-offset:2px;
 }
+/* icon-only header button (share) */
+.btn-ico{ padding:10px 13px; font-size:15px; line-height:1; }
 /* Work Sans is proportional — ease the very widest monospace-era tracking so text reads cleanly */
 #song-name-input{ letter-spacing:1px; }
 #lib-title{ letter-spacing:3px; }
@@ -985,7 +1031,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
       <div class="toggle-chip on" id="num-toggle" onclick="toggleNumbering()" title="Auto-number repeated sections (Verse 1, Verse 2…)">
         <span class="sw"></span># No.
       </div>
-      <button class="btn" onclick="shareSong()" title="Copy a shareable read-only link to this chart">🔗 SHARE</button>
+      <button class="btn btn-ico" onclick="shareSong()" title="Copy a shareable read-only link to this chart">🔗</button>
       <button class="btn perform" onclick="startPerf()">▶ PERFORM</button>
     </div>
   </div>
@@ -1370,6 +1416,34 @@ window.redoEdit = function(){
   applyHistory(redoStack.pop());
   showToast('↷ Redo');
 };
+function secAt(i){ return currentSong()?.sections?.[i] || null; }
+window.renameSongById = function(id){
+  const s = library.find(x => x.id === id); if(!s) return;
+  const name = prompt('Rename chart:', s.name || 'Untitled');
+  if(name == null) return;
+  s.name = name.trim() || 'Untitled';
+  if(s.id === currentSongId){ const el = document.getElementById('song-name-input'); if(el) el.value = s.name; }
+  window.save(); window.renderLibrary();
+};
+window.exportSongById = function(id){
+  const s = library.find(x => x.id === id); if(!s) return;
+  const blob = new Blob([JSON.stringify({version:1, exported:new Date().toISOString(), library:[s]}, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob); const a = document.createElement('a');
+  a.href = url; a.download = (s.name||'chart').replace(/[^\w\- ]+/g,'').trim().replace(/\s+/g,'-').toLowerCase() + '.json'; a.click();
+  URL.revokeObjectURL(url); showToast('✓ Exported');
+};
+window.moveSectionTo = function(from, to){
+  const secs = currentSong().sections;
+  if(from === to || from < 0 || to < 0 || from >= secs.length || to >= secs.length) return;
+  secs.splice(to, 0, secs.splice(from, 1)[0]);
+  setSelectedSection(to);
+  window.save(); window.renderChart();
+};
+window.setAllFills = function(open){
+  const song = currentSong(); if(!song) return;
+  song.sections.forEach(s => { if(open) fillsOpen.add(s.id); else fillsOpen.delete(s.id); });
+  window.renderChart();
+};
 window.toggleFills = function(i){
   const song = currentSong(); if(!song) return;
   const sec = song.sections[i]; if(!sec) return;
@@ -1555,7 +1629,7 @@ function renderSharedView(){
   document.getElementById('shared-title').textContent = song.name || 'Untitled Song';
   const totalBars = song.sections.reduce((a,s)=>a+(s.bars*s.repeats),0);
   document.getElementById('shared-meta').textContent =
-    `${song.bpm} BPM · ${song.ts}/${song.tsd||4} · ${song.sections.length} sections · ${totalBars} bars`
+    `${song.bpm} BPM · ${song.ts}/${song.tsd||4} · ${song.sections.length} sections · ${fmtBars(totalBars)} bars`
     + (song.audio && song.audio.type==='youtube' ? ' · ♪ track' : '');
 
   const nums = computeInstanceNumbers(song);
@@ -1570,7 +1644,7 @@ function renderSharedView(){
         <div class="sv-body">
           <div class="sv-row1">
             <span class="sv-name" style="color:${ec}">${esc(baseLabel(sec))}</span>${numHtml}
-            <span class="sv-meta">${fill} ${sec.bars} bars ${sec.repeats>1?'×'+sec.repeats:''} · ${tsLabel(song,sec)}</span>
+            <span class="sv-meta">${fill} ${fmtBars(sec.bars)} bars ${sec.repeats>1?'×'+sec.repeats:''} · ${tsLabel(song,sec)}</span>
           </div>
           ${sec.notes ? `<div class="sv-notes">${esc(sec.notes)}</div>` : ''}
         </div>
@@ -1711,6 +1785,8 @@ function barMsFor(song, sec){ const {n,d} = effTS(song, sec); return n * (4/d) *
 function sectionHasTSOverride(sec){ return sec.ts != null || sec.tsd != null; }
 // ── 16th-note geometry for fills ──
 function sixteenthsPerBar(ets){ return ets.n * 16 / ets.d; }   // n beats × (16/d) 16ths per beat
+// bars can be fractional (4.25) — print without trailing zeros
+function fmtBars(n){ return Number(n).toFixed(2).replace(/\.?0+$/,''); }
 function sixteenthsPerBeat(ets){ return 16 / ets.d; }
 function msPer16(song){ return (60000 / song.bpm) / 4; }       // a 16th note is always a quarter ÷ 4
 // where (bar, beat) a fill's start16 lands, for labels
@@ -1826,18 +1902,26 @@ window.renderChart = function(){
       : `<input class="sec-num-input" type="number" min="1" value="${sec.num??''}" placeholder="#" title="Section number" onchange="updateNum(${i},this.value)" style="color:${ec}">`;
     const modPrefix = sec.mod === 'pre' ? '<span class="sec-mod-label">Pre-</span>'
                     : sec.mod === 'post' ? '<span class="sec-mod-label">Post-</span>' : '';
-    const cuePill = hasAudio
-      ? `<span class="cue-pill ${sec.time!=null?'set':''}" onclick="setCueHere(${i})" title="${sec.time!=null?'Cue set — click to clear it':'Click to cue this section at the current play time'}">${sec.time!=null?'⏱ '+fmtCue(sec.time):'⏱ set cue'}</span>`
-      : '';
+    const cuePill = !hasAudio ? ''
+      : sec.time != null
+        ? `<span class="cue-box" title="Cue time — type an exact value like 2:39.42">
+             <span class="cue-ico" onclick="seekEditorToSection(${i})" title="Jump the track here">⏱</span>
+             <input class="cue-input" type="text" value="${fmtCue(sec.time)}" onchange="setCueText(${i},this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+             <button class="cue-x" onclick="clearCue(${i})" title="Clear this cue">✕</button>
+           </span>`
+        : `<span class="cue-pill" onclick="setCueHere(${i})" title="Click to cue this section at the current play time">⏱ set cue</span>`;
     const ets = effTS(song, sec);
     // ── fills: a 16th-note timeline you drag across to draw fills (they stretch across bars) ──
     const spb = sixteenthsPerBar(ets), s16b = sixteenthsPerBeat(ets);
-    const total16 = sec.bars * spb;
+    const total16 = Math.max(1, Math.round(sec.bars * spb));   // bars may be fractional (4.25)
     // px per 16th: stretch to fill the chart for short sections, but never below 14px (so you keep fine control)
     const PX = Math.max(14, Math.floor(chartAvailW / total16));
     const totalW = total16 * PX;
-    const measures = Array.from({length: sec.bars}, (_,b) =>
-      `<div class="ftl-measure" style="left:${b*spb*PX}px;width:${spb*PX}px"><span class="ftl-measure-n">${b+1}</span></div>`).join('');
+    // a partial last bar gets a proportionally narrower measure block
+    const measures = Array.from({length: Math.ceil(sec.bars)}, (_,b) => {
+      const w = Math.min(spb, total16 - b*spb) * PX;
+      return `<div class="ftl-measure" style="left:${b*spb*PX}px;width:${w}px"><span class="ftl-measure-n">${b+1}</span></div>`;
+    }).join('');
     const fillBars = sec.fills.map((f,fi) => {
       const bb = fillBarBeat(ets, f.start16);
       return `<div class="ftl-fill" data-fi="${fi}" style="left:${f.start16*PX}px;width:${Math.max(PX,f.len16*PX)}px" title="bar ${bb.bar}, beat ${bb.beat} · ${fmtFillLen(ets,f.len16)}">
@@ -1903,7 +1987,7 @@ window.renderChart = function(){
             ${tsCtrl}
             <span class="repeat-pill" onclick="cycleRepeats(${i})" title="Repeat count">×${sec.repeats}</span>
             <div class="bars-wrap">
-              <input class="bars-input" type="number" value="${sec.bars}" onchange="updateBars(${i},this.value)">
+              <input class="bars-input" type="number" step="0.25" min="0.25" value="${fmtBars(sec.bars)}" title="Bars in this section — decimals allowed (e.g. 4.25)" onchange="updateBars(${i},this.value)">
               <span>bars</span>
             </div>
             <button class="ico-btn" onclick="duplicateSection(${i})" title="Duplicate section">⧉</button>
@@ -1962,7 +2046,7 @@ window.renderChart = function(){
   const totalBars = song.sections.reduce((a,s)=>a+(s.bars*s.repeats),0);
   const fillCount = song.sections.reduce((a,s)=>a+(s.fills?s.fills.length:0),0);
   document.getElementById('chart-stats').textContent =
-    `${song.sections.length} sections · ${totalBars} bars` + (fillCount?` · ${fillCount} fill${fillCount>1?'s':''}`:'');
+    `${song.sections.length} sections · ${fmtBars(totalBars)} bars` + (fillCount?` · ${fillCount} fill${fillCount>1?'s':''}`:'');
   // restore scroll position (unless we just opened the song and want the bounce-in from the top)
   if(!animate){
     if(chartArea) chartArea.scrollTop = savedTop;
@@ -2026,7 +2110,9 @@ function renderAudioBar(){
     const label = song.audio.type === 'youtube'
       ? '▶ YouTube'
       : (localAudioURL ? '♪ '+song.audio.name : '♪ '+song.audio.name+' (re-load file to play)');
-    chip.innerHTML = `${esc(label)} <span class="x" onclick="removeAudio()" title="Remove track">✕</span>`;
+    chip.innerHTML = `<span class="chip-label" title="${esc(label)}">${esc(label)}</span>
+      <button class="sync-ico" onclick="document.getElementById('audio-file-input').click()" title="Swap in an audio file">⬆</button>
+      <button class="sync-ico danger" onclick="removeAudio()" title="Remove track">✕</button>`;
     setupEditorAudio();
     renderSyncPanel();
   } else {
@@ -2143,7 +2229,7 @@ function updateEdPlayhead(){
   const tl = block.querySelector('.fill-timeline'), ph = block.querySelector('.ftl-playhead');
   if(!tl || !ph) return;
   const ets = effTS(song, cur.s);
-  const total16 = cur.s.bars * sixteenthsPerBar(ets);
+  const total16 = Math.round(cur.s.bars * sixteenthsPerBar(ets));
   const pos16 = Math.max(0, Math.min(total16, (t - cur.s.time) * 1000 / msPer16(song)));
   const PX = +tl.dataset.px;
   ph.style.left = (pos16 * PX) + 'px';
@@ -2162,17 +2248,21 @@ function renderSyncPanel(){
   if(edCueIdx > total) edCueIdx = total;
   const done = edCueIdx >= total;
   const nextName = done ? '' : sectionDisplay(song, edCueIdx).toUpperCase();
+  const pct = total ? Math.round(cued/total*100) : 0;
   panel.innerHTML = `
-    <div class="sync-title">⏱ Sync to track</div>
     <div class="sync-row">
-      <button class="sync-play" onclick="edPlayPause()" title="Play / pause">▶</button>
-      <button class="sync-tap" onclick="editTapCue()" ${done?'disabled':''} title="Tap on the section's downbeat">⊙ TAP CUE</button>
+      <button class="sync-play" onclick="edPlayPause()" title="Play / pause track">▶</button>
+      <button class="sync-tap" onclick="editTapCue()" ${done?'disabled':''} title="${done?'All sections cued':'Tap on '+esc(nextName)+'’s downbeat'}">
+        ⊙ TAP<span class="sync-tap-next">${done?'':' · '+esc(nextName)}</span>
+      </button>
       <span class="sync-time">0:00 / 0:00</span>
+      <span class="sync-tools">
+        <button class="sync-ico" onclick="editResetCueCursor()" title="Start the tap sequence over from the first section">↺</button>
+        <button class="sync-ico danger" onclick="clearAllCues()" title="Clear every cue point">🗑</button>
+      </span>
     </div>
-    <div class="sync-status">${ done
-        ? `✓ All ${total} sections cued`
-        : `Next: <b>${esc(nextName)}</b> &nbsp;·&nbsp; ${cued}/${total} cued` }</div>
-    <div class="sync-links"><a onclick="editResetCueCursor()">Start over</a> &nbsp;·&nbsp; <a onclick="clearAllCues()">Clear all cues</a></div>`;
+    <div class="sync-meter" title="${cued} of ${total} sections cued"><span style="width:${pct}%"></span></div>
+    <div class="sync-status">${ done ? `✓ All ${total} sections cued` : `${cued}/${total} cued` }</div>`;
 }
 window.editTapCue = function(){
   const song = currentSong(); if(!edAvailable()) return;
@@ -2467,8 +2557,9 @@ function scheduleAuto(startAnchor){
   const ets = effTS(song, sec);
   const barMs = barMsFor(song, sec);              // ms per bar, honouring this section's time sig
   const beatMs = barMs / ets.n;                   // one beat of this section
-  totalBarTicks = sec.bars * sec.repeats;
-  const totalMs = totalBarTicks * barMs;
+  const exactBars = sec.bars * sec.repeats;       // may be fractional (e.g. 4.25)
+  totalBarTicks = Math.ceil(exactBars);           // whole bars to *count* on the ticker
+  const totalMs = exactBars * barMs;              // but time the section by the exact amount
   const events = sectionEvents(song, sec, perfIdx);
 
   document.getElementById('countdown-ring-wrap').classList.add('visible');
@@ -2519,7 +2610,7 @@ function updateBarTicker(){
   if(!sec || !fb) return;
   const ets = effTS(currentSong(), sec);
   const spb = sixteenthsPerBar(ets);
-  const barInRepeat = ((currentBarTick - 1) % sec.bars) + 1;
+  const barInRepeat = ((currentBarTick - 1) % Math.ceil(sec.bars)) + 1;
   const here = (sec.fills || []).filter(f => Math.floor(f.start16 / spb) + 1 === barInRepeat);
   if(here.length){
     fb.className = 'show imminent';
@@ -2560,7 +2651,7 @@ window.renderPerf = function(){
   document.getElementById('perf-section-name').textContent = sectionDisplay(song, perfIdx).toUpperCase();
   document.getElementById('perf-section-name').style.color = ec;
   document.getElementById('perf-stripe').style.background = ec;
-  document.getElementById('perf-section-sub').textContent = `${sec.bars} bars ${sec.repeats > 1 ? '×'+sec.repeats : ''} · ${tsLabel(song, sec)}`;
+  document.getElementById('perf-section-sub').textContent = `${fmtBars(sec.bars)} bars ${sec.repeats > 1 ? '×'+sec.repeats : ''} · ${tsLabel(song, sec)}`;
   document.getElementById('perf-notes-disp').textContent = sec.notes;
   // top-bar shows the current section's time sig (which may differ from the song default)
   document.getElementById('perf-ts-disp').textContent = tsLabel(song, sec);
@@ -2590,14 +2681,14 @@ function renderPerfList(){
     const fillTag = (sec.fills && sec.fills.length)
       ? `<span class="pl-fill-tag" title="${sec.fills.slice().sort((a,b)=>a.start16-b.start16).map(f=>{const bb=fillBarBeat(etsL,f.start16);return 'bar '+bb.bar+'.'+bb.beat+(f.notes?': '+f.notes:'');}).join(' · ')}">🥁 ${sec.fills.map(f=>{const bb=fillBarBeat(etsL,f.start16);return bb.bar+'.'+bb.beat+(f.notes?' '+f.notes:'');}).join(' · ')}</span>`
       : '';
-    const cue = sec.time!=null ? `<span class="pl-bar-live">⏱ ${fmtTime(sec.time)}</span>` : `<span class="pl-bar-live">${sec.bars}×${sec.repeats}</span>`;
+    const cue = sec.time!=null ? `<span class="pl-bar-live">⏱ ${fmtTime(sec.time)}</span>` : `<span class="pl-bar-live">${fmtBars(sec.bars)}×${sec.repeats}</span>`;
     return `
       <div class="pl-row ${cls}" data-i="${i}" onclick="perfJump(${i})">
         <div class="pl-swatch" style="background:${ec}"></div>
         <div class="pl-num">${i+1}</div>
         <div class="pl-body">
           <div class="pl-name" style="color:${i===perfIdx?ec:''}">${esc(sectionDisplay(song,i))}</div>
-          <div class="pl-meta-col">${sec.bars} bars ${sec.repeats>1?'×'+sec.repeats:''}</div>
+          <div class="pl-meta-col">${fmtBars(sec.bars)} bars ${sec.repeats>1?'×'+sec.repeats:''}</div>
           <div class="pl-notes-col">${esc(sec.notes||'')}</div>
           <div class="pl-right">${fillTag}<span class="pl-badge">NOW</span>${cue}</div>
         </div>
@@ -2635,9 +2726,14 @@ window.setDisplayMode = (m) => {
 
 // ─── HELPERS ───
 window.updateBars = (i,v) => {
-  const sec = currentSong().sections[i];
-  sec.bars = Math.max(1,parseInt(v)||1);
-  sec.fills = sec.fills.filter(f => f.bar <= sec.bars);   // drop fills that fall past the new bar count
+  const song = currentSong(); const sec = song.sections[i];
+  // bars can be fractional (e.g. 4.25) — snap to the nearest 16th of a bar, min a quarter bar
+  const raw = parseFloat(v);
+  sec.bars = isNaN(raw) ? 1 : Math.max(0.25, Math.round(raw*16)/16);
+  // drop fills that now start past the end of the section (fills are 16th-based: start16/len16)
+  const total16 = Math.round(sec.bars * sixteenthsPerBar(effTS(song, sec)));
+  sec.fills = (sec.fills||[]).filter(f => f.start16 < total16);
+  sec.fills.forEach(f => { f.len16 = Math.max(1, Math.min(f.len16, total16 - f.start16)); });
   window.save(); window.renderChart();
 }
 window.updateNotes = (i,v) => { currentSong().sections[i].notes = v; window.save(); }
@@ -2691,7 +2787,7 @@ window.setMod = (i, m) => {
 window.removeFill = (i, fi) => { currentSong().sections[i].fills.splice(fi, 1); window.save(); window.renderChart(); }
 window.duplicateFill = (i, fi) => {
   const sec = currentSong().sections[i]; const f = sec.fills[fi];
-  const total = sec.bars * sixteenthsPerBar(effTS(currentSong(), sec));
+  const total = Math.round(sec.bars * sixteenthsPerBar(effTS(currentSong(), sec)));
   const start = Math.min(total - 1, f.start16 + f.len16);
   sec.fills.push({ start16: start, len16: Math.min(f.len16, total - start), notes: f.notes });
   window.save(); window.renderChart();
@@ -2771,6 +2867,26 @@ function attachFillTimeline(tl, blockEl){
 }
 // cue points
 window.clearCue = (i) => { currentSong().sections[i].time = null; edCueIdx = Math.min(edCueIdx, i); window.save(); window.renderChart(); renderSyncPanel(); }
+// parse a typed cue time: "2:39.42", "2:39", "159.42" or "159" → seconds (null if unusable)
+function parseCue(str){
+  const s = String(str).trim(); if(!s) return null;
+  const m = s.match(/^(?:(\d+):)?(\d+(?:\.\d+)?)$/);
+  if(!m) return null;
+  const mins = m[1] ? parseInt(m[1]) : 0;
+  const secs = parseFloat(m[2]);
+  if(isNaN(secs)) return null;
+  return Math.max(0, mins*60 + secs);
+}
+// type an exact cue time into a section's cue box
+window.setCueText = (i, v) => {
+  const sec = currentSong().sections[i];
+  const t = parseCue(v);
+  if(t == null){ showToast('Use M:SS.cc — e.g. 2:39.42', 'error'); window.renderChart(); return; }
+  sec.time = t;
+  edCueIdx = Math.max(edCueIdx, i + 1);
+  window.save(); window.renderChart(); renderSyncPanel();
+  showToast('⏱ Cue set to ' + fmtCue(t));
+};
 // toggle this section's cue: set it to the track's current play time, or clear it if already set
 window.setCueHere = (i) => {
   const sec = currentSong().sections[i];
@@ -2889,8 +3005,16 @@ document.addEventListener('contextmenu', e => {
       {id:'cut', icon:'✂', label:'Cut', key:'Ctrl+X', run:()=>window.cutSection(i)},
       {id:'paste', icon:'📋', label:'Paste below', key:'Ctrl+V', disabled:!sectionClipboard, run:()=>window.pasteSection(i)},
       '---',
-      {id:'up', icon:'↑', label:'Move up', run:()=>window.moveSection(i,-1)},
-      {id:'down', icon:'↓', label:'Move down', run:()=>window.moveSection(i,1)},
+      {id:'fills', icon:'🥁', label:(fillsOpen.has(secAt(i)?.id)?'Hide':'Show')+' fills', run:()=>window.toggleFills(i)},
+      {id:'x2', icon:'×', label:'Repeat ×'+((secAt(i)?.repeats||1)%8+1), run:()=>window.cycleRepeats(i)},
+      {id:'mod', icon:'◐', label: secAt(i)?.mod ? 'Clear Pre/Post' : 'Mark as Pre-', run:()=>window.setMod(i, secAt(i)?.mod ? secAt(i).mod : 'pre')},
+      ...(edAvailable() ? [{id:'cue', icon:'⏱', label: secAt(i)?.time!=null ? 'Clear cue' : 'Cue at play time',
+            run:()=> secAt(i)?.time!=null ? window.clearCue(i) : window.setCueHere(i)}] : []),
+      '---',
+      {id:'up', icon:'↑', label:'Move up', disabled:i===0, run:()=>window.moveSection(i,-1)},
+      {id:'down', icon:'↓', label:'Move down', disabled:i===currentSong().sections.length-1, run:()=>window.moveSection(i,1)},
+      {id:'top', icon:'⤒', label:'Move to top', disabled:i===0, run:()=>window.moveSectionTo(i,0)},
+      {id:'bot', icon:'⤓', label:'Move to bottom', disabled:i===currentSong().sections.length-1, run:()=>window.moveSectionTo(i,currentSong().sections.length-1)},
       '---',
       {id:'del', icon:'🗑', label:'Delete', key:'Del', danger:true, run:()=>window.removeSection(i)},
     ]); return;
@@ -2901,18 +3025,33 @@ document.addEventListener('contextmenu', e => {
     showCtx(e.clientX, e.clientY, [
       {id:'open', icon:'✎', label:'Open', run:()=>window.openSong(id)},
       {id:'play', icon:'▶', label:'Perform', run:()=>window.openAndPerform(id)},
+      '---',
       {id:'dup', icon:'⧉', label:'Duplicate', run:()=>window.duplicateSongById(id)},
+      {id:'rename', icon:'✎', label:'Rename…', run:()=>window.renameSongById(id)},
       {id:'share', icon:'🔗', label:'Copy share link', run:()=>{ window.openSong(id); setTimeout(window.shareSong, 200); }},
+      {id:'export', icon:'⬇', label:'Export this chart', run:()=>window.exportSongById(id)},
+      '---',
+      {id:'newsong', icon:'＋', label:'New song', run:()=>window.newSong()},
       '---',
       {id:'del', icon:'🗑', label:'Delete', danger:true, run:()=>window.deleteSongById(id)},
     ]); return;
   }
-  // empty editor area → still offer undo/redo
+  // empty editor area → undo/redo + quick add / paste / whole-chart actions
   if(document.getElementById('view-editor').classList.contains('active')){
     e.preventDefault();
+    const nSec = (currentSong()?.sections || []).length;
     showCtx(e.clientX, e.clientY, [
       {id:'undo', icon:'↶', label:'Undo', key:'Ctrl+Z', disabled:!undoStack.length, run:()=>window.undoEdit()},
       {id:'redo', icon:'↷', label:'Redo', key:'Ctrl+Y', disabled:!redoStack.length, run:()=>window.redoEdit()},
+      '---',
+      ...TYPES.slice(0,4).map(t => ({id:'add-'+t.id, icon:'＋', label:'Add '+t.label, key:t.key.toUpperCase(), run:()=>window.addSection(t.id)})),
+      {id:'pasteEnd', icon:'📋', label:'Paste section', key:'Ctrl+V', disabled:!sectionClipboard, run:()=>window.pasteSection(nSec-1)},
+      '---',
+      {id:'allFills', icon:'🥁', label:'Expand all fills', disabled:!nSec, run:()=>window.setAllFills(true)},
+      {id:'noFills', icon:'🥁', label:'Collapse all fills', disabled:!nSec, run:()=>window.setAllFills(false)},
+      '---',
+      {id:'share', icon:'🔗', label:'Copy share link', run:()=>window.shareSong()},
+      {id:'perform', icon:'▶', label:'Perform', disabled:!nSec, run:()=>window.startPerf()},
     ]); return;
   }
   hideCtx();
