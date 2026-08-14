@@ -607,6 +607,19 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 .ctx-ico{width:18px;text-align:center;opacity:.9;font-size:13px}
 .ctx-key{margin-left:auto;font-size:11px;color:var(--muted2);letter-spacing:1px}
 .ctx-sep{height:1px;background:var(--border);margin:5px 8px}
+.ctx-label{flex:1}
+.ctx-dot{width:11px;height:11px;border-radius:50%;display:inline-block;flex-shrink:0}
+.ctx-arrow{margin-left:auto;color:var(--muted2);font-size:15px;line-height:1}
+.ctx-item.ctx-has-sub{position:relative}
+.ctx-sub{
+  display:none;position:absolute;left:calc(100% + 4px);top:-7px;min-width:196px;
+  background:var(--bg3);border:1px solid var(--border2);border-radius:10px;
+  box-shadow:0 16px 40px rgba(0,0,0,.55);padding:6px;z-index:1001;
+  animation:popIn .11s ease;
+}
+.ctx-item.ctx-has-sub.flip .ctx-sub{left:auto;right:calc(100% + 4px)}
+.ctx-item.ctx-has-sub:hover .ctx-sub{display:block}
+.ctx-item.ctx-has-sub:hover{background:var(--bg4)}
 .section-block.selected{box-shadow:0 0 0 2px var(--accent)}
 .lib-save-row{
   display:flex;align-items:center;gap:10px;
@@ -692,7 +705,7 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 .fills-label{ font-size:12px;font-weight:700;letter-spacing:2px;color:#e87d47;text-transform:uppercase; }
 .fills-count{ font-size:11px;font-weight:700;color:#e87d47;background:rgba(232,125,71,.14);border:1px solid rgba(232,125,71,.32);border-radius:9px;padding:1px 9px;font-variant-numeric:tabular-nums; }
 .fills-body{ display:none;margin-top:10px; }
-.fills-section.open .fills-body{ display:block;animation:fadeSlideUp .2s ease; }
+.fills-section.open .fills-body{ display:block; }
 .fill-timeline-wrap{ overflow-x:auto; padding-bottom:4px; }
 .fill-timeline-wrap::-webkit-scrollbar{ height:5px; }
 .fill-timeline-wrap::-webkit-scrollbar-thumb{ background:var(--border2); }
@@ -704,21 +717,24 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 .ftl-measure:first-child{ border-left:none; }
 .ftl-measure-n{ position:absolute; top:3px; left:5px; font-size:11px; font-weight:700; color:var(--muted); font-variant-numeric:tabular-nums; }
 /* trailing odd bar (e.g. the 2/4 in "4.5 bars of 4/4") reads as its own measure */
-.ftl-measure.ftl-odd{ background:rgba(255,140,43,.09); border-left-color:var(--accent); }
+.ftl-measure.ftl-odd{ background:#2a1c10; border-left-color:var(--accent); }
 .ftl-measure.ftl-odd .ftl-measure-n{ color:var(--accent); }
 .ftl-odd-ts{
   position:absolute; top:2px; right:4px; font-size:9px; font-weight:700; letter-spacing:.5px;
-  color:#1c1005; background:var(--accent); border-radius:2px; padding:1px 4px;
-  font-family:var(--mono);
+  color:#1c1005; background:var(--accent); border-radius:2px; padding:2px 5px;
+  font-family:var(--mono); cursor:grab; touch-action:none; user-select:none; z-index:4;
 }
+.ftl-odd-ts:hover{ box-shadow:0 0 0 2px rgba(255,140,43,.35); }
+.ftl-odd-ts.dragging{ cursor:grabbing; box-shadow:0 0 0 2px var(--accent); }
+.ftl-measure.ftl-odd-target{ box-shadow:inset 0 0 0 2px var(--accent); }
 .ftl-beat-n{
   position:absolute; bottom:3px; font-size:10px; font-weight:700; color:var(--accent);
   font-variant-numeric:tabular-nums; padding-left:3px; opacity:.9; pointer-events:none;
 }
 .ftl-fill{
   position:absolute; top:22px; height:32px; border-radius:4px; cursor:grab;
-  background:linear-gradient(180deg, rgba(232,125,71,.9), rgba(232,125,71,.65));
-  border:1px solid #ffb98a; box-shadow:0 1px 4px rgba(0,0,0,.3); overflow:hidden; min-width:8px;
+  background:linear-gradient(176deg, #f08b52, #d96a33);
+  border:1px solid #ffb98a; box-shadow:0 2px 6px rgba(0,0,0,.45); overflow:hidden; min-width:8px;
   display:flex; align-items:center;
 }
 .ftl-fill:active{ cursor:grabbing; }
@@ -794,7 +810,6 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 #audio-bar{
   display:flex;align-items:center;gap:16px;padding:16px 28px;
   border-bottom:1px solid var(--border);background:var(--bg);flex-shrink:0;
-  animation:fadeSlideUp .3s ease;
 }
 #audio-bar.empty{background:var(--bg2);padding:14px 28px}
 #audio-setup{display:flex;align-items:center;gap:14px;width:100%}
@@ -1195,6 +1210,16 @@ body::before{
 .mod-btn.active{ color:#1c1005;border-color:var(--accent-dim) }
 .toggle-chip.on{ color:var(--accent);border-color:var(--accent-dim) }
 #num-toggle.toggle-chip{ letter-spacing:1px }
+
+/* ── MOTION POLICY ──
+   Animation is reserved for things that carry meaning: entering a view,
+   a section appearing, a menu opening, scrolling to a target. Incidental
+   re-renders (editing a fill, retyping a note) must never animate. */
+#chart-area,#lib-body,#perf-list-view,#shared-body{ scroll-behavior:smooth; }
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important;
+    transition-duration:.01ms !important; scroll-behavior:auto !important; }
+}
 
 /* keyboard focus stays obvious */
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,
@@ -1738,6 +1763,7 @@ function migrateSong(song){
     if(s.ts === undefined)   s.ts = null;    // per-section time-sig override: numerator (null = inherit song)
     if(s.tsd === undefined)  s.tsd = null;   // per-section time-sig override: denominator (null = inherit song)
     if(s.color === undefined) s.color = null;// custom per-section color override (null = use type/modifier color)
+    if(s.oddAt === undefined) s.oddAt = null;// which bar is the short 'odd' bar (null = the last one)
     // the old "Pre-Chorus" type is gone — fold it into a Chorus flagged "pre"
     if(s.typeId === 'pre'){ s.typeId = 'chorus'; if(!s.mod) s.mod = 'pre'; }
     if(s.repeats === undefined) s.repeats = 1;
@@ -2031,6 +2057,23 @@ function oddBarBeats(ets, bars){
   return Math.max(1, Math.round(frac * ets.n));   // beats in that trailing bar
 }
 function wholeBarsOf(bars){ return Math.floor(bars + 1e-9); }
+// The bars of a section, in order, as {start16,len16,beats,isOdd}. The odd bar defaults to
+// last but can sit anywhere via sec.oddAt, so an extra beat can fall mid-phrase.
+function barLayout(ets, bars, oddAt){
+  const spb = sixteenthsPerBar(ets), s16b = sixteenthsPerBeat(ets);
+  const whole = wholeBarsOf(bars), ob = oddBarBeats(ets, bars);
+  const count = whole + (ob ? 1 : 0);
+  const oddIdx = ob ? Math.max(0, Math.min(oddAt == null ? count - 1 : oddAt, count - 1)) : -1;
+  const out = []; let pos = 0;
+  for(let k = 0; k < count; k++){
+    const isOdd = k === oddIdx;
+    const len = isOdd ? ob * s16b : spb;
+    out.push({ start16: pos, len16: len, beats: isOdd ? ob : ets.n, isOdd });
+    pos += len;
+  }
+  return out;
+}
+function secLayout(song, sec){ return barLayout(effTS(song, sec), sec.bars, sec.oddAt); }
 // "8 bars" / "4 bars + 2 beats"
 function barsLabel(ets, bars){
   const w = wholeBarsOf(bars), ob = oddBarBeats(ets, bars);
@@ -2040,8 +2083,18 @@ function barsLabel(ets, bars){
 }
 function msPer16(song){ return (60000 / song.bpm) / 4; }       // a 16th note is always a quarter ÷ 4
 // where (bar, beat) a fill's start16 lands, for labels
-function fillBarBeat(ets, start16){
+function fillBarBeat(ets, start16, layout){
   const spb = sixteenthsPerBar(ets), s16b = sixteenthsPerBeat(ets);
+  // with an odd bar in play the bars aren't uniform, so walk the real layout
+  if(layout && layout.length){
+    for(let k = 0; k < layout.length; k++){
+      const b = layout[k];
+      if(start16 < b.start16 + b.len16 - 1e-9 || k === layout.length - 1){
+        const off = Math.max(0, start16 - b.start16);
+        return { bar:k+1, beat: Math.floor(off/s16b)+1, sub: Math.round((off % s16b)/(s16b/4)) };
+      }
+    }
+  }
   const bar = Math.floor(start16 / spb) + 1;
   const beat = Math.floor((start16 % spb) / s16b) + 1;
   const sub = Math.round((start16 % s16b) / (s16b/4));   // 0..3 sixteenth within the beat (for "e & a")
@@ -2086,10 +2139,21 @@ window.duplicateSongById = function(id){
 window.clearChart = function(){ if(confirm('Clear?')){ currentSong().sections = []; window.save(); window.renderChart(); } }
 
 // ─── EDITOR ──────────────────────────────────────────
-window.addSection = function(typeId){
+window.addSection = function(typeId){ window.addSectionAt(typeId, null); }
+// insert a new section at a given index (null = append) and let just that one animate in
+window.addSectionAt = function(typeId, index){
   const song = currentSong(); if(!song) return;
-  song.sections.push({id:idCounter++, typeId, bars:8, notes:'', repeats:1, mod:null, fills:[], time:null, num:null, ts:null, tsd:null, color:null});
+  const sec = {id:idCounter++, typeId, bars:8, notes:'', repeats:1, mod:null, fills:[], time:null, num:null, ts:null, tsd:null, color:null, oddAt:null};
+  const at = Math.max(0, Math.min(index == null ? song.sections.length : index, song.sections.length));
+  song.sections.splice(at, 0, sec);
   window.save(); window.renderChart();
+  const el = document.querySelector(`#chart-area .section-block[data-idx="${at}"]`);
+  if(el){
+    el.classList.add('anim-in');
+    el.addEventListener('animationend', () => el.classList.remove('anim-in'), {once:true});
+    el.scrollIntoView({block:'nearest'});
+  }
+  setSelectedSection(at);
 }
 
 window.toggleNumbering = function(){
@@ -2169,23 +2233,20 @@ window.renderChart = function(){
     const totalW = total16 * PX;
     // the trailing odd bar (from a fractional bar count) is drawn as a real, labelled measure
     // in its own meter, with its beats numbered so you can see exactly where they land
-    const oddBeats = oddBarBeats(ets, sec.bars);
-    const measures = Array.from({length: Math.ceil(sec.bars - 1e-9)}, (_,b) => {
-      const rem = total16 - b*spb;
-      const isOdd = rem < spb - 1e-9;
-      const w = Math.min(spb, rem) * PX;
-      const beatNums = isOdd
-        ? Array.from({length: oddBeats}, (_,k) =>
+    const layout = barLayout(ets, sec.bars, sec.oddAt);
+    const measures = layout.map((bar, b) => {
+      const beatNums = bar.isOdd
+        ? Array.from({length: bar.beats}, (_,k) =>
             `<span class="ftl-beat-n" style="left:${k*s16b*PX}px">${k+1}</span>`).join('')
         : '';
-      return `<div class="ftl-measure${isOdd?' ftl-odd':''}" style="left:${b*spb*PX}px;width:${w}px">
+      return `<div class="ftl-measure${bar.isOdd?' ftl-odd':''}" data-bar="${b}" style="left:${bar.start16*PX}px;width:${bar.len16*PX}px">
                 <span class="ftl-measure-n">${b+1}</span>
-                ${isOdd?`<span class="ftl-odd-ts" title="Odd bar — ${oddBeats} beat${oddBeats!==1?'s':''}">${oddBeats}/${ets.d}</span>`:''}
+                ${bar.isOdd?`<span class="ftl-odd-ts" data-odd-handle="${i}" title="Drag to move this odd bar">${bar.beats}/${ets.d}</span>`:''}
                 ${beatNums}
               </div>`;
     }).join('');
     const fillBars = sec.fills.map((f,fi) => {
-      const bb = fillBarBeat(ets, f.start16);
+      const bb = fillBarBeat(ets, f.start16, layout);
       return `<div class="ftl-fill" data-fi="${fi}" style="left:${f.start16*PX}px;width:${Math.max(PX,f.len16*PX)}px" title="bar ${bb.bar}, beat ${bb.beat} · ${fmtFillLen(ets,f.len16)}">
                 <span class="ftl-fill-label">${f.notes ? esc(f.notes) : '🥁'}</span><span class="ftl-fill-resize"></span>
               </div>`;
@@ -2207,7 +2268,7 @@ window.renderChart = function(){
             </div>
           </div>
           ${sec.fills.length ? `<div class="fills-list">
-            ${sec.fills.map((f,fi)=>({f,fi})).sort((a,b)=>a.f.start16-b.f.start16).map((o,pos) => { const bb = fillBarBeat(ets, o.f.start16); return `
+            ${sec.fills.map((f,fi)=>({f,fi})).sort((a,b)=>a.f.start16-b.f.start16).map((o,pos) => { const bb = fillBarBeat(ets, o.f.start16, layout); return `
               <div class="fill-item" data-pos="${pos}">
                 <span class="fill-drag" title="Drag to reorder">⠿</span>
                 <span class="fill-item-bar" style="color:#e87d47">Bar ${bb.bar} · beat ${bb.beat}</span>
@@ -2746,8 +2807,8 @@ function startSyncLoop(){
       let cinBeats = ets.n;
       if(next.type === 'section' && next.si > 0){
         const prev = song.sections[next.si - 1];
-        const ob = oddBarBeats(effTS(song, prev), prev.bars);
-        if(ob) cinBeats = ob;
+        const plast = secLayout(song, prev).slice(-1)[0];
+        if(plast && plast.isOdd) cinBeats = plast.beats;
       }
       updateCountIn((next.time - t)*1000, barMsFor(song,evSec)/ets.n, cinBeats, next);
     } else hideCountIn();
@@ -2828,8 +2889,12 @@ function scheduleAuto(startAnchor){
   const barMs = barMsFor(song, sec);              // ms per bar, honouring this section's time sig
   const beatMs = barMs / ets.n;                   // one beat of this section
   const exactBars = sec.bars * sec.repeats;       // may be fractional (e.g. 4.25)
-  const oddBeatsHere = oddBarBeats(ets, sec.bars);// beats in the trailing odd bar, 0 if none
-  totalBarTicks = Math.ceil(exactBars);           // whole bars to *count* on the ticker
+  // bars aren't uniform once an odd bar is in play, so count ticks off the real layout
+  const layoutHere = barLayout(ets, sec.bars, sec.oddAt);
+  const cycle16 = layoutHere.reduce((a,b)=>a+b.len16, 0);
+  const lastBar = layoutHere[layoutHere.length - 1];
+  const oddBeatsHere = (lastBar && lastBar.isOdd) ? lastBar.beats : 0;  // lead-in to the next section
+  totalBarTicks = layoutHere.length * sec.repeats;
   const totalMs = exactBars * barMs;              // but time the section by the exact amount
   const events = sectionEvents(song, sec, perfIdx);
 
@@ -2859,7 +2924,15 @@ function scheduleAuto(startAnchor){
 
     updateRing(elapsed / totalMs);
     setSectionProgress(elapsed / totalMs);
-    const bar = Math.min(totalBarTicks, Math.floor(elapsed / barMs) + 1);
+    // locate the current bar through the layout so a short odd bar ticks correctly
+    const pos16  = elapsed / msPer16(song);
+    const rep    = Math.floor(pos16 / cycle16);
+    const within = pos16 - rep * cycle16;
+    let inCycle = layoutHere.length - 1;
+    for(let k = 0; k < layoutHere.length; k++){
+      if(within < layoutHere[k].start16 + layoutHere[k].len16 - 1e-9){ inCycle = k; break; }
+    }
+    const bar = Math.min(totalBarTicks, rep * layoutHere.length + inCycle + 1);
     if(bar !== currentBarTick){ currentBarTick = bar; updateBarTicker(); }
     // count-in to the next event (respecting the count-in setting).
     // If this section ends on an odd bar, the lead-in to the next section is that bar,
@@ -2883,9 +2956,9 @@ function updateBarTicker(){
   const fb = document.getElementById('perf-fill-badge');
   if(!sec || !fb) return;
   const ets = effTS(currentSong(), sec);
-  const spb = sixteenthsPerBar(ets);
-  const barInRepeat = ((currentBarTick - 1) % Math.ceil(sec.bars)) + 1;
-  const here = (sec.fills || []).filter(f => Math.floor(f.start16 / spb) + 1 === barInRepeat);
+  const lay = barLayout(ets, sec.bars, sec.oddAt);
+  const barInRepeat = ((currentBarTick - 1) % lay.length) + 1;
+  const here = (sec.fills || []).filter(f => fillBarBeat(ets, f.start16, lay).bar === barInRepeat);
   if(here.length){
     fb.className = 'show imminent';
     fb.innerHTML = `<span class="pfb-now">🥁 FILL NOW${here[0].notes ? ' — '+esc(here[0].notes) : ''}</span>`;
@@ -2906,7 +2979,7 @@ function setSectionProgress(prog){
 // concise summary of a section's fills for the performance badge
 // each fill as "bar.beat — note" (description visible in focus mode)
 function fillLineHTML(ets, f){
-  const bb = fillBarBeat(ets, f.start16);
+  const bb = fillBarBeat(ets, f.start16, barLayout(ets, sec.bars, sec.oddAt));
   return `<span class="pfb-item">🥁 <b>${bb.bar}.${bb.beat}</b>${f.notes ? ' — '+esc(f.notes) : ' · '+fmtFillLen(ets, f.len16)}</span>`;
 }
 function renderFillBadge(sec){
@@ -2958,9 +3031,9 @@ function renderPerfList(){
   wrap.innerHTML = song.sections.map((sec,i) => {
     const t = TM[sec.typeId]; const ec = effColor(sec);
     const cls = i===perfIdx ? 'pl-current' : (i<perfIdx ? 'pl-done' : '');
-    const etsL = effTS(song, sec);
+    const etsL = effTS(song, sec); const lay = barLayout(etsL, sec.bars, sec.oddAt);
     const fillTag = (sec.fills && sec.fills.length)
-      ? `<span class="pl-fill-tag" title="${sec.fills.slice().sort((a,b)=>a.start16-b.start16).map(f=>{const bb=fillBarBeat(etsL,f.start16);return 'bar '+bb.bar+'.'+bb.beat+(f.notes?': '+f.notes:'');}).join(' · ')}">🥁 ${sec.fills.map(f=>{const bb=fillBarBeat(etsL,f.start16);return bb.bar+'.'+bb.beat+(f.notes?' '+f.notes:'');}).join(' · ')}</span>`
+      ? `<span class="pl-fill-tag" title="${sec.fills.slice().sort((a,b)=>a.start16-b.start16).map(f=>{const bb=fillBarBeat(etsL,f.start16,lay);return 'bar '+bb.bar+'.'+bb.beat+(f.notes?': '+f.notes:'');}).join(' · ')}">🥁 ${sec.fills.map(f=>{const bb=fillBarBeat(etsL,f.start16,lay);return bb.bar+'.'+bb.beat+(f.notes?' '+f.notes:'');}).join(' · ')}</span>`
       : '';
     const cue = sec.time!=null ? `<span class="pl-bar-live">⏱ ${fmtTime(sec.time)}</span>` : `<span class="pl-bar-live">${fmtBars(sec.bars)}×${sec.repeats}</span>`;
     return `
@@ -3085,8 +3158,46 @@ function attachFillTimeline(tl, blockEl){
     const rect = tl.getBoundingClientRect();
     return Math.max(0, Math.min(total, Math.round((clientX - rect.left) / PX)));
   };
+  // ── drag the odd bar to a different slot in the section ──
+  const handle = tl.querySelector('[data-odd-handle]');
+  if(handle){
+    handle.addEventListener('pointerdown', e => {
+      if(e.button) return;
+      e.stopPropagation();                      // never start a fill drag from the handle
+      blockEl.draggable = false;
+      const song = currentSong(), sec = song.sections[i];
+      const ets = effTS(song, sec);
+      const slots = barLayout(ets, sec.bars, sec.oddAt).length;
+      const rect = tl.getBoundingClientRect();
+      const spbPX = sixteenthsPerBar(ets) * PX;
+      try { handle.setPointerCapture(e.pointerId); } catch(_){}
+      handle.classList.add('dragging');
+      let target = sec.oddAt == null ? slots - 1 : sec.oddAt;
+      const move = ev => {
+        // which bar slot is the pointer over?
+        const k = Math.max(0, Math.min(slots - 1, Math.floor((ev.clientX - rect.left) / spbPX)));
+        if(k !== target){
+          target = k;
+          tl.querySelectorAll('.ftl-measure').forEach(m =>
+            m.classList.toggle('ftl-odd-target', +m.dataset.bar === k));
+        }
+      };
+      const up = () => {
+        handle.removeEventListener('pointermove', move);
+        handle.removeEventListener('pointerup', up);
+        handle.classList.remove('dragging');
+        blockEl.draggable = true;
+        const wasLast = slots - 1;
+        sec.oddAt = (target === wasLast) ? null : target;   // null keeps "last bar" behaviour
+        window.save(); window.renderChart();
+      };
+      handle.addEventListener('pointermove', move);
+      handle.addEventListener('pointerup', up);
+    });
+  }
   tl.addEventListener('pointerdown', e => {
     if(e.button) return;
+    if(e.target.hasAttribute('data-odd-handle')) return;   // handled above
     blockEl.draggable = false;
     const sec = currentSong().sections[i];
     const fillEl = e.target.closest('.ftl-fill');
@@ -3227,16 +3338,51 @@ function setSelectedSection(i){
 const ctxEl = document.getElementById('ctx-menu');
 function hideCtx(){ ctxEl.style.display='none'; ctxEl.innerHTML=''; }
 function showCtx(x, y, items){
-  ctxEl.innerHTML = items.map(it => it === '---'
-    ? '<div class="ctx-sep"></div>'
-    : `<div class="ctx-item ${it.disabled?'disabled':''} ${it.danger?'ctx-danger':''}" data-act="${it.id}"><span class="ctx-ico">${it.icon||''}</span><span>${it.label}</span>${it.key?`<span class="ctx-key">${it.key}</span>`:''}</div>`).join('');
+  const flat = new Map();
+  const renderList = list => list.map(it => {
+    if(it === '---') return '<div class="ctx-sep"></div>';
+    flat.set(it.id, it);
+    const ico  = it.dot ? `<i class="ctx-dot" style="background:${it.dot}"></i>` : (it.icon || '');
+    const tail = it.submenu ? '<span class="ctx-arrow">›</span>'
+                            : (it.key ? `<span class="ctx-key">${it.key}</span>` : '');
+    return `<div class="ctx-item ${it.disabled?'disabled':''} ${it.danger?'ctx-danger':''} ${it.submenu?'ctx-has-sub':''}" data-act="${it.id}">
+              <span class="ctx-ico">${ico}</span><span class="ctx-label">${it.label}</span>${tail}
+              ${it.submenu ? `<div class="ctx-sub">${renderList(it.submenu)}</div>` : ''}
+            </div>`;
+  }).join('');
+  ctxEl.innerHTML = renderList(items);
   ctxEl.style.display='block';
   const mw = ctxEl.offsetWidth, mh = ctxEl.offsetHeight;
   ctxEl.style.left = Math.min(x, innerWidth - mw - 8) + 'px';
   ctxEl.style.top  = Math.min(y, innerHeight - mh - 8) + 'px';
-  ctxEl.querySelectorAll('.ctx-item:not(.disabled)').forEach(el => {
-    el.onclick = () => { const act = items.find(it => it && it.id === el.dataset.act); hideCtx(); if(act && act.run) act.run(); };
+  // flip submenus to the left when there isn't room on the right
+  ctxEl.querySelectorAll('.ctx-has-sub').forEach(el => {
+    if(parseFloat(ctxEl.style.left) + mw + 200 > innerWidth) el.classList.add('flip');
   });
+  ctxEl.querySelectorAll('.ctx-item:not(.disabled)').forEach(el => {
+    el.onclick = ev => {
+      ev.stopPropagation();                       // don't let a sub-item fire its parent too
+      const act = flat.get(el.dataset.act);
+      if(act && act.submenu) return;              // the parent row just opens the submenu
+      hideCtx(); if(act && act.run) act.run();
+    };
+  });
+}
+// where a new section should land, based on where the menu was opened
+function insertIndexFromPoint(clientY){
+  const song = currentSong(); if(!song) return 0;
+  const blocks = [...document.querySelectorAll('#chart-area .section-block')];
+  for(const b of blocks){
+    const r = b.getBoundingClientRect();
+    if(clientY < r.top + r.height/2) return +b.dataset.idx;
+  }
+  return song.sections.length;
+}
+// the "Add section ▸" submenu, with each type's colour swatch
+function addSectionMenu(at){
+  return { id:'addsec', icon:'＋', label:'Add section', submenu:
+    TYPES.map(t => ({ id:'add-'+t.id, dot:t.color, label:t.label, key:t.key.toUpperCase(),
+                      run:()=>window.addSectionAt(t.id, at) })) };
 }
 function cycleMode(){
   const order = audioAvailable() ? ['auto','manual','sync'] : ['auto','manual'];
@@ -3280,6 +3426,8 @@ document.addEventListener('contextmenu', e => {
     showCtx(e.clientX, e.clientY, [
       {id:'undo', icon:'↶', label:'Undo', key:'Ctrl+Z', disabled:!undoStack.length, run:()=>window.undoEdit()},
       {id:'redo', icon:'↷', label:'Redo', key:'Ctrl+Y', disabled:!redoStack.length, run:()=>window.redoEdit()},
+      '---',
+      addSectionMenu(i + 1),
       '---',
       {id:'dup', icon:'⧉', label:'Duplicate', key:'Ctrl+D', run:()=>window.duplicateSection(i)},
       {id:'copy', icon:'⎘', label:'Copy', key:'Ctrl+C', run:()=>window.copySection(i)},
@@ -3325,7 +3473,7 @@ document.addEventListener('contextmenu', e => {
       {id:'undo', icon:'↶', label:'Undo', key:'Ctrl+Z', disabled:!undoStack.length, run:()=>window.undoEdit()},
       {id:'redo', icon:'↷', label:'Redo', key:'Ctrl+Y', disabled:!redoStack.length, run:()=>window.redoEdit()},
       '---',
-      ...TYPES.slice(0,4).map(t => ({id:'add-'+t.id, icon:'＋', label:'Add '+t.label, key:t.key.toUpperCase(), run:()=>window.addSection(t.id)})),
+      addSectionMenu(insertIndexFromPoint(e.clientY)),
       {id:'pasteEnd', icon:'📋', label:'Paste section', key:'Ctrl+V', disabled:!sectionClipboard, run:()=>window.pasteSection(nSec-1)},
       '---',
       {id:'allFills', icon:'🥁', label:'Expand all fills', disabled:!nSec, run:()=>window.setAllFills(true)},
