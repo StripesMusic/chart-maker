@@ -510,9 +510,10 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 /* Section name and notes are the two things you read off a phone on the floor,
    so they carry the weight here; bars/cue meta stay quiet underneath. */
 .pl-name{
-  font-family:var(--display);
-  font-weight:900;font-variation-settings:'wdth' 62,'wght' 900;
-  font-size:25px;letter-spacing:.5px;
+  /* Arial Narrow Bold where the system has it, plain Arial Bold everywhere else */
+  font-family:'Arial Narrow',Arial,Helvetica,sans-serif;
+  font-weight:700;font-stretch:condensed;
+  font-size:26px;letter-spacing:.5px;
   text-transform:uppercase;flex-shrink:0;min-width:150px;transition:color .2s;
 }
 .pl-row.pl-current .pl-name{color:var(--amber)}
