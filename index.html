@@ -507,8 +507,12 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
   flex:1;padding:13px 18px;background:transparent;
   display:flex;align-items:center;gap:22px;min-width:0;
 }
+/* Section name and notes are the two things you read off a phone on the floor,
+   so they carry the weight here; bars/cue meta stay quiet underneath. */
 .pl-name{
-  font-size:19px;font-weight:700;letter-spacing:1px;
+  font-family:var(--display);
+  font-weight:900;font-variation-settings:'wdth' 62,'wght' 900;
+  font-size:25px;letter-spacing:.5px;
   text-transform:uppercase;flex-shrink:0;min-width:150px;transition:color .2s;
 }
 .pl-row.pl-current .pl-name{color:var(--amber)}
@@ -519,10 +523,12 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 }
 .pl-row.pl-current .pl-meta-col{color:var(--ink)}
 .pl-notes-col{
-  flex:1;font-size:14px;color:var(--ink-soft);font-style:normal;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding-right:16px;
+  flex:1;font-size:17px;font-weight:700;color:var(--ink);font-style:normal;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  padding:2px 16px 2px 11px;border-left:2px solid var(--amber-dim);
 }
-.pl-row.pl-current .pl-notes-col{color:var(--ink)}
+.pl-notes-col:empty{display:none}
+.pl-row.pl-current .pl-notes-col{color:#fff;border-left-color:var(--amber)}
 .pl-right{display:flex;align-items:center;gap:12px;flex-shrink:0}
 .pl-badge{
   font-family:var(--mono);
@@ -1043,9 +1049,15 @@ html{ -webkit-text-size-adjust:100%; }
     display:grid; grid-template-columns:1fr auto; align-items:center;
     gap:3px 10px; padding:10px 12px;
   }
-  .pl-name{ min-width:0; font-size:17px; letter-spacing:1px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .pl-meta-col{ width:auto; font-size:12px; grid-column:1; }
-  .pl-notes-col{ grid-column:1 / -1; flex:none; padding-right:0; font-size:12px; white-space:normal; }
+  /* phone on the floor: the title and the notes have to win the row */
+  .pl-name{ min-width:0; font-size:27px; letter-spacing:.6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pl-meta-col{ width:auto; font-size:11px; grid-column:1; opacity:.75; }
+  .pl-notes-col{
+    grid-column:1 / -1; flex:none; font-size:17px; line-height:1.35;
+    white-space:normal; overflow:visible; text-overflow:clip;
+    margin-top:3px; padding:3px 0 3px 10px;
+  }
+  .pl-bar-live{ opacity:.75; }
   .pl-right{ grid-column:2; grid-row:1 / span 2; flex-direction:column; align-items:flex-end; gap:4px; }
   .pl-fill-tag{ max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .pl-bar-live{ min-width:0; font-size:12px; }
