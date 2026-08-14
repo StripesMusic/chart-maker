@@ -7,7 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%F0%9F%A5%81</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&family=League+Gothic&family=DM+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62,900&family=DM+Mono:wght@400;500&display=swap">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -28,8 +28,9 @@
   --green:#57c47f;
   --red:#ff3b30;
   --blue:#63b6d0;
-  --font:'Work Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
-  --display:'League Gothic','Work Sans',system-ui,sans-serif;
+  --font:Arial,Helvetica,'Helvetica Neue',sans-serif;
+  /* display face is used ONLY for the big focus-mode readouts */
+  --display:'Archivo',Arial,sans-serif;
   --mono:'DM Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
   font-family:var(--font);
   font-size:16px;
@@ -323,8 +324,8 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
   border-bottom:1px solid var(--rule);background:transparent;
 }
 #perf-song{
-  font-family:var(--display);font-size:16px;font-weight:500;
-  letter-spacing:4px;color:var(--amber);text-transform:uppercase;
+  font-size:15px;font-weight:700;
+  letter-spacing:3px;color:var(--amber);text-transform:uppercase;
 }
 .perf-meta{
   font-family:var(--mono);font-size:13px;
@@ -377,7 +378,7 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 #perf-prev-wrap{margin-bottom:20px;text-align:center;min-height:24px;opacity:.5}
 #perf-prev-label{margin-bottom:4px}
 #perf-prev-val{
-  font-family:var(--display);font-size:18px;font-weight:400;
+  font-size:16px;font-weight:700;
   letter-spacing:2px;color:var(--ink-soft);text-transform:uppercase;
 }
 
@@ -396,8 +397,9 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 #perf-current-center{text-align:center;padding:28px 46px 26px;flex:1;min-width:0}
 #perf-section-name{
   font-family:var(--display);
-  font-size:clamp(66px,11.5vw,148px);font-weight:400;letter-spacing:1px;
-  text-transform:uppercase;line-height:.92;transition:color .25s;
+  font-weight:900;font-variation-settings:'wdth' 62,'wght' 900;
+  font-size:clamp(58px,9.6vw,124px);letter-spacing:0;
+  text-transform:uppercase;line-height:.94;transition:color .25s;
 }
 /* the glyphs carry the same top-lit falloff as the flap face, tinted by the
    section's own colour (JS sets it inline, so currentColor drives the ramp) */
@@ -444,7 +446,7 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 #perf-next-wrap{text-align:center;min-height:42px}
 #perf-next-label{margin-bottom:4px}
 #perf-next-val{
-  font-family:var(--display);font-size:25px;font-weight:400;
+  font-size:21px;font-weight:700;
   letter-spacing:2px;text-transform:uppercase;color:var(--amber);
 }
 
@@ -506,8 +508,7 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
   display:flex;align-items:center;gap:22px;min-width:0;
 }
 .pl-name{
-  font-family:var(--display);
-  font-size:22px;font-weight:400;letter-spacing:1px;
+  font-size:19px;font-weight:700;letter-spacing:1px;
   text-transform:uppercase;flex-shrink:0;min-width:150px;transition:color .2s;
 }
 .pl-row.pl-current .pl-name{color:var(--amber)}
@@ -561,7 +562,7 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 }
 .p-btn:hover{border-color:var(--amber-dim);color:var(--amber);transform:translateY(-1px)}
 .p-btn.big{
-  font-family:var(--display);font-size:18px;font-weight:400;
+  font-size:15px;font-weight:700;
   padding:12px 42px;letter-spacing:3px;color:var(--amber);border-color:var(--amber-dim);
 }
 .p-btn.big:hover{background:linear-gradient(176deg,var(--amber),var(--amber-dim));color:#1a1206}
@@ -881,8 +882,7 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 }
 .pfb-item b{color:#ffc9c4;font-weight:500}
 .pfb-now{
-  font-family:var(--display);
-  font-size:22px;letter-spacing:3px;text-transform:uppercase;color:#fff;font-weight:400;
+  font-size:19px;letter-spacing:3px;text-transform:uppercase;color:#fff;font-weight:700;
   background:var(--alert);border-radius:3px;padding:8px 24px;animation:fillFlash .5s infinite;
   box-shadow:0 0 34px rgba(255,59,48,.4);
 }
@@ -904,7 +904,8 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 #perf-countin.fill #ci-label{color:var(--alert)}
 #ci-num{
   font-family:var(--display);
-  font-size:clamp(120px,26vw,210px);font-weight:400;line-height:1;color:var(--amber);
+  font-weight:900;font-variation-settings:'wdth' 62,'wght' 900;
+  font-size:clamp(110px,24vw,200px);line-height:1;color:var(--amber);
   font-variant-numeric:tabular-nums;text-shadow:0 0 70px var(--amber-glow);
 }
 @keyframes ciPop{ from{transform:scale(.6);opacity:.2} to{transform:scale(1);opacity:1} }
@@ -1080,11 +1081,12 @@ html{ -webkit-text-size-adjust:100%; }
 
 /* ═══════════════════════════════════════════════════════════
    THE BOARD — one design language across the whole app.
-   Same vocabulary as the performance view: League Gothic for
-   names, DM Mono for anything mechanical (numbers, labels,
-   controls), Work Sans for prose, flat warm surfaces lit from
-   one direction only. No mid-panel seams, no fake top-edge
-   highlights, no bloom.
+   Arial carries the general UI; DM Mono carries anything
+   mechanical (numbers, labels, controls). The heavy condensed
+   display face (Archivo 900 / wdth 62) is reserved for the big
+   focus-mode readouts only. Flat warm surfaces lit from one
+   direction. No mid-panel seams, no fake top-edge highlights,
+   no bloom.
    ═══════════════════════════════════════════════════════════ */
 body{ -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
 button,input,select,textarea{ font-family:inherit; }
@@ -1096,10 +1098,10 @@ body::before{
   mix-blend-mode:overlay;
 }
 
-/* ── NAMES: League Gothic, tight, uppercase ── */
+/* ── NAMES: Arial bold, uppercase ── */
 #lib-title,.song-card-name,#song-name-input,.sec-type-label,
 .shared-title,.sv-name,.auth-box h1,.auth-box h2{
-  font-family:var(--display);font-weight:400;text-transform:uppercase;
+  font-weight:700;text-transform:uppercase;
 }
 #lib-title{ font-size:34px;letter-spacing:2px;line-height:1 }
 .song-card-name{ font-size:27px;letter-spacing:1px;color:var(--text) }
@@ -1146,7 +1148,7 @@ body::before{
 }
 .btn.accent:hover{ background:linear-gradient(176deg,#ffa04f,var(--accent));color:#1c1005 }
 .btn.perform{
-  font-family:var(--display);font-size:19px;letter-spacing:2px;font-weight:400;
+  font-size:14px;letter-spacing:2px;font-weight:700;
   background:linear-gradient(176deg,var(--green),#3f9a5f);color:#06170d;
   border-color:#3f9a5f;padding:8px 26px;
 }
