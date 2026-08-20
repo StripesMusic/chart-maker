@@ -2778,6 +2778,12 @@ function startSyncLoop(){
     if(perfMode !== 'sync'){ syncRAF = null; return; }
     const t = getAudioTime();
     const cued = song.sections.map((s,i)=>({i,time:s.time})).filter(o=>o.time!=null);
+    // SYNC only moves while the track is rolling - say which state we're in, live
+    const wantStatus = !cued.length ? 'SYNC · NO CUE POINTS SET'
+                     : isAudioPlaying() ? 'SYNC · FOLLOWING TRACK'
+                     : 'SYNC · PRESS PLAY ON THE TRACK';
+    const stEl = document.getElementById('auto-status');
+    if(stEl.textContent !== wantStatus) stEl.textContent = wantStatus;
     if(cued.length){
       let target = cued[0].i;
       for(const o of cued){ if(t >= o.time - 0.15) target = o.i; else break; }
