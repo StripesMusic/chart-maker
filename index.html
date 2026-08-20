@@ -1222,43 +1222,62 @@ body::before{
 }
 
 
-/* ── project settings dialog ── */
+/* ── project settings — a compact preferences sheet, not a card grid ── */
 #settings-overlay{
   position:fixed; inset:0; z-index:1200; display:none;
-  background:rgba(4,3,2,.72); backdrop-filter:blur(3px);
+  background:rgba(4,3,2,.7);
   align-items:center; justify-content:center; padding:20px;
 }
 #settings-overlay.open{ display:flex; }
 #settings-box{
-  width:100%; max-width:560px; max-height:86vh; overflow-y:auto;
-  background:linear-gradient(176deg,var(--bg3),var(--bg2));
-  border:1px solid var(--border2); border-radius:10px; padding:22px 24px 24px;
-  box-shadow:0 30px 70px rgba(0,0,0,.6); animation:popIn .16s ease;
+  width:100%; max-width:400px;
+  background:var(--bg2); border:1px solid var(--border2); border-radius:8px;
+  box-shadow:0 24px 60px rgba(0,0,0,.6); animation:popIn .13s ease;
+  padding:0 16px 6px;
 }
-.set-head{ display:flex; align-items:center; gap:12px; }
-.set-title{ font-size:20px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--accent); flex:1; }
-.set-x{ background:none; border:none; color:var(--muted); font-size:17px; cursor:pointer; padding:4px 6px; border-radius:4px; line-height:1; }
-.set-x:hover{ color:var(--red); background:var(--bg4); }
-.set-sub{ font-family:var(--mono); font-size:12px; color:var(--muted2); letter-spacing:1px; margin-top:2px; }
-.set-group{ margin-top:22px; }
-.set-label{ font-family:var(--mono); font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--accent-dim); }
-.set-help{ font-size:13px; color:var(--muted); margin-top:5px; line-height:1.45; }
-.set-opts{ display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:11px; }
-.set-opts.set-row3{ grid-template-columns:repeat(3,1fr); }
-.set-opt{
-  text-align:left; background:linear-gradient(176deg,var(--bg4),var(--bg3));
-  border:1px solid var(--border2); border-radius:6px; padding:11px 13px;
-  cursor:pointer; color:var(--text); transition:border-color .15s,background .15s;
-  display:flex; flex-direction:column; gap:5px;
+.set-head{
+  display:flex; align-items:baseline; gap:10px;
+  padding:14px 0 12px; border-bottom:1px solid var(--border); margin-bottom:4px;
 }
-.set-opt b{ font-size:14px; font-weight:700; }
-.set-opt span{ font-size:12px; color:var(--muted); line-height:1.4; }
-.set-opt:hover{ border-color:var(--accent-dim); }
-.set-opt.on{ border-color:var(--accent); background:linear-gradient(176deg,rgba(255,140,43,.16),rgba(255,140,43,.07)); }
-.set-opt.on b{ color:var(--accent); }
+.set-title{
+  font-family:var(--mono); font-size:11px; letter-spacing:2.5px;
+  text-transform:uppercase; color:var(--accent);
+}
+.set-song{
+  flex:1; min-width:0; font-size:12px; color:var(--muted2);
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.set-x{
+  background:none; border:none; color:var(--muted2); font-size:13px;
+  cursor:pointer; padding:2px 4px; line-height:1; align-self:center;
+}
+.set-x:hover{ color:var(--red); }
+
+.set-row{
+  display:flex; align-items:center; gap:14px;
+  padding:11px 0; border-bottom:1px solid var(--border); cursor:pointer;
+}
+.set-row:last-of-type{ border-bottom:none; }
+.set-name{
+  flex:1; font-family:var(--mono); font-size:12px; letter-spacing:1px;
+  color:var(--muted); text-transform:uppercase;
+}
+.set-select{
+  flex-shrink:0; min-width:150px;
+  background:var(--bg4); border:1px solid var(--border2); border-radius:4px;
+  color:var(--text); font-size:13px; padding:6px 26px 6px 10px;
+  cursor:pointer; outline:none; appearance:none; -webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6'%3E%3Cpath d='M0 0h9L4.5 6z' fill='%23ff8c2b'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 9px center;
+}
+.set-select:hover,.set-select:focus{ border-color:var(--accent-dim); }
+.set-select option{ background:var(--bg3); color:var(--text); }
+.set-note{
+  font-size:11.5px; color:var(--muted2); line-height:1.4;
+  margin:-4px 0 2px; padding-bottom:9px; border-bottom:1px solid var(--border);
+}
 @media (max-width:600px){
-  .set-opts,.set-opts.set-row3{ grid-template-columns:1fr; }
-  #settings-box{ padding:18px 16px 20px; }
+  .set-select{ min-width:135px; }
 }
 
 /* keyboard focus stays obvious */
@@ -1480,41 +1499,36 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 <div id="settings-overlay" onclick="if(event.target===this)closeSettings()">
   <div id="settings-box" role="dialog" aria-label="Project settings">
     <div class="set-head">
-      <span class="set-title">Project settings</span>
+      <span class="set-title">Settings</span>
+      <span class="set-song" id="set-songname">—</span>
       <button class="set-x" onclick="closeSettings()" title="Close">✕</button>
     </div>
-    <div class="set-sub" id="set-songname">—</div>
 
-    <div class="set-group">
-      <div class="set-label">Playhead timing</div>
-      <div class="set-help">How the playhead paces itself across a section while the track plays.</div>
-      <div class="set-opts" id="set-playhead">
-        <button class="set-opt" data-v="cue" onclick="setPlayheadMode('cue')">
-          <b>Cue points</b><span>Stretches from this section's cue to the next one, so it lands exactly on the change. Best for songs not recorded to a click.</span>
-        </button>
-        <button class="set-opt" data-v="bpm" onclick="setPlayheadMode('bpm')">
-          <b>Tempo (BPM)</b><span>Paces strictly off BPM and bar count. Best when the track is locked to a click.</span>
-        </button>
-      </div>
-    </div>
+    <label class="set-row">
+      <span class="set-name">Playhead</span>
+      <select class="set-select" id="set-playhead" onchange="setPlayheadMode(this.value)">
+        <option value="cue">Cue points</option>
+        <option value="bpm">Tempo (BPM)</option>
+      </select>
+    </label>
+    <div class="set-note" id="set-playhead-note"></div>
 
-    <div class="set-group">
-      <div class="set-label">Count-in</div>
-      <div class="set-help">The big 1-2-3-4 shown before a change in performance mode.</div>
-      <div class="set-opts set-row3" id="set-countin">
-        <button class="set-opt" data-v="all" onclick="setCountInMode('all')"><b>Sections + fills</b></button>
-        <button class="set-opt" data-v="sections" onclick="setCountInMode('sections')"><b>Sections only</b></button>
-        <button class="set-opt" data-v="off" onclick="setCountInMode('off')"><b>Off</b></button>
-      </div>
-    </div>
+    <label class="set-row">
+      <span class="set-name">Count-in</span>
+      <select class="set-select" id="set-countin" onchange="setCountInMode(this.value)">
+        <option value="all">Sections + fills</option>
+        <option value="sections">Sections only</option>
+        <option value="off">Off</option>
+      </select>
+    </label>
 
-    <div class="set-group">
-      <div class="set-label">Numbering</div>
-      <div class="set-opts set-row3" id="set-number">
-        <button class="set-opt" data-v="on" onclick="setAutoNumber(true)"><b>Auto</b><span>Verse 1, Verse 2…</span></button>
-        <button class="set-opt" data-v="off" onclick="setAutoNumber(false)"><b>Manual</b><span>Set each number yourself</span></button>
-      </div>
-    </div>
+    <label class="set-row">
+      <span class="set-name">Numbering</span>
+      <select class="set-select" id="set-number" onchange="setAutoNumber(this.value==='on')">
+        <option value="on">Auto</option>
+        <option value="off">Manual</option>
+      </select>
+    </label>
   </div>
 </div>
 <div id="ctx-menu"></div>
@@ -2246,19 +2260,22 @@ window.openSettings = function(){
   document.getElementById('settings-overlay').classList.add('open');
 }
 window.closeSettings = function(){ document.getElementById('settings-overlay').classList.remove('open'); }
+const PLAYHEAD_NOTE = {
+  cue: 'Crosses the section in the time between its cue and the next — stays with the recording.',
+  bpm: 'Paced strictly by BPM and bar count — for tracks locked to a click.'
+};
 function renderSettings(){
   const song = currentSong(); if(!song) return;
-  const mark = (wrapId, val) => document.querySelectorAll('#'+wrapId+' .set-opt')
-    .forEach(b => b.classList.toggle('on', b.dataset.v === val));
-  mark('set-playhead', playheadMode());
-  mark('set-countin', countInMode());
-  mark('set-number', song.autoNumber === false ? 'off' : 'on');
+  const mode = playheadMode();
+  document.getElementById('set-playhead').value = mode;
+  document.getElementById('set-playhead-note').textContent = PLAYHEAD_NOTE[mode];
+  document.getElementById('set-countin').value = countInMode();
+  document.getElementById('set-number').value = song.autoNumber === false ? 'off' : 'on';
 }
 window.setPlayheadMode = function(m){
   const song = currentSong(); if(!song) return;
   song.playheadMode = (m === 'bpm') ? 'bpm' : 'cue';
   window.save(); renderSettings();
-  showToast(song.playheadMode === 'bpm' ? 'Playhead follows BPM' : 'Playhead stretches between cues');
 }
 window.setCountInMode = function(m){
   const song = currentSong(); if(!song) return;
