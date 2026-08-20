@@ -2721,8 +2721,8 @@ window.startPerf = function(){
   stopEditorPlayer();   // silence the editor's inline player so it doesn't double up
   setupPerfAudio(song);
   updateCountInToggle();
-  // If a track is attached, default to SYNC; otherwise AUTO
-  window.setMode(audioAvailable() ? 'sync' : 'auto');
+  // SYNC can only advance if the track has cue points to follow - otherwise start in AUTO
+  window.setMode(audioAvailable() && songCueCount(song) ? 'sync' : 'auto');
   window.setDisplayMode('focus');
   window.renderPerf();
 }
@@ -2747,7 +2747,10 @@ window.setMode = function(m){
   const status = document.getElementById('auto-status');
   const ring = document.getElementById('countdown-ring-wrap');
   if(m==='auto'){ status.textContent='AUTO · BPM TIMED'; scheduleAuto(); }
-  else if(m==='sync'){ status.textContent='SYNC · FOLLOWING TRACK'; ring.classList.remove('visible'); startSyncLoop(); }
+  else if(m==='sync'){
+    status.textContent = songCueCount(currentSong()) ? 'SYNC · PLAY THE TRACK' : 'SYNC · NO CUE POINTS SET';
+    ring.classList.remove('visible'); startSyncLoop();
+  }
   else { status.textContent='MANUAL · SPACE TO ADVANCE'; ring.classList.remove('visible'); setSectionProgress(0); }
 }
 
@@ -2766,6 +2769,7 @@ function buildSyncEvents(song){
 }
 let syncFillFlash = false;
 // Follow the audio clock: highlight whichever cued section we're inside of, count in, flash fills
+function songCueCount(song){ return (song?.sections||[]).filter(s => s.time != null).length; }
 function startSyncLoop(){
   stopSyncLoop();
   const song = currentSong();
