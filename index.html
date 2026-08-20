@@ -1221,6 +1221,46 @@ body::before{
     transition-duration:.01ms !important; scroll-behavior:auto !important; }
 }
 
+
+/* ── project settings dialog ── */
+#settings-overlay{
+  position:fixed; inset:0; z-index:1200; display:none;
+  background:rgba(4,3,2,.72); backdrop-filter:blur(3px);
+  align-items:center; justify-content:center; padding:20px;
+}
+#settings-overlay.open{ display:flex; }
+#settings-box{
+  width:100%; max-width:560px; max-height:86vh; overflow-y:auto;
+  background:linear-gradient(176deg,var(--bg3),var(--bg2));
+  border:1px solid var(--border2); border-radius:10px; padding:22px 24px 24px;
+  box-shadow:0 30px 70px rgba(0,0,0,.6); animation:popIn .16s ease;
+}
+.set-head{ display:flex; align-items:center; gap:12px; }
+.set-title{ font-size:20px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--accent); flex:1; }
+.set-x{ background:none; border:none; color:var(--muted); font-size:17px; cursor:pointer; padding:4px 6px; border-radius:4px; line-height:1; }
+.set-x:hover{ color:var(--red); background:var(--bg4); }
+.set-sub{ font-family:var(--mono); font-size:12px; color:var(--muted2); letter-spacing:1px; margin-top:2px; }
+.set-group{ margin-top:22px; }
+.set-label{ font-family:var(--mono); font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--accent-dim); }
+.set-help{ font-size:13px; color:var(--muted); margin-top:5px; line-height:1.45; }
+.set-opts{ display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:11px; }
+.set-opts.set-row3{ grid-template-columns:repeat(3,1fr); }
+.set-opt{
+  text-align:left; background:linear-gradient(176deg,var(--bg4),var(--bg3));
+  border:1px solid var(--border2); border-radius:6px; padding:11px 13px;
+  cursor:pointer; color:var(--text); transition:border-color .15s,background .15s;
+  display:flex; flex-direction:column; gap:5px;
+}
+.set-opt b{ font-size:14px; font-weight:700; }
+.set-opt span{ font-size:12px; color:var(--muted); line-height:1.4; }
+.set-opt:hover{ border-color:var(--accent-dim); }
+.set-opt.on{ border-color:var(--accent); background:linear-gradient(176deg,rgba(255,140,43,.16),rgba(255,140,43,.07)); }
+.set-opt.on b{ color:var(--accent); }
+@media (max-width:600px){
+  .set-opts,.set-opts.set-row3{ grid-template-columns:1fr; }
+  #settings-box{ padding:18px 16px 20px; }
+}
+
 /* keyboard focus stays obvious */
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,
 .toggle-chip:focus-visible,.palette-item:focus-visible,.song-card:focus-visible{
@@ -1290,6 +1330,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
       <div class="toggle-chip on" id="num-toggle" onclick="toggleNumbering()" title="Auto-number repeated sections (Verse 1, Verse 2…)">
         <span class="sw"></span># No.
       </div>
+      <button class="btn btn-ico" onclick="openSettings()" title="Project settings">⚙</button>
       <button class="btn btn-ico" onclick="shareSong()" title="Copy a shareable read-only link to this chart">🔗</button>
       <button class="btn perform" onclick="startPerf()">▶ PERFORM</button>
     </div>
@@ -1436,6 +1477,46 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 </div>
 
 <div id="save-toast"></div>
+<div id="settings-overlay" onclick="if(event.target===this)closeSettings()">
+  <div id="settings-box" role="dialog" aria-label="Project settings">
+    <div class="set-head">
+      <span class="set-title">Project settings</span>
+      <button class="set-x" onclick="closeSettings()" title="Close">✕</button>
+    </div>
+    <div class="set-sub" id="set-songname">—</div>
+
+    <div class="set-group">
+      <div class="set-label">Playhead timing</div>
+      <div class="set-help">How the playhead paces itself across a section while the track plays.</div>
+      <div class="set-opts" id="set-playhead">
+        <button class="set-opt" data-v="cue" onclick="setPlayheadMode('cue')">
+          <b>Cue points</b><span>Stretches from this section's cue to the next one, so it lands exactly on the change. Best for songs not recorded to a click.</span>
+        </button>
+        <button class="set-opt" data-v="bpm" onclick="setPlayheadMode('bpm')">
+          <b>Tempo (BPM)</b><span>Paces strictly off BPM and bar count. Best when the track is locked to a click.</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="set-group">
+      <div class="set-label">Count-in</div>
+      <div class="set-help">The big 1-2-3-4 shown before a change in performance mode.</div>
+      <div class="set-opts set-row3" id="set-countin">
+        <button class="set-opt" data-v="all" onclick="setCountInMode('all')"><b>Sections + fills</b></button>
+        <button class="set-opt" data-v="sections" onclick="setCountInMode('sections')"><b>Sections only</b></button>
+        <button class="set-opt" data-v="off" onclick="setCountInMode('off')"><b>Off</b></button>
+      </div>
+    </div>
+
+    <div class="set-group">
+      <div class="set-label">Numbering</div>
+      <div class="set-opts set-row3" id="set-number">
+        <button class="set-opt" data-v="on" onclick="setAutoNumber(true)"><b>Auto</b><span>Verse 1, Verse 2…</span></button>
+        <button class="set-opt" data-v="off" onclick="setAutoNumber(false)"><b>Manual</b><span>Set each number yourself</span></button>
+      </div>
+    </div>
+  </div>
+</div>
 <div id="ctx-menu"></div>
 
 <script type="module">
@@ -1753,6 +1834,7 @@ function migrateSong(song){
   if(song.audio === undefined) song.audio = null;
   if(song.shareCode === undefined) song.shareCode = null; // Firestore short-link code (null = not published)
   if(song.countIn === undefined) song.countIn = 'all';    // count-in: 'all' | 'sections' | 'off'
+  if(song.playheadMode === undefined) song.playheadMode = 'cue'; // 'cue' = stretch between cue points, 'bpm' = strict tempo
   // a local audio-file URL can't survive a reload — drop the dead blob ref, keep cues
   if(song.audio && song.audio.type === 'file') song.audio = null;
   (song.sections||[]).forEach(s => {
@@ -2156,6 +2238,37 @@ window.addSectionAt = function(typeId, index){
   setSelectedSection(at);
 }
 
+function playheadMode(){ const s = currentSong(); return s && s.playheadMode === 'bpm' ? 'bpm' : 'cue'; }
+window.openSettings = function(){
+  const song = currentSong(); if(!song) return;
+  document.getElementById('set-songname').textContent = song.name || 'Untitled song';
+  renderSettings();
+  document.getElementById('settings-overlay').classList.add('open');
+}
+window.closeSettings = function(){ document.getElementById('settings-overlay').classList.remove('open'); }
+function renderSettings(){
+  const song = currentSong(); if(!song) return;
+  const mark = (wrapId, val) => document.querySelectorAll('#'+wrapId+' .set-opt')
+    .forEach(b => b.classList.toggle('on', b.dataset.v === val));
+  mark('set-playhead', playheadMode());
+  mark('set-countin', countInMode());
+  mark('set-number', song.autoNumber === false ? 'off' : 'on');
+}
+window.setPlayheadMode = function(m){
+  const song = currentSong(); if(!song) return;
+  song.playheadMode = (m === 'bpm') ? 'bpm' : 'cue';
+  window.save(); renderSettings();
+  showToast(song.playheadMode === 'bpm' ? 'Playhead follows BPM' : 'Playhead stretches between cues');
+}
+window.setCountInMode = function(m){
+  const song = currentSong(); if(!song) return;
+  song.countIn = m; window.save(); renderSettings(); updateCountInToggle();
+}
+window.setAutoNumber = function(on){
+  const song = currentSong(); if(!song) return;
+  if((song.autoNumber !== false) !== on) window.toggleNumbering();
+  renderSettings();
+}
 window.toggleNumbering = function(){
   const song = currentSong(); if(!song) return;
   song.autoNumber = !(song.autoNumber !== false);
@@ -2553,7 +2666,18 @@ function updateEdPlayhead(){
   if(!tl || !ph) return;
   const ets = effTS(song, cur.s);
   const total16 = Math.round(cur.s.bars * sixteenthsPerBar(ets));
-  const pos16 = Math.max(0, Math.min(total16, (t - cur.s.time) * 1000 / msPer16(song)));
+  let pos16;
+  if(playheadMode() === 'cue'){
+    // Stretch the crossing so it lands exactly on the next cue. Recordings drift off the
+    // click, so pacing by BPM would run ahead or lag; the cues are the real anchors.
+    const nxt = cued.find(o => o.s.time > cur.s.time);
+    const bpmEnd = cur.s.time + (barMsFor(song, cur.s) * cur.s.bars * cur.s.repeats) / 1000;
+    const endT = nxt ? nxt.s.time : bpmEnd;          // no next cue -> fall back to tempo
+    const span = Math.max(0.05, endT - cur.s.time);
+    pos16 = Math.max(0, Math.min(total16, ((t - cur.s.time) / span) * total16));
+  } else {
+    pos16 = Math.max(0, Math.min(total16, (t - cur.s.time) * 1000 / msPer16(song)));
+  }
   const PX = +tl.dataset.px;
   ph.style.left = (pos16 * PX) + 'px';
   ph.style.display = 'block';
@@ -2794,7 +2918,7 @@ function startSyncLoop(){
       const cs = song.sections[target];
       const secDur = barMsFor(song, cs) * cs.bars * cs.repeats / 1000;
       const nextCue = cued.find(o => o.time > cs.time);
-      const endT = nextCue ? nextCue.time : cs.time + secDur;
+      const endT = (playheadMode() === 'cue' && nextCue) ? nextCue.time : cs.time + secDur;
       setSectionProgress((t - cs.time) / Math.max(0.01, endT - cs.time));
     }
     // flash FILL NOW for ~0.4s when a fill hits
@@ -2988,8 +3112,8 @@ function setSectionProgress(prog){
 
 // concise summary of a section's fills for the performance badge
 // each fill as "bar.beat — note" (description visible in focus mode)
-function fillLineHTML(ets, f){
-  const bb = fillBarBeat(ets, f.start16, barLayout(ets, sec.bars, sec.oddAt));
+function fillLineHTML(ets, f, layout){
+  const bb = fillBarBeat(ets, f.start16, layout);
   return `<span class="pfb-item">🥁 <b>${bb.bar}.${bb.beat}</b>${f.notes ? ' — '+esc(f.notes) : ' · '+fmtFillLen(ets, f.len16)}</span>`;
 }
 function renderFillBadge(sec){
@@ -2997,8 +3121,9 @@ function renderFillBadge(sec){
   const fs = (sec.fills || []).slice().sort((a,b)=>a.start16-b.start16);
   if(!fs.length){ fb.className = ''; fb.innerHTML = ''; return; }
   const ets = effTS(currentSong(), sec);
+  const lay = barLayout(ets, sec.bars, sec.oddAt);
   fb.className = 'show';
-  fb.innerHTML = fs.map(f => fillLineHTML(ets, f)).join('');
+  fb.innerHTML = fs.map(f => fillLineHTML(ets, f, lay)).join('');
 }
 
 window.renderPerf = function(){
@@ -3401,6 +3526,7 @@ function cycleMode(){
 document.addEventListener('contextmenu', e => {
   // let text inputs keep their native copy/paste menu
   if(e.target.closest('input, textarea, select')) { hideCtx(); return; }
+  if(e.target.closest('#settings-overlay')) { hideCtx(); return; }
   // performance mode menu (overlay is on top of everything)
   if(document.getElementById('perf-overlay').classList.contains('active')){
     e.preventDefault();
@@ -3502,7 +3628,7 @@ window.addEventListener('resize', hideCtx);
 
 // editor keyboard shortcuts act on the selected section
 document.addEventListener('keydown', e => {
-  if(e.key === 'Escape') hideCtx();
+  if(e.key === 'Escape'){ hideCtx(); if(document.getElementById('settings-overlay').classList.contains('open')){ window.closeSettings(); return; } }
   if(!document.getElementById('view-editor').classList.contains('active')) return;
   if(document.getElementById('perf-overlay').classList.contains('active')) return;
   if(e.target.closest('input, textarea, select')) return;     // don't hijack typing
