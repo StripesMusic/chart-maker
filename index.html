@@ -7,7 +7,7 @@
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%F0%9F%A5%81</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62,900&family=DM+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=DM+Mono:wght@400;500&display=swap">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -41,10 +41,6 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 @keyframes popIn {
   from { opacity: 0; transform: scale(0.96) translateY(10px); }
   to { opacity: 1; transform: scale(1) translateY(0); }
-}
-@keyframes slideInRight {
-  from { opacity: 0; transform: translateX(20px); }
-  to { opacity: 1; transform: translateX(0); }
 }
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
@@ -86,40 +82,162 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 
 /* ── LIBRARY VIEW ── */
 #lib-header{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:24px 36px;border-bottom:1px solid var(--border);
-  background:var(--bg2);flex-shrink:0;
+  display:flex;align-items:flex-end;justify-content:space-between;gap:24px;
+  padding:26px 30px 18px;border-bottom:1px solid var(--border);
+  background:var(--bg);flex-shrink:0;
 }
-#lib-title{font-size:28px;font-weight:700;letter-spacing:5px;color:var(--accent);text-transform:uppercase}
-#lib-subtitle{font-size:13px;color:var(--muted);letter-spacing:2px;margin-top:5px}
-#lib-body{flex:1;overflow-y:auto;padding:32px 36px}
+#lib-title{
+  font-family:var(--display);font-weight:900;font-stretch:72%;
+  font-size:38px;line-height:.86;letter-spacing:-.5px;
+  text-transform:uppercase;color:var(--text);
+}
+#lib-title b{color:var(--accent);font-weight:inherit}
+#lib-subtitle{
+  font-family:var(--mono);font-size:11px;color:var(--muted2);
+  letter-spacing:.14em;text-transform:uppercase;margin-top:9px;
+}
+#lib-actions{display:flex;gap:10px;align-items:center;flex-shrink:0;flex-wrap:wrap}
+#lib-actions .btn{
+  background:transparent;border:1px solid var(--border2);border-radius:0;
+  color:var(--muted);font-family:var(--mono);font-size:10.5px;font-weight:400;
+  letter-spacing:.14em;text-transform:uppercase;padding:11px 17px;
+  transition:color .16s,border-color .16s,background .16s;
+}
+#lib-actions .btn:hover{
+  background:transparent;border-color:var(--accent);color:var(--accent);transform:none;
+}
+/* the one action that starts something is the only filled control on the page */
+#lib-actions .btn.new-song{
+  background:var(--accent);border-color:var(--accent);color:#160f06;font-weight:500;
+}
+#lib-actions .btn.new-song:hover{background:#ffa04f;border-color:#ffa04f;color:#160f06}
+/* export/import are one pair, joined on a shared hairline like the tile seams */
+.lib-seg{display:flex}
+.lib-seg .btn + .btn{margin-left:-1px}
+.lib-seg .btn:hover{position:relative;z-index:1}
+#lib-actions .btn.lib-quiet{border-color:transparent;color:var(--muted2)}
+#lib-actions .btn.lib-quiet:hover{border-color:transparent;color:var(--red);background:transparent}
+
+#lib-body{flex:1;overflow-y:auto;padding:0;background:var(--bg)}
 #lib-body::-webkit-scrollbar{width:5px}
 #lib-body::-webkit-scrollbar-thumb{background:var(--border2)}
 
-#lib-empty{
-  text-align:center;padding:100px 40px;color:var(--muted2);
-  font-size:15px;letter-spacing:2px;text-transform:uppercase;
-  border:1px dashed var(--border2);border-radius:8px;margin:20px;
+/* the grid is a wall, not a list of cards: 2px seams, no radius, no borders */
+#song-list{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+  gap:2px;padding:0 0 2px;
 }
-#lib-empty span{display:block;font-size:42px;margin-bottom:20px;color:var(--border2)}
 
-.song-card{
-  display:flex;align-items:center;gap:20px;
-  padding:20px 24px;margin-bottom:10px;
-  background:var(--bg2);border:1px solid var(--border);border-radius:8px;
-  cursor:pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  animation: slideInRight 0.4s ease backwards;
+.tile{
+  position:relative;aspect-ratio:1/1;overflow:hidden;
+  background:var(--bg2);cursor:pointer;outline:none;
+  container-type:inline-size;
+  animation:tileIn .45s ease backwards;
 }
-.song-card:hover{ 
-    background:var(--bg3); border-color:var(--accent); 
-    transform: translateX(8px); box-shadow: -4px 0 0 var(--accent);
+@keyframes tileIn{from{opacity:0}to{opacity:1}}
+.tile-art{
+  position:absolute;inset:0;background-size:cover;background-position:center;
+  filter:saturate(.8) brightness(.86);
+  transition:transform .55s cubic-bezier(.2,.7,.2,1),filter .3s ease;
 }
-.song-card-left{flex:1;min-width:0}
-.song-card-name{font-size:20px;font-weight:700;letter-spacing:2px;color:var(--accent);text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.song-card-meta{font-size:13px;color:var(--muted);letter-spacing:1px;margin-top:6px}
-.song-card-strips{display:flex;gap:4px;margin-top:10px;flex-wrap:wrap}
-.song-card-strip{height:8px;border-radius:2px;min-width:14px}
-.song-card-actions{display:flex;gap:8px;flex-shrink:0}
+.tile-scrim{
+  position:absolute;inset:0;opacity:0;transition:opacity .28s ease;
+  background:linear-gradient(180deg,rgba(8,7,6,.88) 0%,rgba(8,7,6,.22) 40%,rgba(8,7,6,.3) 60%,rgba(8,7,6,.92) 100%);
+}
+.tile-top{position:absolute;left:16px;right:16px;top:24px;z-index:2;pointer-events:none}
+.tile-bot{
+  position:absolute;left:16px;right:14px;bottom:13px;z-index:2;pointer-events:none;
+  display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
+}
+.tile-title{
+  position:relative;display:block;
+  font-family:var(--display);font-weight:900;font-stretch:68%;
+  font-size:clamp(15px,11cqw,28px);line-height:1.04;letter-spacing:-.4px;
+  text-transform:uppercase;color:var(--text);overflow-wrap:anywhere;
+  padding-right:min(44px,20cqw);
+}
+.tile-title .tt-fill,.tile-title .tt-stroke{
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+}
+.tile-title .tt-fill{position:relative;z-index:1}
+/* second layer: same word, outlined, offset — the pop */
+.tile-title .tt-stroke{
+  position:absolute;left:0;top:0;right:min(44px,20cqw);z-index:0;
+  color:transparent;-webkit-text-stroke:.6px var(--accent);
+  opacity:0;transform:translate(0,0);
+  transition:opacity .3s ease,transform .4s cubic-bezier(.2,.7,.2,1);
+}
+.tile-artist{
+  font-family:var(--font);font-size:clamp(9.5px,5.2cqw,12.5px);letter-spacing:.07em;
+  text-transform:uppercase;color:var(--muted);margin-top:7px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.tile-meta{
+  font-family:var(--mono);font-size:clamp(8px,4.3cqw,10.5px);letter-spacing:.08em;
+  text-transform:uppercase;color:var(--muted);line-height:1.5;
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.tile-dots{display:flex;flex-direction:column;align-items:flex-end;flex-shrink:0;max-height:62cqw}
+.tile-dot{border-radius:50%;flex-shrink:0}
+
+/* one orchestrated reveal — scrim, art, then the two type layers */
+.tile-top,.tile-bot{
+  opacity:0;transform:translateY(9px);
+  transition:opacity .3s ease,transform .42s cubic-bezier(.2,.7,.2,1);
+}
+.tile:hover .tile-scrim,.tile:focus-visible .tile-scrim{opacity:1}
+.tile:hover .tile-art,.tile:focus-visible .tile-art{transform:scale(1.055);filter:saturate(1.05) brightness(.62)}
+.tile:hover .tile-top,.tile:focus-visible .tile-top,
+.tile:hover .tile-bot,.tile:focus-visible .tile-bot{opacity:1;transform:translateY(0)}
+.tile:hover .tile-bot,.tile:focus-visible .tile-bot{transition-delay:.05s}
+.tile:hover .tt-stroke,.tile:focus-visible .tt-stroke{opacity:1;transform:translate(.11em,-.11em);transition-delay:.08s}
+.tile:focus-visible{box-shadow:inset 0 0 0 2px var(--accent)}
+
+.tile-acts{
+  position:absolute;top:11px;right:11px;z-index:3;display:flex;gap:4px;
+  opacity:0;transform:translateY(-6px);
+  transition:opacity .25s ease,transform .3s ease;
+}
+.tile:hover .tile-acts,.tile:focus-within .tile-acts{opacity:1;transform:translateY(0)}
+.tile-act{
+  width:clamp(19px,10.5cqw,26px);height:clamp(19px,10.5cqw,26px);
+  display:grid;place-items:center;border-radius:3px;
+  border:1px solid rgba(255,255,255,.18);background:rgba(10,9,8,.62);
+  backdrop-filter:blur(6px);color:var(--text);
+  font-family:var(--font);font-size:clamp(9px,4.6cqw,11px);line-height:1;cursor:pointer;
+  transition:background .18s,border-color .18s,color .18s;
+}
+.tile-act:hover{background:var(--accent);border-color:var(--accent);color:#1a1206}
+.tile-act.danger:hover{background:var(--red);border-color:var(--red);color:#fff}
+
+@container (max-width:190px){
+  .tile-artist{display:none}
+  .tile-top{left:10px;right:10px;top:18px}
+  .tile-bot{left:10px;right:9px;bottom:9px}
+}
+
+/* touch has no hover — show the card face up */
+@media (hover:none){
+  .tile-top,.tile-bot,.tile-acts{opacity:1;transform:none}
+  .tile-scrim{opacity:1}
+  .tile-art{filter:saturate(1.05) brightness(.62)}
+}
+@media (prefers-reduced-motion:reduce){
+  .tile{animation:none}
+  .tile-art,.tile-top,.tile-bot,.tt-stroke,.tile-acts{transition-duration:.01ms}
+}
+
+#lib-empty{text-align:center;padding:96px 40px;color:var(--muted2)}
+#lib-empty span{display:block;font-size:38px;margin-bottom:18px;color:var(--border2)}
+#lib-empty b{
+  display:block;font-family:var(--display);font-weight:900;font-stretch:68%;
+  font-size:30px;letter-spacing:-.3px;text-transform:uppercase;
+  color:var(--text);margin-bottom:9px;
+}
+#lib-empty i{
+  font-style:normal;font-family:var(--mono);font-size:11.5px;
+  letter-spacing:.1em;text-transform:uppercase;
+}
 
 /* ── EDITOR VIEW ── */
 #ed-header{
@@ -134,12 +252,19 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
   transition:all .15s;white-space:nowrap;
 }
 #back-btn:hover{border-color:var(--accent);color:var(--accent); transform: translateX(-3px); }
+#song-id-wrap{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
 #song-name-input{
   background:transparent;border:none;border-bottom:1px solid var(--border2);
   color:var(--accent);font-size:20px;font-weight:700;
   font-family:var(--font);letter-spacing:3px;text-transform:uppercase;
-  outline:none;flex:1;padding:4px 0;min-width:0;
+  outline:none;width:100%;padding:4px 0;min-width:0;
 }
+#song-artist-input{
+  background:transparent;border:none;outline:none;width:100%;
+  color:var(--muted);font-family:var(--font);font-size:12.5px;
+  letter-spacing:.07em;text-transform:uppercase;padding:3px 0 0;
+}
+#song-artist-input::placeholder{color:var(--muted2)}
 #song-name-input::placeholder{color:var(--muted2)}
 #song-name-input:focus{border-bottom-color:var(--accent)}
 .ed-header-right{display:flex;align-items:center;gap:12px;flex-shrink:0}
@@ -621,12 +746,6 @@ body{background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display
 .ctx-item.ctx-has-sub:hover .ctx-sub{display:block}
 .ctx-item.ctx-has-sub:hover{background:var(--bg4)}
 .section-block.selected{box-shadow:0 0 0 2px var(--accent)}
-.lib-save-row{
-  display:flex;align-items:center;gap:10px;
-  padding:12px 36px;border-top:1px solid var(--border);
-  background:var(--bg);flex-shrink:0;
-}
-.lib-save-row label{font-size:12px;color:var(--muted2);letter-spacing:1px;flex:1}
 
 /* ═══════════════════════════════
    ADDED FEATURES — animations, fills, numbering, modifiers, audio
@@ -997,19 +1116,21 @@ html{ -webkit-text-size-adjust:100%; }
 
   /* ── Library ── */
   #lib-header{ padding:16px 18px; flex-wrap:wrap; gap:12px; }
-  #lib-title{ font-size:22px; letter-spacing:3px; }
-  #lib-subtitle{ font-size:12px; }
-  .lib-save-row{ padding:10px 16px; flex-wrap:wrap; }
-  .lib-save-row label{ flex:1 1 100%; }
-  #lib-body{ padding:18px 14px; }
-  .song-card{ padding:16px; gap:12px; flex-wrap:wrap; }
-  .song-card-left{ flex:1 1 100%; }
-  .song-card-actions{ width:100%; }
-  .song-card-actions .btn{ flex:1; }
+  #lib-title{ font-size:27px; }
+  #lib-subtitle{ font-size:11px; }
+  #lib-actions{ flex:1 1 100%; }
+  #song-list{ grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); }
+}
+
+@media (max-width: 560px){
+  #song-list{ grid-template-columns:repeat(auto-fill,minmax(144px,1fr)); }
+  .tile-top{ left:12px; right:12px; top:11px; }
+  .tile-bot{ left:12px; right:11px; bottom:10px; }
 
   /* ── Editor header ── */
   #ed-header{ flex-wrap:wrap; padding:12px 14px; gap:10px; }
-  #song-name-input{ order:3; flex:1 1 100%; font-size:18px; }
+  #song-id-wrap{ order:3; flex:1 1 100%; }
+  #song-name-input{ font-size:18px; }
   .ed-header-right{ flex-wrap:wrap; gap:10px; width:100%; justify-content:flex-start; }
   .bpm-wrap,.ts-wrap{ gap:6px; }
   .btn.perform{ margin-left:auto; }
@@ -1115,7 +1236,7 @@ html{ -webkit-text-size-adjust:100%; }
   #perf-position, #bar-ticker-wrap{ display:none; }
   #perf-section-name{ letter-spacing:3px; }
   #perf-current-wrap{ gap:12px; }
-  #lib-title{ font-size:19px; }
+  #lib-title{ font-size:22px; }
   .auth-box{ padding:28px 22px; }
 }
 
@@ -1139,42 +1260,33 @@ body::before{
 }
 
 /* ── NAMES: Arial bold, uppercase ── */
-#lib-title,.song-card-name,#song-name-input,.sec-type-label,
+#song-name-input,.sec-type-label,
 .shared-title,.sv-name,.auth-box h1,.auth-box h2{
   font-weight:700;text-transform:uppercase;
 }
-#lib-title{ font-size:34px;letter-spacing:2px;line-height:1 }
-.song-card-name{ font-size:27px;letter-spacing:1px;color:var(--text) }
-.song-card:hover .song-card-name{ color:var(--accent) }
 #song-name-input{ font-size:27px;letter-spacing:1px;padding:2px 0 4px }
 .sec-type-label{ font-size:23px;letter-spacing:.5px }
 .shared-title{ font-size:42px;letter-spacing:1px }
 .sv-name{ font-size:23px;letter-spacing:.5px }
 
 /* ── MECHANICAL: DM Mono for every number, label and control ── */
-#lib-subtitle,.song-card-meta,.sidebar-section-label,#sidebar-footer label,
+.sidebar-section-label,#sidebar-footer label,
 .bpm-wrap label,.ts-wrap label,.bars-wrap span,#chart-stats,.audio-label,
 .sync-title,.sync-time,.sync-status,.sync-links,.shared-meta,.sv-meta,
-#shared-foot,.lib-save-row label,.fills-label,.fills-count,.fill-item-bar,
+#shared-foot,.fills-label,.fills-count,.fill-item-bar,
 .fill-item-lbl,.toggle-chip,.repeat-pill,.cue-pill,.mod-btn,.btn,#back-btn,
 #bpm-input,#ts-num,#ts-den,.bars-input,.sec-num-input,.ts-mini-num,.ts-mini-den,
 .ctx-key,#save-toast,.audio-chip,.sv-fill,#drop-hint,#lib-empty,.key-hint{
   font-family:var(--mono);
 }
 #bpm-input,.bars-input,.sec-num-input,.ts-mini-num,#ts-num{ font-variant-numeric:tabular-nums }
-#lib-subtitle,.song-card-meta{ letter-spacing:1px }
 #chart-stats{ letter-spacing:.5px }
 
 /* ── SURFACES: one light direction, no seam, no inset highlight ── */
-.song-card,.section-block,#audio-side,.auth-box,.sv-row,.fill-timeline{
+.section-block,#audio-side,.auth-box,.sv-row,.fill-timeline{
   background:linear-gradient(176deg,var(--bg3) 0%,var(--bg2) 100%);
 }
-.song-card,.section-block,.sv-row{ border-radius:6px }
-.song-card:hover{
-  background:linear-gradient(176deg,var(--bg4) 0%,var(--bg3) 100%);
-  border-color:var(--accent-dim);transform:translateX(6px);
-  box-shadow:-3px 0 0 var(--accent);
-}
+.section-block,.sv-row{ border-radius:6px }
 .sec-body{ background:transparent }
 .sec-body:hover{ background:rgba(255,255,255,.018) }
 .btn,#back-btn,.toggle-chip{
@@ -1282,7 +1394,7 @@ body::before{
 
 /* keyboard focus stays obvious */
 button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,
-.toggle-chip:focus-visible,.palette-item:focus-visible,.song-card:focus-visible{
+.toggle-chip:focus-visible,.palette-item:focus-visible{
   outline:2px solid var(--accent); outline-offset:2px;
 }
 </style>
@@ -1305,33 +1417,37 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 <div id="view-library" class="view">
   <div id="lib-header">
     <div>
-      <div id="lib-title">🥁 Drum Charts</div>
+      <div id="lib-title">Drum <b>Charts</b></div>
       <div id="lib-subtitle">Your song library</div>
     </div>
-    <div style="display:flex; gap:10px">
-        <button class="btn new-song" onclick="newSong()">+ NEW SONG</button>
-        <button class="btn danger" onclick="handleLogout()">Logout</button>
+    <div id="lib-actions">
+      <button class="btn new-song" onclick="newSong()">+ New song</button>
+      <div class="lib-seg">
+        <button class="btn" onclick="exportLibrary()">Export</button>
+        <button class="btn" onclick="document.getElementById('import-input').click()">Import</button>
+      </div>
+      <button class="btn lib-quiet" onclick="handleLogout()">Log out</button>
     </div>
-  </div>
-  <div class="lib-save-row">
-    <label id="save-status-label">Cloud Sync Active</label>
-    <button class="btn" onclick="exportLibrary()">⬇ Export All</button>
-    <button class="btn" onclick="document.getElementById('import-input').click()">⬆ Import</button>
-    <input type="file" id="import-input" accept=".json" style="display:none" onchange="importLibrary(event)">
   </div>
   <div id="lib-body">
     <div id="lib-empty" style="display:none">
       <span>🥁</span>
-      No songs yet — create your first chart
+      <b>No charts yet</b>
+      <i>Start with your first song</i>
     </div>
     <div id="song-list"></div>
   </div>
+  <input type="file" id="import-input" accept=".json" style="display:none" onchange="importLibrary(event)">
+  <input type="file" id="art-input" accept="image/*" style="display:none" onchange="setCoverArt(event)">
 </div>
 
 <div id="view-editor" class="view">
   <div id="ed-header">
     <button id="back-btn" class="btn" onclick="goLibrary()">← Library</button>
-    <input id="song-name-input" placeholder="SONG TITLE..." maxlength="50" oninput="saveSongMeta()">
+    <div id="song-id-wrap">
+      <input id="song-name-input" placeholder="SONG TITLE..." maxlength="50" oninput="saveSongMeta()">
+      <input id="song-artist-input" placeholder="Artist" maxlength="60" oninput="saveSongMeta()">
+    </div>
     <div class="ed-header-right">
       <div class="bpm-wrap">
         <label>BPM</label>
@@ -1736,6 +1852,7 @@ function refreshEditorFromState(){
   if(song && document.getElementById('view-editor').classList.contains('active')){
     const g = id => document.getElementById(id);
     g('song-name-input').value = song.name || '';
+    g('song-artist-input').value = song.artist || '';
     g('bpm-input').value = song.bpm;
     g('ts-num').value = song.ts;
     g('ts-den').value = String(song.tsd || 4);
@@ -1836,13 +1953,15 @@ window.importLibrary = function(e){
 }
 
 // ─── APP LOGIC ───────────────────────────────────────
-function makeSong(){ return { id: idCounter++, name: '', bpm: 120, ts: 4, tsd: 4, notes: '', sections: [], created: Date.now(), autoNumber:true, audio:null, shareCode:null, countIn:'all' }; }
+function makeSong(){ return { id: idCounter++, name: '', artist: '', art: null, bpm: 120, ts: 4, tsd: 4, notes: '', sections: [], created: Date.now(), autoNumber:true, audio:null, shareCode:null, countIn:'all' }; }
 function currentSong(){ if(sharedSong) return sharedSong; return library.find(s => s.id === currentSongId) || null; }
 
 // Ensure older saved songs/sections have the newer fields
 function migrateSong(song){
   if(!song) return song;
   if(song.autoNumber === undefined) song.autoNumber = true;
+  if(song.artist === undefined) song.artist = '';
+  if(song.art === undefined) song.art = null;   // cover art, stored as a downscaled JPEG data URL
   // old data stored only a numerator; 6 and 7 were the /8 options, everything else /4
   if(song.tsd === undefined) song.tsd = (song.ts === 6 || song.ts === 7) ? 8 : 4;
   if(song.audio === undefined) song.audio = null;
@@ -2043,6 +2162,91 @@ window.exitShared = function(){
   else document.getElementById('view-auth').classList.add('active');
 }
 
+// ── LIBRARY GRID ──────────────────────────────────────
+// A song with no uploaded art gets a cover built from its own chart:
+// the section colours as raked bands, sized by how long each section runs.
+function songHash(song){
+  const s = (song.name || '') + '|' + (song.artist || '') + '|' + song.id;
+  let h = 0;
+  for(let k = 0; k < s.length; k++) h = (h * 31 + s.charCodeAt(k)) | 0;
+  return Math.abs(h);
+}
+
+function generatedCover(song){
+  const secs = song.sections || [];
+  if(!secs.length) return 'linear-gradient(148deg,#232019 0%,#100e0c 100%)';
+  const h = songHash(song);
+  const angle = -(8 + h % 30);          // each chart rakes at its own angle
+  const total = secs.reduce((a,s)=>a+(s.bars*s.repeats),0) || 1;
+  let y = 0, bands = '';
+  secs.forEach(s => {
+    const bh = (s.bars*s.repeats)/total*150;
+    bands += '<rect x="-60" y="'+y.toFixed(2)+'" width="220" height="'+(bh+.6).toFixed(2)+'" fill="'+effColor(s)+'"/>';
+    y += bh;
+  });
+  const svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none">'
+            + '<defs><linearGradient id="v" x1="0" y1="0" x2="0.35" y2="1">'
+            + '<stop offset="0" stop-color="#100e0c" stop-opacity=".45"/>'
+            + '<stop offset="0.55" stop-color="#100e0c" stop-opacity=".7"/>'
+            + '<stop offset="1" stop-color="#100e0c" stop-opacity=".93"/>'
+            + '</linearGradient></defs>'
+            + '<rect width="100" height="100" fill="#100e0c"/>'
+            + '<g opacity="0.5" transform="rotate(' + angle + ' 50 50) translate(0,-26)">' + bands + '</g>'
+            + '<rect width="100" height="100" fill="url(#v)"/></svg>';
+  return "url('data:image/svg+xml," + encodeURIComponent(svg) + "')";
+}
+
+function coverImage(song){
+  return song.art ? "url('" + song.art + "')" : generatedCover(song);
+}
+
+function ytThumb(id, res){ return 'https://img.youtube.com/vi/' + id + '/' + res + '.jpg'; }
+
+// Cover priority: uploaded art > the linked YouTube thumbnail > a cover drawn from the chart.
+// The chart cover paints immediately; the thumbnail swaps in once it has loaded, so the grid
+// never waits on the network and never flashes empty.
+function applyCover(el, song){
+  el.style.backgroundImage = coverImage(song);
+  if(song.art) return;
+  const yt = song.audio && song.audio.type === 'youtube' && song.audio.videoId;
+  if(!yt) return;
+  const id = song.audio.videoId;
+  // Not every video has a maxres still, and an unavailable video answers every size with the
+  // same 120x90 grey placeholder — so measure before swapping, and keep the chart cover if
+  // there's no real thumbnail to be had.
+  const probe = (res, onMiss) => {
+    const im = new Image();
+    im.onload = () => {
+      if(im.naturalWidth > 120) el.style.backgroundImage = "url('" + ytThumb(id, res) + "')";
+      else onMiss();
+    };
+    im.onerror = onMiss;
+    im.src = ytThumb(id, res);
+  };
+  probe('maxresdefault', () => probe('mqdefault', () => {}));
+}
+
+// vertical section preview — dots shrink so a long chart still fits the tile
+function coverDots(secs){
+  if(!secs.length) return '';
+  let list = secs;
+  if(list.length > 28){
+    const step = list.length / 28;
+    list = Array.from({length:28}, (_,k) => secs[Math.floor(k*step)]);
+  }
+  const n = list.length;
+  const size = n <= 12 ? 7 : n <= 20 ? 5.5 : 4.5;
+  const gap  = n <= 12 ? 4 : n <= 20 ? 3 : 2;
+  return list.map((s,k) =>
+    '<div class="tile-dot" style="width:'+size+'px;height:'+size+'px;background:'+effColor(s)
+    + (k ? ';margin-top:'+gap+'px' : '') + '"></div>').join('');
+}
+
+function libDate(t){
+  if(!t) return '';
+  return new Date(t).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+}
+
 window.renderLibrary = function(){
   const list = document.getElementById('song-list');
   const empty = document.getElementById('lib-empty');
@@ -2050,24 +2254,63 @@ window.renderLibrary = function(){
   if(!library.length){ empty.style.display='block'; return; }
   empty.style.display = 'none';
   [...library].reverse().forEach((song, i) => {
-    const totalBars = song.sections.reduce((a,s)=>a+(s.bars*s.repeats),0);
-    const strips = song.sections.map(s => `<div class="song-card-strip" style="background:${effColor(s)};width:14px"></div>`).join('');
-    const card = document.createElement('div');
-    card.className = 'song-card';
+    const secs = song.sections || [];
+    const totalBars = secs.reduce((a,s)=>a+(s.bars*s.repeats),0);
+    const name = song.name || 'Untitled';
+    const card = document.createElement('article');
+    card.className = 'tile';
+    card.tabIndex = 0;
     card.dataset.id = song.id;
-    card.style.animationDelay = (i * 0.05) + 's';
+    card.style.animationDelay = Math.min(i*0.03, 0.36) + 's';
     card.innerHTML = `
-      <div class="song-card-left" onclick="openSong(${song.id})">
-        <div class="song-card-name">${song.name||'Untitled Song'}</div>
-        <div class="song-card-meta">${song.bpm} BPM · ${song.ts}/${song.tsd||4} · ${totalBars} bars</div>
-        <div class="song-card-strips">${strips}</div>
+      <div class="tile-art"></div>
+      <div class="tile-scrim"></div>
+      <div class="tile-acts">
+        <button class="tile-act danger" title="Delete" aria-label="Delete ${esc(name)}" onclick="event.stopPropagation();deleteSongById(${song.id})">✕</button>
       </div>
-      <div class="song-card-actions">
-        <button class="btn perform" onclick="event.stopPropagation();openAndPerform(${song.id})">▶ Play</button>
-        <button class="btn danger" onclick="event.stopPropagation();deleteSongById(${song.id})">✕</button>
+      <div class="tile-top">
+        <h3 class="tile-title"><span class="tt-stroke" aria-hidden="true">${esc(name)}</span><span class="tt-fill">${esc(name)}</span></h3>
+        ${song.artist ? `<div class="tile-artist">${esc(song.artist)}</div>` : ''}
+      </div>
+      <div class="tile-bot">
+        <div class="tile-meta">${song.bpm} BPM · ${Math.round(totalBars)} bars<br>${libDate(song.created)}</div>
+        <div class="tile-dots">${coverDots(secs)}</div>
       </div>`;
+    applyCover(card.querySelector('.tile-art'), song);
+    card.onclick = () => window.openSong(song.id);
+    card.onkeydown = e => {
+      if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); window.openSong(song.id); }
+    };
     list.appendChild(card);
   });
+}
+
+// ── cover art: centre-cropped and downscaled so the library stays small enough to sync ──
+let artTargetId = null;
+window.pickCoverArt = function(id){
+  artTargetId = id;
+  document.getElementById('art-input').click();
+}
+window.setCoverArt = function(e){
+  const file = e.target.files[0];
+  e.target.value = '';
+  if(!file || artTargetId == null) return;
+  const song = library.find(s => s.id === artTargetId);
+  if(!song) return;
+  const url = URL.createObjectURL(file);
+  const img = new Image();
+  img.onload = () => {
+    const S = 512, c = document.createElement('canvas');
+    c.width = c.height = S;
+    const side = Math.min(img.width, img.height);
+    c.getContext('2d').drawImage(img, (img.width-side)/2, (img.height-side)/2, side, side, 0, 0, S, S);
+    song.art = c.toDataURL('image/jpeg', 0.72);
+    URL.revokeObjectURL(url);
+    window.save();
+    window.renderLibrary();
+  };
+  img.onerror = () => { URL.revokeObjectURL(url); showToast('Could not read that image', 'error'); };
+  img.src = url;
 }
 
 window.newSong = function(){
@@ -2081,6 +2324,7 @@ window.openSong = function(id){
   currentSongId = id;
   const song = migrateSong(currentSong());
   document.getElementById('song-name-input').value = song.name;
+  document.getElementById('song-artist-input').value = song.artist || '';
   document.getElementById('bpm-input').value = song.bpm;
   document.getElementById('ts-num').value = song.ts;
   document.getElementById('ts-den').value = String(song.tsd || 4);
@@ -2215,6 +2459,7 @@ window.saveSongMeta = function(){
   if(sharedSong) return;        // read-only shared view: never write back from the (hidden) editor
   const song = currentSong(); if(!song) return;
   song.name = document.getElementById('song-name-input').value;
+  song.artist = document.getElementById('song-artist-input').value;
   song.bpm  = parseInt(document.getElementById('bpm-input').value)||120;
   song.ts   = parseInt(document.getElementById('ts-num').value)||4;
   song.tsd  = parseInt(document.getElementById('ts-den').value)||4;
@@ -3566,7 +3811,7 @@ document.addEventListener('contextmenu', e => {
   }
   const block = e.target.closest('.section-block');
   const fillEl = e.target.closest('.ftl-fill');
-  const card = e.target.closest('.song-card');
+  const card = e.target.closest('.tile');
   if(fillEl && block){
     e.preventDefault(); const i = +block.dataset.idx, fi = +fillEl.dataset.fi;
     showCtx(e.clientX, e.clientY, [
@@ -3610,6 +3855,7 @@ document.addEventListener('contextmenu', e => {
       '---',
       {id:'dup', icon:'⧉', label:'Duplicate', run:()=>window.duplicateSongById(id)},
       {id:'rename', icon:'✎', label:'Rename…', run:()=>window.renameSongById(id)},
+      {id:'art', icon:'⛰', label:'Set cover art…', run:()=>window.pickCoverArt(id)},
       {id:'share', icon:'🔗', label:'Copy share link', run:()=>{ window.openSong(id); setTimeout(window.shareSong, 200); }},
       {id:'export', icon:'⬇', label:'Export this chart', run:()=>window.exportSongById(id)},
       '---',
