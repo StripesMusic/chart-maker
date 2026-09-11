@@ -29,7 +29,7 @@
   --red:#ff3b30;
   --blue:#63b6d0;
   --font:Arial,Helvetica,'Helvetica Neue',sans-serif;
-  /* display face: song and section names, and the big focus-mode readouts */
+  /* display face: song and section names, and the performance view's big readouts */
   --display:'Archivo',Arial,sans-serif;
   --mono:'Sometype Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
   font-family:var(--font);
@@ -364,128 +364,23 @@ body{background:var(--bg);color:var(--text);height:100vh;height:100dvh;overflow:
 /* ═══════════════════════════════
    PERFORMANCE VIEW
 ═══════════════════════════════ */
-/* ─────────────────────────────────────────────
-   SOLARI — the performance view is a mechanical
-   split-flap departure board. Amber phosphor on
-   warm black, flap seams, silkscreen labels.
-   ───────────────────────────────────────────── */
-#perf-overlay{
-  position:fixed;inset:0;z-index:200;
-  display:none;flex-direction:column;
-  /* board palette, scoped so it never leaks into the editor */
-  --board:#0a0908;
-  --flap-hi:#1c1915;
-  --flap-lo:#141210;
-  --amber:#ff8c2b;
-  --amber-dim:#b35f14;
-  --amber-glow:rgba(255,140,43,.2);
-  --ink:#f4ecdd;
-  --ink-soft:#cbbca4;   /* kept bright — this board gets read at a glance, from a distance */
-  --rule:#272219;
-  --go:#57c47f;
-  --alert:#ff3b30;
-  background:var(--board);
-  color:var(--ink);
-}
-/* grain comes from the app-wide body::before layer, so the board doesn't add its own */
-#perf-overlay.active{display:flex; animation: popIn 0.4s ease; }
-#perf-overlay > *{position:relative;z-index:2}
+#perf-overlay{position:fixed;inset:0;z-index:200;display:none;flex-direction:column;background:var(--bg);color:var(--text)}
+#perf-overlay.active{display:flex;animation:tpIn .22s ease}
+@keyframes tpIn{from{opacity:0}to{opacity:1}}
 
-#perf-topbar{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:13px 26px;flex-shrink:0;
-  border-bottom:1px solid var(--rule);background:transparent;
-}
-#perf-song{
-  font-size:15px;font-weight:700;
-  letter-spacing:3px;color:var(--amber);text-transform:uppercase;
-}
-.perf-meta{
-  font-family:var(--mono);font-size:13px;
-  color:var(--ink-soft);letter-spacing:1px;
-}
 
 /* AUTO ADVANCE CONTROLS — the board's control strip */
-#perf-mode-bar{
-  display:flex;align-items:center;justify-content:center;gap:14px;
-  padding:11px 26px;flex-shrink:0;
-  border-bottom:1px solid var(--rule);
-  background:transparent;
-}
-.mode-btn{
-  background:linear-gradient(176deg,var(--flap-hi),var(--flap-lo));
-  border:1px solid var(--rule);color:var(--ink-soft);
-  padding:7px 16px;font-family:var(--mono);font-size:11px;
-  letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:3px;
-  transition:all .15s;
-}
-.mode-btn.active{
-  border-color:var(--amber-dim);color:#1a1206;
-  background:linear-gradient(176deg,var(--amber),var(--amber-dim));
-  font-weight:500;box-shadow:0 0 14px var(--amber-glow);
-}
-.mode-btn:hover{border-color:var(--amber-dim);color:var(--amber)}
-.mode-btn.active:hover{color:#1a1206}
-#auto-status{
-  font-family:var(--mono);
-  font-size:12px;letter-spacing:2px;color:var(--ink-soft);text-transform:uppercase;
-  min-width:180px;text-align:center;
-}
-#countdown-ring-wrap{
-  position:relative;width:36px;height:36px;flex-shrink:0;
-  display:none;
-}
-#countdown-ring-wrap.visible{display:flex;align-items:center;justify-content:center}
-#countdown-ring-svg{position:absolute;inset:0;transform:rotate(-90deg)}
-#countdown-ring-text{font-size:11px;font-weight:700;color:#cfcfcf;letter-spacing:0;position:relative;z-index:1}
 
-#perf-body{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:20px 80px;position:relative}
 
 /* silkscreen label used above every readout on the board */
-#perf-prev-label,#perf-next-label,#perf-pos-total,#bar-ticker-label{
-  font-family:var(--mono);
-  font-size:10px;letter-spacing:3px;color:var(--amber-dim);text-transform:uppercase;
-}
 
 /* Prev — a spent flap, dimmed and pushed back */
-#perf-prev-wrap{margin-bottom:20px;text-align:center;min-height:24px;opacity:.5}
-#perf-prev-label{margin-bottom:4px}
-#perf-prev-val{
-  font-size:16px;font-weight:700;
-  letter-spacing:2px;color:var(--ink-soft);text-transform:uppercase;
-}
 
 /* ── the current section: one big split-flap panel ── */
 /* one clean top-lit face — no hinge line, no inset highlight */
-#perf-current-wrap{
-  position:relative;display:flex;align-items:stretch;gap:0;margin-bottom:26px;
-  border:1px solid var(--rule);border-radius:6px;overflow:hidden;
-  background:linear-gradient(176deg,var(--flap-hi) 0%,var(--flap-lo) 100%);
-  box-shadow:0 26px 64px rgba(0,0,0,.55);
-  max-width:min(1100px,92vw);
-}
-#perf-stripe{
-  width:10px;flex-shrink:0;align-self:stretch;min-height:130px;transition:background .3s;
-}
-#perf-current-center{text-align:center;padding:28px 46px 26px;flex:1;min-width:0}
-#perf-section-name{
-  font-family:var(--display);
-  font-weight:900;font-variation-settings:'wdth' 62,'wght' 900;
-  font-size:clamp(58px,9.6vw,124px);letter-spacing:0;
-  text-transform:uppercase;line-height:.94;transition:color .25s;
-}
 /* the glyphs carry the same top-lit falloff as the flap face, tinted by the
    section's own colour (JS sets it inline, so currentColor drives the ramp) */
 @supports (color: color-mix(in srgb, red, blue)){
-  #perf-section-name{
-    background-image:linear-gradient(178deg,
-      color-mix(in srgb, currentColor 80%, #fff) 0%,
-      currentColor 44%,
-      color-mix(in srgb, currentColor 88%, #000) 74%,
-      color-mix(in srgb, currentColor 66%, #000) 100%);
-    -webkit-background-clip:text;background-clip:text;
-    -webkit-text-fill-color:transparent;
-  }
 }
 /* the flap turn on every section change */
 @keyframes flapTurn{
@@ -494,158 +389,23 @@ body{background:var(--bg);color:var(--text);height:100vh;height:100dvh;overflow:
   78%  { transform:rotateX(-4deg); }
   100% { transform:rotateX(0);      opacity:1;   filter:brightness(1); }
 }
-#perf-current-center.flap{ transform-origin:center top; animation:flapTurn .42s cubic-bezier(.31,.79,.36,1); }
-#perf-section-sub{
-  font-family:var(--mono);
-  font-size:clamp(22px,3.4vw,38px);font-weight:500;color:var(--ink);
-  letter-spacing:2px;margin-top:16px;
-}
-#perf-section-progress{
-  height:5px;background:rgba(0,0,0,.55);border-radius:0;margin:18px auto 0;max-width:460px;
-  overflow:hidden;box-shadow:0 1px 0 rgba(255,255,255,.05);
-}
-#perf-section-progress-fill{
-  height:100%;width:0%;background:linear-gradient(90deg,var(--amber-dim),var(--amber));
-  box-shadow:0 0 12px var(--amber-glow);transition:width .1s linear;
-}
 /* collapses to nothing when a section has no notes, so the flap never sits half-empty */
-#perf-notes-disp{
-  font-size:clamp(15px,2vw,26px);color:var(--ink-soft);letter-spacing:.5px;
-  min-height:0;font-style:normal;
-}
-#perf-notes-disp:not(:empty){margin-top:14px}
 
 /* Next — the flap waiting to drop */
-#perf-next-wrap{text-align:center;min-height:42px}
-#perf-next-label{margin-bottom:4px}
-#perf-next-val{
-  font-size:21px;font-weight:700;
-  letter-spacing:2px;text-transform:uppercase;color:var(--amber);
-}
 
 /* Position — right-hand gate number */
-#perf-position{position:absolute;right:30px;top:50%;transform:translateY(-50%);text-align:right}
-#perf-pos-num{
-  font-family:var(--mono);font-size:34px;font-weight:500;
-  color:var(--ink-soft);letter-spacing:1px;line-height:1;font-variant-numeric:tabular-nums;
-}
-#perf-pos-total{margin-top:6px}
 
 /* Bar counter — a mechanical odometer on the left */
-#bar-ticker-wrap{position:absolute;left:30px;top:50%;transform:translateY(-50%);text-align:center}
-#bar-ticker-num{
-  font-family:var(--mono);font-size:34px;font-weight:500;
-  color:var(--amber);letter-spacing:1px;line-height:1;font-variant-numeric:tabular-nums;
-  text-shadow:0 0 20px var(--amber-glow);
-}
-#bar-ticker-label{margin-top:6px}
 
 /* Progress — the travel bar along the bottom of the board */
-#perf-progress{height:3px;background:rgba(0,0,0,.6);flex-shrink:0}
-#perf-progress-fill{
-  height:100%;background:linear-gradient(90deg,var(--amber-dim),var(--amber));
-  box-shadow:0 0 14px var(--amber-glow);transition:width .12s linear;
-}
 
 /* ── LIST VIEW ── */
-#perf-list-view{
-  flex:1;overflow-y:auto;padding:24px 40px;display:none;
-}
-#perf-list-view.active{display:block}
-#perf-list-view::-webkit-scrollbar{width:5px}
-#perf-list-view::-webkit-scrollbar-thumb{background:#2a2a2a}
 
 /* every row is a flap on the board */
-.pl-row{
-  display:flex;align-items:stretch;gap:0;
-  margin-bottom:5px;border-radius:4px;overflow:hidden;
-  border:1px solid var(--rule);transition:all .2s;cursor:pointer;
-  background:linear-gradient(176deg,var(--flap-hi) 0%,var(--flap-lo) 100%);
-}
-.pl-row:hover{border-color:var(--amber-dim)}
-.pl-row.pl-current{
-  border-color:var(--amber-dim);
-  box-shadow:0 0 0 1px var(--amber-dim), 0 0 26px -6px var(--amber-glow);
-}
-.pl-row.pl-done{opacity:.52}
-.pl-swatch{width:6px;flex-shrink:0}
-.pl-num{
-  width:42px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
-  font-family:var(--mono);font-size:13px;color:var(--amber-dim);
-  background:rgba(0,0,0,.35);border-right:1px solid var(--rule);
-  font-weight:500;letter-spacing:1px;font-variant-numeric:tabular-nums;
-}
-.pl-row.pl-current .pl-num{color:var(--amber)}
-.pl-body{
-  flex:1;padding:13px 18px;background:transparent;
-  display:flex;align-items:center;gap:22px;min-width:0;
-}
 /* Section name and notes are the two things you read off a phone on the floor,
    so they carry the weight here; bars/cue meta stay quiet underneath. */
-.pl-name{
-  /* Arial Narrow Bold where the system has it, plain Arial Bold everywhere else */
-  font-family:'Arial Narrow',Arial,Helvetica,sans-serif;
-  font-weight:700;font-stretch:condensed;
-  font-size:26px;letter-spacing:.5px;
-  text-transform:uppercase;flex-shrink:0;min-width:150px;transition:color .2s;
-}
-.pl-row.pl-current .pl-name{color:var(--amber)}
-.pl-row.pl-done .pl-name{color:var(--ink-soft) !important}
-.pl-meta-col{
-  flex-shrink:0;width:112px;font-family:var(--mono);
-  font-size:12px;color:var(--ink-soft);letter-spacing:.5px;
-}
-.pl-row.pl-current .pl-meta-col{color:var(--ink)}
-.pl-notes-col{
-  flex:1;font-size:17px;font-weight:700;color:var(--ink);font-style:normal;
-  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
-  padding:2px 16px 2px 11px;border-left:2px solid var(--amber-dim);
-}
-.pl-notes-col:empty{display:none}
-.pl-row.pl-current .pl-notes-col{color:#fff;border-left-color:var(--amber)}
-.pl-right{display:flex;align-items:center;gap:12px;flex-shrink:0}
-.pl-badge{
-  font-family:var(--mono);
-  font-size:9px;letter-spacing:2px;color:#1a1206;background:var(--amber);
-  border:1px solid var(--amber);padding:4px 9px;border-radius:2px;
-  text-transform:uppercase;opacity:0;transition:opacity .2s;
-}
-.pl-row.pl-current .pl-badge{opacity:1}
-.pl-bar-live{
-  font-family:var(--mono);font-size:12px;color:var(--ink-soft);
-  letter-spacing:.5px;min-width:70px;text-align:right;font-variant-numeric:tabular-nums;
-}
-.pl-row.pl-current .pl-bar-live{color:var(--amber)}
 
 /* Nav — the board's bottom rail */
-#perf-nav{
-  display:flex;align-items:center;justify-content:center;gap:14px;
-  padding:15px 26px;border-top:1px solid var(--rule);flex-shrink:0;background:transparent;
-}
-.disp-btn{
-  background:linear-gradient(176deg,var(--flap-hi),var(--flap-lo));
-  border:1px solid var(--rule);color:var(--ink-soft);
-  padding:6px 15px;font-family:var(--mono);font-size:11px;
-  letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:3px;transition:all .15s;
-}
-.disp-btn:hover{border-color:var(--amber-dim);color:var(--amber)}
-.disp-btn.active{
-  border-color:var(--amber-dim);color:#1a1206;
-  background:linear-gradient(176deg,var(--amber),var(--amber-dim));box-shadow:0 0 14px var(--amber-glow);
-}
-.p-btn{
-  background:linear-gradient(176deg,var(--flap-hi),var(--flap-lo));
-  border:1px solid var(--rule);color:var(--ink);
-  padding:11px 26px;font-family:var(--mono);font-size:12px;
-  letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-radius:4px;
-  transition:all .15s;
-}
-.p-btn:hover{border-color:var(--amber-dim);color:var(--amber);transform:translateY(-1px)}
-.p-btn.big{
-  font-size:15px;font-weight:700;
-  padding:12px 42px;letter-spacing:3px;color:var(--amber);border-color:var(--amber-dim);
-}
-.p-btn.big:hover{background:linear-gradient(176deg,var(--amber),var(--amber-dim));color:#1a1206}
 #key-hint{
   font-family:var(--mono);
   font-size:11px;color:var(--ink-soft);font-weight:400;letter-spacing:1.5px;
@@ -704,7 +464,6 @@ body{background:var(--bg);color:var(--text);height:100vh;height:100dvh;overflow:
 @keyframes barFlash { 0%{transform:scale(1)} 40%{transform:scale(1.18)} 100%{transform:scale(1)} }
 
 /* smoother default transitions on interactive bits */
-.disp-btn,.mode-btn{transition:all .18s cubic-bezier(.34,1.56,.64,1)}
 
 
 
@@ -797,82 +556,19 @@ body{background:var(--bg);color:var(--text);height:100vh;height:100dvh;overflow:
 .sync-tap:hover:not(:disabled){background:rgba(90,175,200,.16)}
 .sync-tap:disabled{opacity:.4;cursor:default;border-color:var(--border2);color:var(--muted2)}
 .sync-time{font-size:15px;color:var(--text);letter-spacing:1px;font-variant-numeric:tabular-nums}
-#perf-sync-note{font-size:12px;color:#999;letter-spacing:1px}
 
 /* ── perf audio + fill highlight ── */
-#perf-audio-wrap{
-  display:flex;align-items:center;gap:16px;padding:10px 28px;
-  border-bottom:1px solid var(--rule);background:rgba(0,0,0,.32);flex-shrink:0;justify-content:center;
-}
-#perf-audio-wrap.hidden{display:none}
-#yt-player-holder{width:256px;height:144px;flex-shrink:0;border-radius:6px;overflow:hidden;background:#000}
-#yt-player-holder iframe{width:100%;height:100%;display:block;border:0}
-#yt-player-holder.audio-only{width:0;height:0;overflow:hidden}
-.perf-audio-btn{
-  background:linear-gradient(176deg,var(--flap-hi),var(--flap-lo));border:1px solid var(--rule);
-  color:var(--amber);width:42px;height:42px;border-radius:50%;
-  cursor:pointer;font-size:16px;transition:all .15s;flex-shrink:0;
-}
-.perf-audio-btn:hover{border-color:var(--amber-dim);transform:scale(1.06);box-shadow:0 0 16px var(--amber-glow)}
-#perf-audio-time{
-  font-family:var(--mono);
-  font-size:13px;color:var(--ink);letter-spacing:1px;font-variant-numeric:tabular-nums;
-  min-width:96px;text-align:center;
-}
 
 /* fill badge in perf focus view */
-#perf-fill-badge{
-  margin-top:18px;display:none;flex-wrap:wrap;gap:8px;justify-content:center;max-width:760px;
-}
-#perf-fill-badge.show{display:flex;animation:fadeSlideUp .3s ease}
-.pfb-item{
-  font-family:var(--mono);
-  font-size:13px;color:#ff9a93;letter-spacing:.5px;
-  border:1px solid rgba(255,59,48,.38);border-radius:3px;padding:6px 13px;
-  background:rgba(255,59,48,.07);
-}
-.pfb-item b{color:#ffc9c4;font-weight:500}
-.pfb-now{
-  font-size:19px;letter-spacing:3px;text-transform:uppercase;color:#fff;font-weight:700;
-  background:var(--alert);border-radius:3px;padding:8px 24px;animation:fillFlash .5s infinite;
-  box-shadow:0 0 34px rgba(255,59,48,.4);
-}
 
 /* ── count-in before a section / fill ── */
-#perf-countin{
-  position:absolute;top:0;left:0;right:0;bottom:0;z-index:5;
-  display:none;flex-direction:column;align-items:center;justify-content:center;
-  /* opaque through the middle so the count reads cleanly instead of fighting the section name */
-  pointer-events:none;background:radial-gradient(circle at center, rgba(6,5,4,.93) 0%, rgba(4,3,2,.97) 70%);
-  backdrop-filter:blur(3px);
-}
-#perf-countin.show{display:flex}
-#perf-countin.fill #ci-num{color:var(--alert);text-shadow:0 0 60px rgba(255,107,53,.5)}
-#ci-label{
-  font-family:var(--mono);
-  font-size:15px;letter-spacing:7px;text-transform:uppercase;color:var(--amber-dim);margin-bottom:10px;
-}
-#perf-countin.fill #ci-label{color:var(--alert)}
-#ci-num{
-  font-family:var(--display);
-  font-weight:900;font-variation-settings:'wdth' 62,'wght' 900;
-  font-size:clamp(110px,24vw,200px);line-height:1;color:var(--amber);
-  font-variant-numeric:tabular-nums;text-shadow:0 0 70px var(--amber-glow);
-}
 @keyframes ciPop{ from{transform:scale(.6);opacity:.2} to{transform:scale(1);opacity:1} }
-#ci-num.beat{animation:ciPop .18s ease-out}
 
 /* fill marker in list view */
-.pl-fill-tag{
-  font-size:10px;letter-spacing:1px;color:#e87d47;border:1px solid rgba(232,125,71,.4);
-  padding:3px 8px;border-radius:4px;text-transform:uppercase;flex-shrink:0;
-}
 
 /* bar ticker flash on bar change */
-#bar-ticker-num.flash{animation:barFlash .25s ease}
 
 /* list view smooth current scroll target */
-.pl-row{scroll-margin:120px}
 
 /* ── SHARED (read-only) VIEW ── */
 #view-shared{justify-content:flex-start;align-items:stretch;background:var(--bg)}
@@ -927,58 +623,12 @@ html{ -webkit-text-size-adjust:100%; }
 
 
   /* ── Performance view ── */
-  #perf-topbar{ flex-wrap:wrap; gap:8px; padding:10px 14px; }
-  #perf-mode-bar{ flex-wrap:wrap; gap:10px; padding:10px 14px; }
-  #auto-status{ min-width:0; }
-  #perf-body{ padding:14px 10px; }
-  #perf-section-name{ font-size:clamp(38px,12vw,72px); letter-spacing:2px; }
-  #perf-section-sub{ font-size:clamp(18px,5.5vw,32px); letter-spacing:1px; margin-top:12px; }
-  #perf-notes-disp{ font-size:clamp(14px,4vw,22px); margin-top:10px; min-height:20px; }
-  #perf-current-wrap{ gap:0; margin-bottom:18px; max-width:100%; }
-  #perf-current-center{ padding:20px 16px; }
-  #perf-stripe{ width:8px; min-height:84px; }
-  #perf-prev-wrap{ margin-bottom:18px; }
-  #perf-position{ right:12px; }
-  #perf-pos-num{ font-size:24px; }
-  #bar-ticker-wrap{ left:12px; }
-  #bar-ticker-num{ font-size:24px; }
-  #perf-nav{ padding:12px 14px; gap:10px; }
-  .p-btn{ padding:11px 20px; }
-  .p-btn.big{ padding:12px 30px; }
-  #perf-audio-wrap{ flex-wrap:wrap; gap:10px; padding:8px 12px; }
-  #yt-player-holder{ width:208px; height:117px; }
   #key-hint{ font-size:10px; line-height:1.7; padding:0 12px 8px; }
 
   /* perf LIST view: two-line rows that use the full width */
-  #perf-list-view{ padding:10px 10px 18px; }
-  .pl-num{ width:30px; font-size:12px; }
-  .pl-body{
-    display:grid; grid-template-columns:1fr auto; align-items:center;
-    gap:3px 10px; padding:10px 12px;
-  }
   /* phone on the floor: the title and the notes have to win the row */
-  .pl-name{ min-width:0; font-size:27px; letter-spacing:.6px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .pl-meta-col{ width:auto; font-size:11px; grid-column:1; opacity:.75; }
-  .pl-notes-col{
-    grid-column:1 / -1; flex:none; font-size:17px; line-height:1.35;
-    white-space:normal; overflow:visible; text-overflow:clip;
-    margin-top:3px; padding:3px 0 3px 10px;
-  }
-  .pl-bar-live{ opacity:.75; }
-  .pl-right{ grid-column:2; grid-row:1 / span 2; flex-direction:column; align-items:flex-end; gap:4px; }
-  .pl-fill-tag{ max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .pl-bar-live{ min-width:0; font-size:12px; }
-  .pl-badge{ display:none; }
-  .pl-row.pl-current .pl-badge{ display:inline-block; }
   /* reclaim vertical space so more rows fit on a phone screen */
-  #perf-mode-bar{ gap:6px; padding:8px 10px; }
-  .mode-btn{ padding:6px 12px; font-size:11px; letter-spacing:1px; }
-  #auto-status{ font-size:11px; letter-spacing:1px; }
-  #perf-nav{ padding:9px 12px; gap:8px; }
   #key-hint{ display:none; }
-  #perf-topbar{ padding:8px 12px; }
-  #perf-song{ font-size:12px; letter-spacing:1px; }
-  .perf-meta{ font-size:12px; }
 
   /* shared (read-only) view */
   #shared-header{ padding:20px 18px 16px; }
@@ -991,9 +641,6 @@ html{ -webkit-text-size-adjust:100%; }
 
 /* very small phones — drop the edge widgets so they can't overlap the big text */
 @media (max-width: 480px){
-  #perf-position, #bar-ticker-wrap{ display:none; }
-  #perf-section-name{ letter-spacing:3px; }
-  #perf-current-wrap{ gap:12px; }
   #lib-title{ font-size:22px; }
   .auth-box{ padding:28px 22px; }
 }
@@ -1002,7 +649,7 @@ html{ -webkit-text-size-adjust:100%; }
    THE BOARD — one design language across the whole app.
    Arial carries prose; Sometype Mono carries anything
    mechanical (numbers, labels, controls); Archivo, heavy and
-   condensed, carries names and the big focus-mode readouts. Flat warm surfaces lit from one
+   condensed, carries names and the big performance readouts. Flat warm surfaces lit from one
    direction. No mid-panel seams, no fake top-edge highlights,
    no bloom.
    ═══════════════════════════════════════════════════════════ */
@@ -1065,7 +712,7 @@ body::before{
    Animation is reserved for things that carry meaning: entering a view,
    a section appearing, a menu opening, scrolling to a target. Incidental
    re-renders (editing a fill, retyping a note) must never animate. */
-#chart-area,#lib-body,#perf-list-view,#shared-body{ scroll-behavior:smooth; }
+#chart-area,#lib-body,#shared-body{ scroll-behavior:smooth; }
 @media (prefers-reduced-motion: reduce){
   *,*::before,*::after{ animation-duration:.01ms !important; animation-iteration-count:1 !important;
     transition-duration:.01ms !important; scroll-behavior:auto !important; }
@@ -1597,6 +1244,119 @@ kbd{font-family:var(--mono)}
 @media (prefers-reduced-motion:reduce){
   #fills-overlay.open,#fills-box,#ctx-menu,#view-editor .section-block.anim-in{animation:none}
 }
+
+/* ═══════════════════════════════════════════════════════════
+   PERFORMANCE — TELEPROMPTER
+   The chart as Ledger rows that scroll themselves. The section
+   playing expands in place and holds a fixed reading height;
+   everything is driven by the track. Same faces and shapes as
+   the editor, on phones and laptops alike.
+   ═══════════════════════════════════════════════════════════ */
+#tp-head{display:flex;align-items:center;gap:12px;flex-shrink:0;padding:10px 18px;padding-top:calc(10px + env(safe-area-inset-top));border-bottom:1px solid var(--border)}
+#tp-id{flex:1;min-width:0}
+#tp-song{font-family:var(--display);font-weight:900;font-stretch:72%;font-size:22px;line-height:1;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tp-artist{margin-top:3px;font-family:var(--font);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tp-artist:empty{display:none}
+#tp-countin{height:30px}
+#tp-rows{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:10px 18px 55vh;scrollbar-width:none}
+#tp-rows::-webkit-scrollbar{display:none}
+.tp-list{display:flex;flex-direction:column;gap:6px;max-width:1180px;margin:0 auto}
+
+.tp-row{--blk:84px;position:relative;display:flex;align-items:stretch;min-height:66px;background:var(--bg2);cursor:pointer;transition:opacity .3s,background .2s}
+.tp-row:hover{background:#171513}
+.tp-blk{width:var(--blk);flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;background:var(--sec);color:var(--on-sec)}
+.tp-num{font-family:var(--display);font-weight:900;font-stretch:64%;font-size:30px;line-height:.82;letter-spacing:-.5px;font-variant-numeric:lining-nums tabular-nums}
+.tp-unit{margin-top:5px;padding-left:.2em;font-family:var(--mono);font-size:8.5px;font-weight:700;line-height:1;letter-spacing:.2em;text-transform:uppercase;opacity:.72}
+.tp-beats{display:none;gap:clamp(5px,.7vw,9px);margin-top:clamp(9px,1.4vw,16px)}
+.tp-beats i{display:block;width:clamp(10px,1.3vw,16px);height:clamp(10px,1.3vw,16px);border-radius:50%;border:2px solid currentColor;opacity:.42}
+.tp-beats i.on{background:currentColor;opacity:1}
+.tp-body{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;gap:5px;padding:10px 16px}
+.tp-name{font-family:var(--display);font-weight:900;font-stretch:70%;font-size:24px;line-height:1;text-transform:uppercase;color:var(--sec);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tp-rep{margin-left:.35em;font-family:var(--mono);font-size:.5em;font-weight:500;letter-spacing:.04em;vertical-align:.3em;color:var(--muted2)}
+.tp-meta{font-family:var(--mono);font-size:11px;letter-spacing:.05em;color:var(--muted2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tp-meta:empty,.tp-meta:has(.tp-when:empty + .tp-mn:empty){display:none}
+.tp-when{color:var(--muted)}
+.tp-when:not(:empty) + .tp-mn:not(:empty)::before{content:' · '}
+.tp-notes,.tp-fills,.tp-prog{display:none}
+
+.tp-row.done{min-height:42px;opacity:.32}
+.tp-row.done .tp-num{font-size:18px}
+.tp-row.done .tp-unit,.tp-row.done .tp-meta{display:none}
+.tp-row.done .tp-name{font-size:16px}
+
+.tp-row.now{--blk:clamp(104px,14vw,176px);cursor:default;background:var(--bg3);outline:2px solid var(--accent);outline-offset:-2px}
+.tp-row.now .tp-blk{padding:14px 6px}
+.tp-row.now .tp-num{font-size:clamp(58px,9vw,128px)}
+.tp-row.now .tp-unit{margin-top:clamp(6px,1vw,12px);font-size:clamp(9px,1.1vw,12px)}
+.tp-row.now .tp-beats{display:flex}
+.tp-row.now .tp-body{gap:clamp(8px,1.2vw,14px);padding:clamp(12px,2vw,26px) clamp(14px,2.4vw,32px)}
+.tp-row.now .tp-name{font-size:clamp(34px,6vw,88px);line-height:.9;white-space:normal}
+.tp-row.now .tp-meta{display:none}
+.tp-row.now .tp-notes{display:block;max-width:48ch;font-family:var(--font);font-size:clamp(16px,2.1vw,27px);line-height:1.35;color:var(--text)}
+.tp-row.now .tp-notes:empty{display:none}
+.tp-row.now .tp-fills{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.tp-row.now .tp-fills:empty{display:none}
+.tp-row.now .tp-prog{display:block;position:absolute;left:var(--blk);right:0;bottom:0;height:3px;background:var(--bg4)}
+.tp-prog i{display:block;width:0;height:100%;background:var(--sec)}
+.tp-fill{display:inline-flex;align-items:center;gap:8px;padding:5px 9px;border:1px solid transparent;font-family:var(--mono);font-size:clamp(12px,1.3vw,16px);letter-spacing:.02em;color:var(--accent);transition:opacity .2s}
+.tp-fill.past{opacity:.38}
+.tp-cnt{display:none;font-weight:700}
+.tp-fill.soon{border-color:var(--accent);opacity:1}
+.tp-fill.hit{background:var(--accent);border-color:var(--accent);color:#160f06;opacity:1}
+.tp-fill.soon .tp-cnt,.tp-fill.hit .tp-cnt{display:inline}
+
+/* the bar before a change: the next row lights up and counts in */
+.tp-row.incoming{--blk:clamp(84px,10vw,124px);opacity:1;outline:2px solid var(--sec);outline-offset:-2px}
+.tp-row.incoming .tp-num{font-size:clamp(40px,6vw,76px)}
+.tp-row.incoming .tp-name{font-size:clamp(26px,3.6vw,46px)}
+.tp-row.beat .tp-blk{animation:tpBeat .2s ease-out}
+@keyframes tpBeat{from{filter:brightness(1.4)}to{filter:none}}
+
+#tp-foot{display:flex;align-items:center;gap:12px;flex-shrink:0;padding:10px 18px;padding-bottom:calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--border)}
+#tp-video{flex-shrink:0;width:192px;height:108px;background:#000;overflow:hidden}
+#tp-video iframe{display:block;width:192px;height:108px;border:0}
+#tp-video.audio-only{display:none}
+#tp-play{width:44px;height:44px;color:var(--text)}
+#tp-play .i{width:16px;height:16px}
+.tp-time{min-width:40px;text-align:center;font-family:var(--mono);font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted)}
+#tp-seek{position:relative;flex:1;min-width:0;height:32px;cursor:pointer;touch-action:none}
+#tp-seek::before{content:'';position:absolute;left:0;right:0;top:50%;height:4px;margin-top:-2px;background:var(--bg4)}
+#tp-seek-fill{position:absolute;left:0;top:50%;width:0;height:4px;margin-top:-2px;background:var(--text)}
+.tp-mark{position:absolute;top:50%;width:2px;height:14px;margin:-7px 0 0 -1px;background:var(--sec)}
+
+/* the Perform button says what's missing */
+#perform-btn.blocked{background:transparent;border-color:var(--border2);color:var(--muted)}
+#perform-btn.blocked:hover{border-color:var(--accent);color:var(--accent)}
+#perform-btn .tap-key{margin-left:2px}
+#perform-btn .lbl-short{display:none}
+
+@media (max-width: 820px){
+  #tp-head{gap:10px;padding:8px 12px;padding-top:calc(8px + env(safe-area-inset-top))}
+  #tp-song{font-size:18px}
+  #tp-rows{padding:8px 8px 55vh}
+  .tp-row{--blk:62px;min-height:58px}
+  .tp-num{font-size:24px}
+  .tp-name{font-size:19px}
+  .tp-body{padding:8px 12px}
+  #tp-foot{gap:10px;padding:8px 12px;padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+  #tp-video,#tp-video iframe{width:112px;height:63px}
+}
+@media (max-width: 560px){
+  #perform-btn .lbl-long{display:none}
+  #perform-btn .lbl-short{display:inline}
+}
+/* a phone turned sideways: the playing row still has to fit */
+@media (max-height: 520px) and (orientation: landscape){
+  #tp-head{padding-top:6px;padding-bottom:6px}
+  #tp-foot{padding-top:6px;padding-bottom:6px}
+  #tp-video,#tp-video iframe{width:96px;height:54px}
+  .tp-row.now .tp-num{font-size:clamp(46px,15vh,96px)}
+  .tp-row.now .tp-name{font-size:clamp(28px,11vh,60px)}
+  .tp-row.now .tp-notes{font-size:15px}
+}
+@media (prefers-reduced-motion: reduce){
+  #perf-overlay.active,.tp-row.beat .tp-blk{animation:none}
+}
 </style>
 </head>
 <body>
@@ -1761,89 +1521,21 @@ kbd{font-family:var(--mono)}
   <div id="shared-foot">Read-only shared chart · anyone with the link can view this</div>
 </div>
 
-<div id="perf-overlay">
-  <div id="perf-topbar">
-    <div id="perf-song"></div>
-    <div style="display:flex;gap:20px;align-items:center">
-      <span class="perf-meta" id="perf-bpm-disp"></span>
-      <span class="perf-meta" id="perf-ts-disp"></span>
-    </div>
-    <div style="display:flex;gap:6px;align-items:center">
-      <button class="disp-btn active" id="disp-focus" onclick="setDisplayMode('focus')" title="Big current-section view">⊡ FOCUS</button>
-      <button class="disp-btn" id="disp-list" onclick="setDisplayMode('list')" title="Full song list at a glance">≡ LIST</button>
-      <button class="p-btn" style="padding:5px 12px;font-size:10px;margin-left:8px" onclick="stopPerf()">✕ EXIT</button>
-    </div>
+<div id="perf-overlay" role="dialog" aria-label="Performance">
+  <div id="tp-head">
+    <button class="circ" onclick="stopPerf()" title="Exit (Esc)" aria-label="Exit performance"><svg class="i" aria-hidden="true"><use href="#i-back"/></svg></button>
+    <div id="tp-id"><div id="tp-song"></div><div id="tp-artist"></div></div>
+    <button class="chip on" id="tp-countin" onclick="cycleCountIn()" title="Count-in before sections and fills">Count-in · all</button>
+    <button class="circ" onclick="openPerfMenu(event)" title="Controls" aria-label="Controls"><svg class="i" aria-hidden="true"><use href="#i-more"/></svg></button>
   </div>
-
-  <div id="perf-audio-wrap" class="hidden">
-    <div id="yt-player-holder"></div>
-    <button class="perf-audio-btn" id="perf-play-btn" onclick="toggleAudioPlay()">▶</button>
-    <span id="perf-audio-time">0:00 / 0:00</span>
-    <span id="perf-sync-note">SYNC follows the cue points you set in the editor</span>
+  <div id="tp-rows"></div>
+  <div id="tp-foot">
+    <div id="tp-video"></div>
+    <button class="circ" id="tp-play" onclick="toggleAudioPlay()" title="Play / pause (Space)" aria-label="Play or pause"><svg class="i" aria-hidden="true"><use href="#i-play"/></svg></button>
+    <span class="tp-time" id="tp-now">0:00</span>
+    <div id="tp-seek" title="Drag to move through the song"><i id="tp-seek-fill"></i><span id="tp-seek-marks"></span></div>
+    <span class="tp-time" id="tp-dur">0:00</span>
   </div>
-
-  <div id="perf-mode-bar">
-    <button class="mode-btn active" id="mode-auto" onclick="setMode('auto')" title="Hands-free: advances by itself using your BPM + time signature. No audio needed — great for practice.">AUTO</button>
-    <button class="mode-btn" id="mode-manual" onclick="setMode('manual')" title="You drive: nothing advances until you hit Space / arrows. Best for live playing.">MANUAL</button>
-    <button class="mode-btn" id="mode-sync" onclick="setMode('sync')" style="display:none" title="Follows your attached track using the cue points you tap. Needs a YouTube link or audio file.">♪ SYNC</button>
-    <div id="countdown-ring-wrap">
-      <svg id="countdown-ring-svg" width="32" height="32" viewBox="0 0 32 32">
-        <circle cx="16" cy="16" r="13" fill="none" stroke="#1a1a1a" stroke-width="3"/>
-        <circle id="ring-arc" cx="16" cy="16" r="13" fill="none" stroke="#555" stroke-width="3"
-          stroke-dasharray="81.7" stroke-dashoffset="81.7" stroke-linecap="round"/>
-      </svg>
-      <span id="countdown-ring-text">-</span>
-    </div>
-    <div id="auto-status">READY</div>
-    <button class="mode-btn" id="countin-toggle" onclick="cycleCountIn()" title="Count-in before sections / fills">COUNT-IN: ALL</button>
-  </div>
-
-  <div id="perf-body">
-    <div id="perf-countin">
-      <div id="ci-label">GET READY</div>
-      <div id="ci-num">4</div>
-    </div>
-    <div id="perf-prev-wrap">
-      <div id="perf-prev-label">PREVIOUS</div>
-      <div id="perf-prev-val">—</div>
-    </div>
-
-    <div id="perf-current-wrap">
-      <div id="perf-stripe"></div>
-      <div id="perf-current-center">
-        <div id="perf-section-name">—</div>
-        <div id="perf-section-sub"></div>
-        <div id="perf-section-progress"><div id="perf-section-progress-fill"></div></div>
-        <div id="perf-notes-disp"></div>
-        <div id="perf-fill-badge"></div>
-      </div>
-    </div>
-
-    <div id="perf-next-wrap">
-      <div id="perf-next-label">NEXT UP</div>
-      <div id="perf-next-val">—</div>
-    </div>
-
-    <div id="perf-position">
-      <div id="perf-pos-num">1/1</div>
-      <div id="perf-pos-total">section</div>
-    </div>
-
-    <div id="bar-ticker-wrap">
-      <div id="bar-ticker-num">—</div>
-      <div id="bar-ticker-label">bar</div>
-    </div>
-  </div>
-
-  <div id="perf-list-view"></div>
-
-  <div id="perf-progress"><div id="perf-progress-fill" style="width:0%"></div></div>
-
-  <div id="perf-nav">
-    <button class="p-btn" onclick="perfBack()">← BACK</button>
-    <button class="p-btn big" onclick="perfNext()">NEXT →</button>
-  </div>
-  <div id="key-hint">SPACE / → = next &nbsp;·&nbsp; ← = back &nbsp;·&nbsp; P = play/pause &nbsp;·&nbsp; F = focus / list &nbsp;·&nbsp; ESC = exit</div>
 </div>
 
 <div id="save-toast"></div>
@@ -1920,14 +1612,13 @@ let pendingShareHash = /^#(c\/|s=)/.test(location.hash || '');
 let pendingShareCode = null;    // a #c/<code> link, resolved after auth (own chart → editable, else read-only)
 
 // Performance state
-let perfIdx = 0;
-let perfMode = 'auto'; 
-let autoRAF = null;   // single requestAnimationFrame loop driving AUTO mode
-let autoGen = 0;       // generation token so stale loops cancel themselves
-let lastCountNum = 0;  // last count-in beat shown (so we only re-flash on change)
-let currentBarTick = 0;
-let totalBarTicks  = 0;
-let displayMode = 'focus';
+let perfTL = null;             // section starts, per-16th clock and count-in / fill events for the song on stage
+let perfRAF = null;            // the follow loop
+let perfManualScrollUntil = 0; // a hand scroll holds off auto-scroll until this moment
+let perfSeeking = false;       // dragging the seek bar
+let perfRecenter = false;      // the layout changed size (a phone rotated) — put the playing row back
+let perfWakeLock = null;
+let perfNudgeTarget = null, perfNudgeAt = 0;
 // fills editor
 let fillsIdx = null;           // section whose fills are open in the overlay (null = closed)
 let fillSnap = 1;              // drawing grid: 1 = 1/16, 2 = 1/8, 'beat'
@@ -1940,8 +1631,6 @@ let ytPlayer = null;         // YouTube IFrame player
 let ytReady = false;
 let htmlAudio = null;        // <audio> element for local files
 let localAudioURL = null;    // object URL (session only)
-let syncRAF = null;          // requestAnimationFrame id for the sync follow-loop
-let audioTimeRAF = null;     // clock display loop
 // editor-side player (so you can listen + tap cues right in the chart editor)
 let edYtPlayer = null, edYtReady = false, edAudioEl = null, edTimeRAF = null, edPlayheadRAF = null;
 let edLoadedKey = '';        // identity of the track currently loaded in the editor player
@@ -2923,6 +2612,7 @@ window.renderChart = function(){
     if(sb) sb.classList.add('selected'); else selectedSectionIdx = null;
   }
   if(fillsIdx != null) renderFillsModal();
+  updatePerformBtn();
 }
 
 // ─── FILLS EDITOR ────────────────────────────────────
@@ -3147,6 +2837,7 @@ function renderAudioBar(){
     document.getElementById('audio-url-input').value = '';
     teardownEditorAudio();
   }
+  updatePerformBtn();
 }
 
 // Build the editor's inline player (YouTube IFrame API so we can read currentTime for cue tapping)
@@ -3242,7 +2933,7 @@ function edNudge(dt){
 window.addEventListener('blur', () => {
   setTimeout(() => {
     const a = document.activeElement;
-    if(!a || a.tagName !== 'IFRAME' || !a.closest('#audio-bar-player')) return;
+    if(!a || a.tagName !== 'IFRAME' || !a.closest('#audio-bar-player, #tp-video')) return;
     a.blur();
     if(document.activeElement === a) document.body.focus({ preventScroll:true });
   }, 0);
@@ -3323,6 +3014,7 @@ function updateEdPlayhead(){
 
 // ── cue tapping in the editor: play the track, tap on each section's downbeat ──
 function renderSyncPanel(){
+  updatePerformBtn();
   const panel = document.getElementById('sync-panel');
   const song = currentSong(); if(!panel || !song) return;
   if(!song.audio){ panel.innerHTML = ''; return; }
@@ -3414,445 +3106,385 @@ function pauseAudio(){
   if(ytPlayer && ytReady) ytPlayer.pauseVideo();
   else if(htmlAudio) htmlAudio.pause();
 }
-
-window.toggleAudioPlay = function(){
-  if(isAudioPlaying()) pauseAudio(); else playAudio();
-  setTimeout(updatePlayBtn, 120);
+function seekAudioTo(t){
+  if(ytPlayer && ytReady) ytPlayer.seekTo(t, true);
+  else if(htmlAudio) htmlAudio.currentTime = t;
 }
-function updatePlayBtn(){
-  const b = document.getElementById('perf-play-btn');
-  if(b) b.textContent = isAudioPlaying() ? '❚❚' : '▶';
-}
+window.toggleAudioPlay = function(){ if(isAudioPlaying()) pauseAudio(); else playAudio(); };
 
-// Build the player inside the performance overlay
-function setupPerfAudio(song){
-  const wrap = document.getElementById('perf-audio-wrap');
-  const holder = document.getElementById('yt-player-holder');
-  const syncBtn = document.getElementById('mode-sync');
-  // teardown any previous
-  if(ytPlayer){ try{ ytPlayer.destroy(); }catch(e){} ytPlayer = null; ytReady = false; }
-  if(htmlAudio){ htmlAudio.pause(); htmlAudio = null; }
-  holder.innerHTML = '';
-
-  if(!song.audio){ wrap.classList.add('hidden'); syncBtn.style.display='none'; return; }
-
-  wrap.classList.remove('hidden');
-  syncBtn.style.display = audioAvailable() ? '' : 'none';
-
-  if(song.audio.type === 'youtube'){
-    holder.classList.remove('audio-only');
-    const mount = document.createElement('div'); holder.appendChild(mount);
-    ensureYouTubeAPI(() => {
-      ytPlayer = new YT.Player(mount, {
-        width:'256', height:'144',
-        videoId: song.audio.videoId,
-        playerVars:{ controls:1, modestbranding:1, rel:0 },
-        events:{ onReady:()=>{ ytReady = true; updatePlayBtn(); }, onStateChange:updatePlayBtn }
-      });
-    });
-  } else if(song.audio.type === 'file' && localAudioURL){
-    holder.classList.add('audio-only');
-    htmlAudio = new Audio(localAudioURL);
-    htmlAudio.addEventListener('play', updatePlayBtn);
-    htmlAudio.addEventListener('pause', updatePlayBtn);
-  } else {
-    // file ref exists but blob was lost on reload
-    holder.classList.add('audio-only');
-  }
-  startAudioClock();
-}
-
-function startAudioClock(){
-  cancelAnimationFrame(audioTimeRAF);
-  const tick = () => {
-    const el = document.getElementById('perf-audio-time');
-    if(el) el.textContent = fmtTime(getAudioTime()) + ' / ' + fmtTime(getAudioDuration());
-    audioTimeRAF = requestAnimationFrame(tick);
-  };
-  tick();
-}
-
-// (cue tapping now lives in the editor — see editTapCue)
-
-// ─── PERFORMANCE CORE ────────────────────────────────
-window.startPerf = function(){
-  const song = currentSong();
-  if(!song || !song.sections.length) return;
-  window.saveSongMeta();
-  perfIdx = 0;
-  document.getElementById('perf-overlay').classList.add('active');
-  document.getElementById('perf-song').textContent = song.name || 'UNTITLED';
-  document.getElementById('perf-bpm-disp').textContent = song.bpm+' BPM';
-  document.getElementById('perf-ts-disp').textContent = tsLabel(song, null);
-  stopEditorPlayer();   // silence the editor's inline player so it doesn't double up
-  setupPerfAudio(song);
-  updateCountInToggle();
-  // SYNC can only advance if the track has cue points to follow - otherwise start in AUTO
-  window.setMode(audioAvailable() && songCueCount(song) ? 'sync' : 'auto');
-  window.setDisplayMode('focus');
-  window.renderPerf();
-}
-
-window.stopPerf = function(){
-  clearAuto(); stopSyncLoop();
-  cancelAnimationFrame(audioTimeRAF);
-  pauseAudio();
-  if(ytPlayer){ try{ ytPlayer.destroy(); }catch(e){} ytPlayer = null; ytReady = false; }
-  if(htmlAudio){ htmlAudio.pause(); htmlAudio = null; }
-  document.getElementById('perf-overlay').classList.remove('active');
-  if(!sharedSong) renderAudioBar();   // restore the editor's inline player when returning to the editor
-}
-
-window.setMode = function(m){
-  if(m==='sync' && !audioAvailable()) m = 'auto';
-  perfMode = m;
-  document.getElementById('mode-auto').classList.toggle('active', m==='auto');
-  document.getElementById('mode-manual').classList.toggle('active', m==='manual');
-  document.getElementById('mode-sync').classList.toggle('active', m==='sync');
-  clearAuto(); stopSyncLoop();
-  const status = document.getElementById('auto-status');
-  const ring = document.getElementById('countdown-ring-wrap');
-  if(m==='auto'){ status.textContent='AUTO · BPM TIMED'; scheduleAuto(); }
-  else if(m==='sync'){
-    status.textContent = songCueCount(currentSong()) ? 'SYNC · PLAY THE TRACK' : 'SYNC · NO CUE POINTS SET';
-    ring.classList.remove('visible'); startSyncLoop();
-  }
-  else { status.textContent='MANUAL · SPACE TO ADVANCE'; ring.classList.remove('visible'); setSectionProgress(0); }
-}
-
-function stopSyncLoop(){ if(syncRAF){ cancelAnimationFrame(syncRAF); syncRAF = null; } syncFillFlash = false; hideCountIn(); }
-
-// absolute-time events (section starts + fills) for SYNC count-in / fill flashing
-function buildSyncEvents(song){
-  const evs = [];
-  song.sections.forEach((s,i) => {
-    if(s.time == null) return;
-    evs.push({ time:s.time, type:'section', label:sectionDisplay(song,i).toUpperCase(), si:i });
-    const barS = barMsFor(song,s)/1000, m16 = msPer16(song)/1000;
-    for(let r=0;r<s.repeats;r++) (s.fills||[]).forEach(f => evs.push({ time:s.time + r*s.bars*barS + f.start16*m16, type:'fill', label:f.notes||'FILL', si:i }));
-  });
-  return evs.sort((a,b)=>a.time-b.time);
-}
-let syncFillFlash = false;
-// Follow the audio clock: highlight whichever cued section we're inside of, count in, flash fills
 function songCueCount(song){ return (song?.sections||[]).filter(s => s.time != null).length; }
-function startSyncLoop(){
-  stopSyncLoop();
-  const song = currentSong();
-  const events = buildSyncEvents(song);
-  const follow = () => {
-    if(perfMode !== 'sync'){ syncRAF = null; return; }
-    const t = getAudioTime();
-    const cued = song.sections.map((s,i)=>({i,time:s.time})).filter(o=>o.time!=null);
-    // SYNC only moves while the track is rolling - say which state we're in, live
-    const wantStatus = !cued.length ? 'SYNC · NO CUE POINTS SET'
-                     : isAudioPlaying() ? 'SYNC · FOLLOWING TRACK'
-                     : 'SYNC · PRESS PLAY ON THE TRACK';
-    const stEl = document.getElementById('auto-status');
-    if(stEl.textContent !== wantStatus) stEl.textContent = wantStatus;
-    if(cued.length){
-      let target = cued[0].i;
-      for(const o of cued){ if(t >= o.time - 0.15) target = o.i; else break; }
-      if(target !== perfIdx){ perfIdx = target; window.renderPerf(); }
-      const dur = getAudioDuration();
-      if(dur) document.getElementById('perf-progress-fill').style.width = Math.min(100,(t/dur)*100)+'%';
-      // section playhead: progress through the current cued section
-      const cs = song.sections[target];
-      const secDur = barMsFor(song, cs) * cs.bars * cs.repeats / 1000;
-      const nextCue = cued.find(o => o.time > cs.time);
-      const endT = (playheadMode() === 'cue' && nextCue) ? nextCue.time : cs.time + secDur;
-      setSectionProgress((t - cs.time) / Math.max(0.01, endT - cs.time));
-    }
-    // flash FILL NOW for ~0.4s when a fill hits
-    const nowFill = events.find(e => e.type==='fill' && t >= e.time && t < e.time + 0.4);
-    if(nowFill && !syncFillFlash){
-      syncFillFlash = true;
-      const fb = document.getElementById('perf-fill-badge');
-      fb.className = 'show imminent';
-      fb.innerHTML = `<span class="pfb-now">🥁 FILL NOW${nowFill.label && nowFill.label!=='FILL' ? ' — '+esc(nowFill.label) : ''}</span>`;
-    } else if(!nowFill && syncFillFlash){
-      syncFillFlash = false;
-      renderFillBadge(song.sections[perfIdx]);
-    }
-    // count-in to the next event (respecting the count-in setting)
-    const next = nextCountInEvent(events, t, 'time');
-    if(next){
-      const evSec = song.sections[next.si]; const ets = effTS(song, evSec);
-      // the bar leading into a section change belongs to the PREVIOUS section — if that
-      // one ends on an odd bar, count its beats instead of a full bar
-      let cinBeats = ets.n;
-      if(next.type === 'section' && next.si > 0){
-        const prev = song.sections[next.si - 1];
-        const plast = secLayout(song, prev).slice(-1)[0];
-        if(plast && plast.isOdd) cinBeats = plast.beats;
-      }
-      updateCountIn((next.time - t)*1000, barMsFor(song,evSec)/ets.n, cinBeats, next);
-    } else hideCountIn();
-    syncRAF = requestAnimationFrame(follow);
-  };
-  follow();
-}
-
-function clearAuto(){
-  autoGen++;                                  // invalidate any running loop
-  if(autoRAF){ cancelAnimationFrame(autoRAF); autoRAF = null; }
-  hideCountIn();
-}
-
-// AUTO advance — one rAF loop anchored to performance.now().
-// Bar number and progress are recomputed from real elapsed time every frame,
-// so the ticker can never drift or lag; section boundaries are carried forward
-// exactly (startAnchor) so timing stays tight across the whole song.
-// build the timeline of "events" inside a section (fills + the next-section change),
-// in ms relative to the section start, for the count-in
-function sectionEvents(song, sec, secIdx){
-  const barMs = barMsFor(song, sec);
-  const m16 = msPer16(song);
-  const totalMs = sec.bars * sec.repeats * barMs;
-  const evs = [];
-  for(let r = 0; r < sec.repeats; r++){
-    (sec.fills || []).forEach(f => evs.push({ ms: r*sec.bars*barMs + f.start16*m16, type:'fill', label: f.notes || 'FILL' }));
-  }
-  const nextName = secIdx < song.sections.length-1 ? sectionDisplay(song, secIdx+1).toUpperCase() : 'END';
-  evs.push({ ms: totalMs, type:'section', label: nextName });
-  return evs.sort((a,b)=>a.ms-b.ms);
-}
-// show a 1-2-3-4 count-in when an event is within `beatMs` * (beats of the bar) away
-function updateCountIn(msToEvent, beatMs, totalBeats, ev){
-  const ci = document.getElementById('perf-countin');
-  if(msToEvent == null || msToEvent <= 0 || msToEvent > totalBeats * beatMs){
-    if(ci.classList.contains('show')){ ci.classList.remove('show','fill'); lastCountNum = 0; }
-    return;
-  }
-  const beatsLeft = Math.ceil(msToEvent / beatMs);          // n..1
-  const n = totalBeats - beatsLeft + 1;                     // counts up 1..n
-  ci.classList.add('show');
-  ci.classList.toggle('fill', ev.type === 'fill');
-  if(n !== lastCountNum){
-    lastCountNum = n;
-    const numEl = document.getElementById('ci-num');
-    numEl.textContent = n;
-    numEl.classList.remove('beat'); void numEl.offsetWidth; numEl.classList.add('beat');
-    document.getElementById('ci-label').textContent = ev.type==='fill'
-      ? '🥁 FILL' + (ev.label && ev.label!=='FILL' ? ' · '+ev.label : '')
-      : '→ ' + ev.label;
-  }
-}
-function hideCountIn(){ const ci=document.getElementById('perf-countin'); if(ci){ ci.classList.remove('show','fill'); } lastCountNum=0; }
 function countInMode(){ const s = currentSong(); return (s && s.countIn) || 'all'; }
-// pick the next event to count in to, honouring the count-in setting
-function nextCountInEvent(events, pos, key){
-  const m = countInMode();
-  if(m === 'off') return null;
-  return events.find(e => e[key] - pos > 0.0001 && (m === 'all' || e.type === 'section')) || null;
-}
 function updateCountInToggle(){
-  const b = document.getElementById('countin-toggle'); if(!b) return;
+  const b = document.getElementById('tp-countin'); if(!b) return;
   const m = countInMode();
-  b.textContent = 'COUNT-IN: ' + (m==='all' ? 'ALL' : m==='sections' ? 'SECTIONS' : 'OFF');
-  b.classList.toggle('active', m !== 'off');
+  b.textContent = 'Count-in · ' + m;
+  b.classList.toggle('on', m !== 'off');
 }
 window.cycleCountIn = function(){
   const s = currentSong(); if(!s) return;
   s.countIn = s.countIn === 'all' ? 'sections' : s.countIn === 'sections' ? 'off' : 'all';
   window.save(); updateCountInToggle();
-  if(s.countIn === 'off') hideCountIn();
+};
+
+// ─── PERFORMANCE — TELEPROMPTER ──────────────────────
+// Performing follows the track, so it needs one — plus a cue on at least one section.
+// Sections without a cue are placed from the nearest cue and their bar lengths.
+function performBlocker(song){
+  if(!song || !song.sections.length) return { long:'Perform', short:'Perform', why:'Add a section first', disabled:true };
+  if(!song.audio) return { long:'Add a track to perform', short:'Add track', why:'Performing follows the track', act:'track' };
+  if(!audioAvailable()) return { long:'Re-load audio to perform', short:'Re-load audio', why:'Audio files need re-loading after a refresh', act:'file' };
+  if(!songCueCount(song)) return { long:'Tap a cue to perform', short:'Tap a cue', why:'Press T on the first downbeat', act:'cue' };
+  return null;
+}
+function updatePerformBtn(){
+  const btn = document.getElementById('perform-btn'); if(!btn) return;
+  const b = performBlocker(currentSong());
+  btn.classList.toggle('go', !b);
+  btn.classList.toggle('blocked', !!b);
+  btn.disabled = !!(b && b.disabled);
+  btn.title = b ? b.why : 'Perform — follows the track';
+  const icon = !b || b.disabled ? 'play' : b.act === 'cue' ? 'tap' : b.act === 'file' ? 'upload' : 'music';
+  const label = b ? `<span class="lbl-long">${b.long}</span><span class="lbl-short">${b.short}</span>` : 'Perform';
+  const html = ico(icon) + label + (b && b.act === 'cue' ? '<kbd class="tap-key">T</kbd>' : '');
+  if(btn.innerHTML !== html) btn.innerHTML = html;
 }
 
-function scheduleAuto(startAnchor){
-  const song = currentSong(); const sec = song.sections[perfIdx]; if(!sec) return;
-  const ets = effTS(song, sec);
-  const barMs = barMsFor(song, sec);              // ms per bar, honouring this section's time sig
-  const beatMs = barMs / ets.n;                   // one beat of this section
-  const exactBars = sec.bars * sec.repeats;       // may be fractional (e.g. 4.25)
-  // bars aren't uniform once an odd bar is in play, so count ticks off the real layout
-  const layoutHere = barLayout(ets, sec.bars, sec.oddAt);
-  const cycle16 = layoutHere.reduce((a,b)=>a+b.len16, 0);
-  const lastBar = layoutHere[layoutHere.length - 1];
-  const oddBeatsHere = (lastBar && lastBar.isOdd) ? lastBar.beats : 0;  // lead-in to the next section
-  totalBarTicks = layoutHere.length * sec.repeats;
-  const totalMs = exactBars * barMs;              // but time the section by the exact amount
-  const events = sectionEvents(song, sec, perfIdx);
+// Where every section starts and how its bars are clocked. In "cue points" mode a section's
+// bars stretch to land exactly on the next section's start; in "tempo" mode they run at BPM.
+function buildPerfTimeline(song){
+  const n = song.sections.length;
+  const dur = song.sections.map(s => barMsFor(song, s) * s.bars * s.repeats / 1000);
+  const start = song.sections.map(s => s.time != null ? s.time : null);
+  for(let i = 1; i < n; i++) if(start[i] == null && start[i-1] != null) start[i] = start[i-1] + dur[i-1];
+  for(let i = n - 2; i >= 0; i--) if(start[i] == null && start[i+1] != null) start[i] = Math.max(0, start[i+1] - dur[i]);
+  const bpm = playheadMode() === 'bpm';
+  const secs = song.sections.map((sec, i) => {
+    const ets = effTS(song, sec);
+    const layout = barLayout(ets, sec.bars, sec.oddAt);
+    const pass16 = layout.reduce((a, b) => a + b.len16, 0);
+    const total16 = pass16 * sec.repeats;
+    const end = i < n - 1 ? start[i+1] : start[i] + dur[i];
+    const span = bpm ? dur[i] : Math.max(0.05, end - start[i]);
+    return { i, sec, ets, layout, pass16, total16, start:start[i], per16:span / total16,
+             beat16:sixteenthsPerBeat(ets), bars:layout.length * sec.repeats };
+  });
+  const events = [];
+  secs.forEach(x => {
+    if(x.i > 0 || x.start > 0.5) events.push({ t:x.start, type:'section', si:x.i });
+    for(let r = 0; r < x.sec.repeats; r++)
+      (x.sec.fills || []).forEach((f, fi) => events.push({ t:x.start + (r * x.pass16 + f.start16) * x.per16, len:f.len16 * x.per16, type:'fill', si:x.i, fi }));
+  });
+  events.sort((a, b) => a.t - b.t);
+  return { secs, events };
+}
+function perfPosition(tl, t){
+  let ci = -1;
+  for(const x of tl.secs) if(t >= x.start - 0.15) ci = x.i;          // a tapped cue lands a touch late
+  if(ci < 0) return { ci:-1 };
+  const x = tl.secs[ci];
+  const pos16 = Math.max(0, Math.min(x.total16 - 1e-6, (t - x.start) / x.per16));
+  const rep = Math.floor(pos16 / x.pass16), within16 = pos16 - rep * x.pass16;
+  let k = x.layout.length - 1;
+  for(let j = 0; j < x.layout.length; j++) if(within16 < x.layout[j].start16 + x.layout[j].len16 - 1e-9){ k = j; break; }
+  const b = x.layout[k];
+  const beatsInBar = Math.max(1, Math.round(b.len16 / x.beat16));
+  return { ci, bar:rep * x.layout.length + k + 1, bars:x.bars, beatsInBar, within16,
+           beat:Math.min(beatsInBar, Math.floor((within16 - b.start16) / x.beat16) + 1), prog:pos16 / x.total16 };
+}
 
-  document.getElementById('countdown-ring-wrap').classList.add('visible');
-  currentBarTick = 1;
-  updateBarTicker();
-  updateRing(0);
+function renderPerfRows(song){
+  document.getElementById('tp-rows').innerHTML = '<div class="tp-list">' + song.sections.map((sec, i) => {
+    const ec = effColor(sec), ets = effTS(song, sec), lay = barLayout(ets, sec.bars, sec.oddAt);
+    const fills = (sec.fills || []).map((f, fi) => ({ f, fi, bb:fillBarBeat(ets, f.start16, lay) })).sort((a, b) => a.f.start16 - b.f.start16);
+    const name = esc(sectionDisplay(song, i));
+    return `<div class="tp-row" data-i="${i}" role="button" title="Jump here" aria-label="Jump to ${name}" style="--sec:${ec};--on-sec:${onColor(ec)}" onclick="perfSeekSection(${i})">
+      <div class="tp-blk"><b class="tp-num">${fmtBars(sec.bars)}</b><span class="tp-unit">${sec.bars == 1 ? 'Bar' : 'Bars'}</span><span class="tp-beats"></span></div>
+      <div class="tp-body">
+        <div class="tp-name">${name}${sec.repeats > 1 ? `<span class="tp-rep">×${sec.repeats}</span>` : ''}</div>
+        <div class="tp-meta"><span class="tp-when"></span><span class="tp-mn">${esc(sec.notes || '')}</span></div>
+        <div class="tp-notes">${esc(sec.notes || '')}</div>
+        <div class="tp-fills">${fills.map(o => `<span class="tp-fill" data-fi="${o.fi}"><span class="tp-cnt"></span>Fill · bar ${o.bb.bar} beat ${o.bb.beat}${o.f.notes ? ' — ' + esc(o.f.notes) : ''}</span>`).join('')}</div>
+      </div>
+      <div class="tp-prog"><i></i></div>
+    </div>`;
+  }).join('') + '</div>';
+}
+// a row shows its bar count at rest; while playing or counting in it borrows the number
+function perfRestRow(row, sec){
+  if(!row.dataset.live) return;
+  row.querySelector('.tp-num').textContent = fmtBars(sec.bars);
+  row.querySelector('.tp-unit').textContent = sec.bars == 1 ? 'Bar' : 'Bars';
+  delete row.dataset.live;
+}
+function perfSetCurrent(rows, ci){
+  const secs = currentSong().sections;
+  rows.forEach((r, i) => {
+    r.classList.toggle('done', ci >= 0 && i < ci);
+    r.classList.toggle('now', i === ci);
+    r.classList.remove('incoming');
+    if(i === ci) r.dataset.live = '1'; else perfRestRow(r, secs[i]);
+  });
+}
+// hold the playing row about a fifth of the way down, unless someone is scrolling by hand
+function perfScrollTo(rows, ci, instant){
+  if(performance.now() < perfManualScrollUntil) return;
+  const box = document.getElementById('tp-rows');
+  requestAnimationFrame(() => {
+    const top = ci < 0 ? 0 : rows[ci].getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop - box.clientHeight * 0.18;
+    box.scrollTo({ top:Math.max(0, top), behavior:instant ? 'auto' : 'smooth' });
+  });
+}
+function perfUpdateWhen(rows, tl, p){
+  let acc = p.bars - p.bar + 1;
+  rows.forEach((r, k) => {
+    const w = r.querySelector('.tp-when');
+    if(k <= p.ci){ w.textContent = ''; return; }
+    w.textContent = 'in ' + acc + ' bar' + (acc === 1 ? '' : 's');
+    acc += tl.secs[k].bars;
+  });
+}
+function perfDrawMarks(tl, dur){
+  document.getElementById('tp-seek-marks').innerHTML = tl.secs.map(x =>
+    `<i class="tp-mark" style="left:${Math.min(100, x.start / dur * 100)}%;--sec:${effColor(x.sec)}"></i>`).join('');
+}
 
-  const myGen = ++autoGen;
-  const start = (startAnchor != null) ? startAnchor : performance.now();
+function perfFollow(){
+  cancelAnimationFrame(perfRAF);
+  const song = currentSong(), tl = perfTL;
+  const rows = [...document.querySelectorAll('#tp-rows .tp-row')];
+  const st = { ci:-2, bar:0, beat:0, beatsInBar:0, incoming:-1, count:0, fillKey:'', playing:null, nowS:'', dur:0, held:false, whenS:'' };
+  const overlay = document.getElementById('perf-overlay');
+  const tick = () => {
+    if(!overlay.classList.contains('active')){ perfRAF = null; return; }
+    const t = getAudioTime(), dur = getAudioDuration();
+    const p = perfPosition(tl, t);
 
-  function frame(now){
-    if(myGen !== autoGen) return;                 // a newer loop took over / cancelled
-    const elapsed = now - start;
+    if(p.ci !== st.ci){
+      perfSetCurrent(rows, p.ci);
+      perfScrollTo(rows, p.ci, st.ci === -2);
+      st.ci = p.ci; st.bar = 0; st.beat = 0; st.beatsInBar = 0; st.incoming = -1; st.count = 0;
+    }
+    const held = performance.now() < perfManualScrollUntil;
+    if(perfRecenter){ perfRecenter = false; perfScrollTo(rows, st.ci, true); }
+    if(st.held && !held) perfScrollTo(rows, st.ci);
+    st.held = held;
 
-    if(elapsed >= totalMs){                        // section finished
-      currentBarTick = totalBarTicks; updateBarTicker(); updateRing(1); hideCountIn();
-      if(perfIdx < song.sections.length - 1){
-        perfIdx++;
-        window.renderPerf();
-        scheduleAuto(start + totalMs);             // anchor next section at this one's exact end
-      } else {
-        autoRAF = null;                            // end of song
+    if(p.ci >= 0){
+      const cur = rows[p.ci], x = tl.secs[p.ci];
+      if(p.bar !== st.bar){
+        st.bar = p.bar;
+        cur.querySelector('.tp-num').textContent = p.bar;
+        cur.querySelector('.tp-unit').textContent = 'of ' + p.bars;
+        perfUpdateWhen(rows, tl, p);
+        cur.querySelectorAll('.tp-fill').forEach(el => {
+          const f = x.sec.fills[+el.dataset.fi];
+          el.classList.toggle('past', f.start16 + f.len16 <= p.within16);
+        });
       }
-      return;
+      if(p.beatsInBar !== st.beatsInBar){ st.beatsInBar = p.beatsInBar; st.beat = 0; cur.querySelector('.tp-beats').innerHTML = '<i></i>'.repeat(p.beatsInBar); }
+      if(p.beat !== st.beat){ st.beat = p.beat; cur.querySelectorAll('.tp-beats i').forEach((d, k) => d.classList.toggle('on', k < p.beat)); }
+      cur.querySelector('.tp-prog i').style.width = (p.prog * 100) + '%';
+    } else if(rows[0]){
+      const w = 'in ' + fmtTime(Math.max(0, tl.secs[0].start - t));
+      if(w !== st.whenS){ st.whenS = w; rows[0].querySelector('.tp-when').textContent = w; }
     }
 
-    updateRing(elapsed / totalMs);
-    setSectionProgress(elapsed / totalMs);
-    // locate the current bar through the layout so a short odd bar ticks correctly
-    const pos16  = elapsed / msPer16(song);
-    const rep    = Math.floor(pos16 / cycle16);
-    const within = pos16 - rep * cycle16;
-    let inCycle = layoutHere.length - 1;
-    for(let k = 0; k < layoutHere.length; k++){
-      if(within < layoutHere[k].start16 + layoutHere[k].len16 - 1e-9){ inCycle = k; break; }
+    // count-in to the next section or fill, and the fill sounding right now
+    const mode = countInMode();
+    const hit = tl.events.find(e => e.type === 'fill' && t >= e.t && t < e.t + Math.max(0.35, e.len));
+    // one bar of count-in, in that bar's own beats and tempo. Sections and fills count independently —
+    // a fill so often leads straight into the next section, and neither should hide the other
+    const countTo = e => {
+      if(!e) return 0;
+      const own = tl.secs[e.si];
+      const lead = e.type === 'section' && e.si > 0 ? tl.secs[e.si - 1] : own;   // a section's count-in is the bar before it
+      const beats = lead === own ? own.ets.n : Math.max(1, Math.round(lead.layout[lead.layout.length - 1].len16 / lead.beat16));
+      const beatSec = lead.per16 * lead.beat16, left = e.t - t;
+      return left <= beats * beatSec ? Math.max(1, beats - Math.ceil(left / beatSec) + 1) : 0;
+    };
+    const nextSec = mode === 'off' ? null : tl.events.find(e => e.type === 'section' && e.si > p.ci && e.t > t + 1e-4);
+    const nextFill = mode === 'all' ? tl.events.find(e => e.type === 'fill' && e.t > t + 1e-4) : null;
+    const count = countTo(nextSec), fillCount = countTo(nextFill);
+    const incoming = count ? nextSec.si : -1, soon = fillCount ? nextFill : null;
+    if(incoming !== st.incoming){
+      if(st.incoming >= 0){ rows[st.incoming].classList.remove('incoming'); perfRestRow(rows[st.incoming], song.sections[st.incoming]); }
+      if(incoming >= 0){ rows[incoming].classList.add('incoming'); rows[incoming].dataset.live = '1'; }
+      st.incoming = incoming; st.count = 0;
     }
-    const bar = Math.min(totalBarTicks, rep * layoutHere.length + inCycle + 1);
-    if(bar !== currentBarTick){ currentBarTick = bar; updateBarTicker(); }
-    // count-in to the next event (respecting the count-in setting).
-    // If this section ends on an odd bar, the lead-in to the next section is that bar,
-    // so count its actual beats (e.g. "1,2" for a 2/4) rather than a full 4.
-    const next = nextCountInEvent(events, elapsed, 'ms');
-    const cinBeats = (next && next.type === 'section' && oddBeatsHere) ? oddBeatsHere : ets.n;
-    updateCountIn(next ? next.ms - elapsed : null, beatMs, cinBeats, next || {});
-    autoRAF = requestAnimationFrame(frame);
-  }
-  autoRAF = requestAnimationFrame(frame);
+    if(incoming >= 0 && count !== st.count){
+      st.count = count;
+      const r = rows[incoming];
+      r.querySelector('.tp-num').textContent = count;
+      r.querySelector('.tp-unit').textContent = 'Count';
+      r.classList.remove('beat'); void r.offsetWidth; r.classList.add('beat');
+    }
+    const fillKey = (hit ? 'h' + hit.si + '.' + hit.fi : '') + '|' + (soon ? 's' + soon.si + '.' + soon.fi + '.' + fillCount : '');
+    if(fillKey !== st.fillKey){
+      st.fillKey = fillKey;
+      document.querySelectorAll('#tp-rows .tp-fill.soon, #tp-rows .tp-fill.hit').forEach(el => { el.classList.remove('soon', 'hit'); el.querySelector('.tp-cnt').textContent = ''; });
+      const mark = (e, cls, txt) => { const el = rows[e.si] && rows[e.si].querySelector(`.tp-fill[data-fi="${e.fi}"]`); if(el){ el.classList.add(cls); el.querySelector('.tp-cnt').textContent = txt; } };
+      if(soon) mark(soon, 'soon', fillCount + ' ·');
+      if(hit) mark(hit, 'hit', 'Now ·');
+    }
+
+    const playing = isAudioPlaying();
+    if(playing !== st.playing){ st.playing = playing; document.getElementById('tp-play').innerHTML = ico(playing ? 'pause' : 'play'); }
+    const nowS = fmtTime(t);
+    if(nowS !== st.nowS){ st.nowS = nowS; document.getElementById('tp-now').textContent = nowS; }
+    if(dur && Math.round(dur) !== st.dur){ st.dur = Math.round(dur); document.getElementById('tp-dur').textContent = fmtTime(dur); perfDrawMarks(tl, dur); }
+    if(dur && !perfSeeking) document.getElementById('tp-seek-fill').style.width = Math.min(100, t / dur * 100) + '%';
+    perfRAF = requestAnimationFrame(tick);
+  };
+  tick();
 }
 
-function updateBarTicker(){
-  const num = document.getElementById('bar-ticker-num');
-  num.textContent = currentBarTick;
-  document.getElementById('bar-ticker-label').textContent = 'of '+totalBarTicks;
-  // re-trigger the flash animation each bar
-  num.classList.remove('flash'); void num.offsetWidth; num.classList.add('flash');
-  // light up the fill badge the moment we hit a bar that has a fill (per repeat)
-  const sec = currentSong().sections[perfIdx];
-  const fb = document.getElementById('perf-fill-badge');
-  if(!sec || !fb) return;
-  const ets = effTS(currentSong(), sec);
-  const lay = barLayout(ets, sec.bars, sec.oddAt);
-  const barInRepeat = ((currentBarTick - 1) % lay.length) + 1;
-  const here = (sec.fills || []).filter(f => fillBarBeat(ets, f.start16, lay).bar === barInRepeat);
-  if(here.length){
-    fb.className = 'show imminent';
-    fb.innerHTML = `<span class="pfb-now">🥁 FILL NOW${here[0].notes ? ' — '+esc(here[0].notes) : ''}</span>`;
+// ── transport ──
+window.perfSeekSection = function(i){
+  const x = perfTL && perfTL.secs[i]; if(!x) return;
+  perfManualScrollUntil = 0;
+  seekAudioTo(x.start);
+};
+// ↑ early in a section goes to the one before; later, back to this one's top
+function perfStep(dir){
+  if(!perfTL) return;
+  const t = getAudioTime(), p = perfPosition(perfTL, t);
+  let i = p.ci < 0 ? 0 : p.ci + dir;
+  if(dir < 0 && p.ci >= 0 && t - perfTL.secs[p.ci].start > 1.5) i = p.ci;
+  window.perfSeekSection(Math.max(0, Math.min(perfTL.secs.length - 1, i)));
+}
+// quick presses build on the last target — the player reports the old position for a moment after a seek
+function perfNudge(dt){
+  const dur = getAudioDuration(), now = performance.now();
+  const recent = perfNudgeTarget != null && now - perfNudgeAt < 900;
+  const from = recent ? perfNudgeTarget + (isAudioPlaying() ? (now - perfNudgeAt) / 1000 : 0) : getAudioTime();
+  const t = Math.max(0, Math.min(dur || Infinity, from + dt));
+  perfNudgeTarget = t; perfNudgeAt = now;
+  seekAudioTo(t);
+}
+{
+  const bar = document.getElementById('tp-seek');
+  const at = e => { const r = bar.getBoundingClientRect(); return Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)); };
+  bar.addEventListener('pointerdown', e => {
+    if(e.button || !getAudioDuration()) return;
+    try{ bar.setPointerCapture(e.pointerId); }catch(_){}
+    perfSeeking = true;
+    const show = ev => { document.getElementById('tp-seek-fill').style.width = at(ev) * 100 + '%'; };
+    const done = ev => {
+      bar.removeEventListener('pointermove', show); bar.removeEventListener('pointerup', done); bar.removeEventListener('pointercancel', done);
+      if(ev.type === 'pointerup'){ perfManualScrollUntil = 0; seekAudioTo(at(ev) * getAudioDuration()); }
+      perfSeeking = false;
+    };
+    show(e);
+    bar.addEventListener('pointermove', show); bar.addEventListener('pointerup', done); bar.addEventListener('pointercancel', done);
+  });
+  const rowsBox = document.getElementById('tp-rows');
+  window.addEventListener('resize', () => { perfRecenter = true; });
+  const hold = () => { perfManualScrollUntil = performance.now() + 4000; };
+  rowsBox.addEventListener('wheel', hold, { passive:true });
+  rowsBox.addEventListener('touchmove', hold, { passive:true });
+}
+
+// ── keep the screen awake while performing ──
+async function requestWakeLock(){
+  try{ if('wakeLock' in navigator) perfWakeLock = await navigator.wakeLock.request('screen'); }catch(_){ perfWakeLock = null; }
+}
+function releaseWakeLock(){ try{ if(perfWakeLock) perfWakeLock.release(); }catch(_){} perfWakeLock = null; }
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible' && document.getElementById('perf-overlay').classList.contains('active')) requestWakeLock();
+});
+
+// Build the player inside the performance view
+function setupPerfAudio(song){
+  const holder = document.getElementById('tp-video');
+  if(ytPlayer){ try{ ytPlayer.destroy(); }catch(e){} ytPlayer = null; ytReady = false; }
+  if(htmlAudio){ htmlAudio.pause(); htmlAudio = null; }
+  holder.innerHTML = '';
+  if(song.audio.type === 'youtube'){
+    holder.classList.remove('audio-only');
+    const mount = document.createElement('div'); holder.appendChild(mount);
+    ensureYouTubeAPI(() => {
+      if(!document.getElementById('perf-overlay').classList.contains('active')) return;   // left before the player loaded
+      ytPlayer = new YT.Player(mount, {
+        width:'192', height:'108', videoId: song.audio.videoId,
+        playerVars:{ controls:0, modestbranding:1, rel:0, playsinline:1 },   // playsinline: iPhones would go full-screen
+        events:{ onReady:()=>{ ytReady = true; } }
+      });
+    });
   } else {
-    renderFillBadge(sec);   // back to the section summary
+    holder.classList.add('audio-only');
+    htmlAudio = new Audio(localAudioURL);
   }
 }
 
-function updateRing(prog){
-  const circ = 81.7;
-  document.getElementById('ring-arc').setAttribute('stroke-dashoffset', circ - (circ * prog));
-}
-function setSectionProgress(prog){
-  const f = document.getElementById('perf-section-progress-fill');
-  if(f) f.style.width = Math.max(0, Math.min(100, prog*100)) + '%';
-}
-
-// concise summary of a section's fills for the performance badge
-// each fill as "bar.beat — note" (description visible in focus mode)
-function fillLineHTML(ets, f, layout){
-  const bb = fillBarBeat(ets, f.start16, layout);
-  return `<span class="pfb-item">🥁 <b>${bb.bar}.${bb.beat}</b>${f.notes ? ' — '+esc(f.notes) : ' · '+fmtFillLen(ets, f.len16)}</span>`;
-}
-function renderFillBadge(sec){
-  const fb = document.getElementById('perf-fill-badge');
-  const fs = (sec.fills || []).slice().sort((a,b)=>a.start16-b.start16);
-  if(!fs.length){ fb.className = ''; fb.innerHTML = ''; return; }
-  const ets = effTS(currentSong(), sec);
-  const lay = barLayout(ets, sec.bars, sec.oddAt);
-  fb.className = 'show';
-  fb.innerHTML = fs.map(f => fillLineHTML(ets, f, lay)).join('');
-}
-
-window.renderPerf = function(){
-  const song = currentSong(); const sec = song.sections[perfIdx]; const t = TM[sec.typeId];
-  const ec = effColor(sec);
-
-  const nameEl = document.getElementById('perf-section-name');
-  const newName = sectionDisplay(song, perfIdx).toUpperCase();
-  // split-flap turn whenever the board actually changes section
-  if(nameEl.textContent !== newName){
-    const panel = document.getElementById('perf-current-center');
-    panel.classList.remove('flap'); void panel.offsetWidth; panel.classList.add('flap');
+window.startPerf = function(){
+  const song = currentSong();
+  const b = performBlocker(song);
+  if(b){
+    if(sharedSong || b.disabled){ showToast(sharedSong ? (song && song.audio ? 'This chart has no cues to follow' : 'This chart has no track to follow') : b.why, 'error'); return; }
+    if(b.act === 'track'){
+      const u = document.getElementById('audio-url-input');
+      u.scrollIntoView({ block:'nearest' }); u.focus();
+      showToast('Paste a YouTube link or add an audio file', 'error');
+    } else if(b.act === 'file'){
+      document.getElementById('audio-file-input').click();
+      showToast('Re-load the audio file to perform', 'error');
+    } else if(b.act === 'cue'){
+      edSeek(0);
+      showToast('Press T on the first downbeat', 'error');
+    }
+    return;
   }
-  nameEl.textContent = newName;
-  nameEl.style.color = ec;
-  document.getElementById('perf-stripe').style.background = ec;
-  document.getElementById('perf-section-sub').textContent = `${barsLabel(effTS(song,sec), sec.bars)} ${sec.repeats > 1 ? '×'+sec.repeats : ''} · ${tsLabel(song, sec)}`;
-  document.getElementById('perf-notes-disp').textContent = sec.notes;
-  // top-bar shows the current section's time sig (which may differ from the song default)
-  document.getElementById('perf-ts-disp').textContent = tsLabel(song, sec);
+  window.saveSongMeta();
+  hideCtx();
+  stopEditorPlayer();                     // the editor's inline player mustn't play over this one
+  perfTL = buildPerfTimeline(song);
+  perfManualScrollUntil = 0; perfSeeking = false; perfNudgeTarget = null;
+  document.getElementById('tp-song').textContent = song.name || 'Untitled';
+  document.getElementById('tp-artist').textContent = song.artist || '';
+  document.getElementById('tp-seek-fill').style.width = '0%';
+  document.getElementById('tp-seek-marks').innerHTML = '';
+  document.getElementById('tp-now').textContent = '0:00';
+  document.getElementById('tp-dur').textContent = '0:00';
+  renderPerfRows(song);
+  updateCountInToggle();
+  document.getElementById('perf-overlay').classList.add('active');
+  setupPerfAudio(song);
+  requestWakeLock();
+  perfFollow();
+};
+window.stopPerf = function(){
+  cancelAnimationFrame(perfRAF); perfRAF = null;
+  pauseAudio();
+  if(ytPlayer){ try{ ytPlayer.destroy(); }catch(e){} ytPlayer = null; ytReady = false; }
+  if(htmlAudio){ htmlAudio.pause(); htmlAudio = null; }
+  document.getElementById('tp-video').innerHTML = '';
+  document.getElementById('perf-overlay').classList.remove('active');
+  releaseWakeLock();
+  if(!sharedSong) renderAudioBar();       // bring the editor's player back
+};
 
-  document.getElementById('perf-prev-val').textContent = perfIdx>0 ? sectionDisplay(song, perfIdx-1).toUpperCase() : '—';
-  document.getElementById('perf-next-val').textContent = perfIdx<song.sections.length-1 ? sectionDisplay(song, perfIdx+1).toUpperCase() : 'END';
-
-  // fill badge — a summary of this section's fills
-  renderFillBadge(sec);
-
-  document.getElementById('perf-pos-num').textContent = (perfIdx+1)+'/'+song.sections.length;
-  // progress bar (sync mode drives it from the audio clock instead)
-  if(perfMode !== 'sync')
-    document.getElementById('perf-progress-fill').style.width = ((perfIdx+1)/song.sections.length*100)+'%';
-
-  renderPerfList();
+// the controls, with their keys — the ⋯ button and right-click share them
+function perfMenuItems(rowIdx){
+  const items = [];
+  if(rowIdx != null) items.push({id:'jump', icon:'next', label:'Jump to ' + esc(sectionDisplay(currentSong(), rowIdx)), run:()=>window.perfSeekSection(rowIdx)}, '---');
+  const playing = isAudioPlaying();
+  items.push(
+    {id:'pp', icon:playing ? 'pause' : 'play', label:playing ? 'Pause' : 'Play', key:'Space', run:()=>window.toggleAudioPlay()},
+    {id:'rw', icon:'back', label:'Back 5 seconds', key:'←', run:()=>perfNudge(-5)},
+    {id:'ff', icon:'next', label:'Forward 5 seconds', key:'→', run:()=>perfNudge(5)},
+    {id:'pv', icon:'up', label:'Previous section', key:'↑', run:()=>perfStep(-1)},
+    {id:'nx', icon:'down', label:'Next section', key:'↓', run:()=>perfStep(1)},
+    '---',
+    {id:'ci', icon:'metronome', label:'Count-in: ' + countInMode(), run:()=>window.cycleCountIn()},
+    '---',
+    {id:'ex', icon:'exit', label:'Exit', key:'Esc', danger:true, run:()=>window.stopPerf()},
+  );
+  return items;
 }
-
-// Full-song list view, with the current row highlighted + auto-scrolled into view
-function renderPerfList(){
-  const wrap = document.getElementById('perf-list-view');
-  const song = currentSong(); if(!song) return;
-  wrap.innerHTML = song.sections.map((sec,i) => {
-    const t = TM[sec.typeId]; const ec = effColor(sec);
-    const cls = i===perfIdx ? 'pl-current' : (i<perfIdx ? 'pl-done' : '');
-    const etsL = effTS(song, sec); const lay = barLayout(etsL, sec.bars, sec.oddAt);
-    const fillTag = (sec.fills && sec.fills.length)
-      ? `<span class="pl-fill-tag" title="${sec.fills.slice().sort((a,b)=>a.start16-b.start16).map(f=>{const bb=fillBarBeat(etsL,f.start16,lay);return 'bar '+bb.bar+'.'+bb.beat+(f.notes?': '+f.notes:'');}).join(' · ')}">🥁 ${sec.fills.map(f=>{const bb=fillBarBeat(etsL,f.start16,lay);return bb.bar+'.'+bb.beat+(f.notes?' '+f.notes:'');}).join(' · ')}</span>`
-      : '';
-    const cue = sec.time!=null ? `<span class="pl-bar-live">⏱ ${fmtTime(sec.time)}</span>` : `<span class="pl-bar-live">${fmtBars(sec.bars)}×${sec.repeats}</span>`;
-    return `
-      <div class="pl-row ${cls}" data-i="${i}" onclick="perfJump(${i})">
-        <div class="pl-swatch" style="background:${ec}"></div>
-        <div class="pl-num">${i+1}</div>
-        <div class="pl-body">
-          <div class="pl-name" style="color:${i===perfIdx?ec:''}">${esc(sectionDisplay(song,i))}</div>
-          <div class="pl-meta-col">${barsLabel(etsL, sec.bars)} ${sec.repeats>1?'×'+sec.repeats:''}</div>
-          <div class="pl-notes-col">${esc(sec.notes||'')}</div>
-          <div class="pl-right">${fillTag}<span class="pl-badge">NOW</span>${cue}</div>
-        </div>
-      </div>`;
-  }).join('');
-  // auto-scroll current row into view when the list is showing
-  if(displayMode==='list'){
-    const cur = wrap.querySelector('.pl-current');
-    if(cur) cur.scrollIntoView({behavior:'smooth', block:'center'});
-  }
-}
-
-window.perfJump = function(i){
-  clearAuto();
-  perfIdx = i; window.renderPerf();
-  if(perfMode==='auto') scheduleAuto();
-  if(perfMode==='sync' && audioAvailable() && currentSong().sections[i].time!=null) seekAudioTo(currentSong().sections[i].time);
-}
-function seekAudioTo(t){
-  if(ytPlayer && ytReady) ytPlayer.seekTo(t, true);
-  else if(htmlAudio) htmlAudio.currentTime = t;
-}
-
-window.perfNext = () => { clearAuto(); if(perfIdx < currentSong().sections.length-1){ perfIdx++; window.renderPerf(); if(perfMode==='auto') scheduleAuto(); } }
-window.perfBack = () => { clearAuto(); if(perfIdx > 0){ perfIdx--; window.renderPerf(); if(perfMode==='auto') scheduleAuto(); } }
-
-window.setDisplayMode = (m) => {
-    displayMode = m;
-    document.getElementById('disp-focus').classList.toggle('active', m==='focus');
-    document.getElementById('disp-list').classList.toggle('active', m==='list');
-    document.getElementById('perf-body').style.display = m==='focus' ? 'flex' : 'none';
-    document.getElementById('perf-list-view').classList.toggle('active', m==='list');
-    if(m==='list') renderPerfList();
+window.openPerfMenu = function(ev){
+  ev.stopPropagation();
+  const r = ev.currentTarget.getBoundingClientRect();
+  showCtx(r.right, r.bottom + 6, perfMenuItems(null), { alignRight:true });
 };
 
 // ─── HELPERS ───
@@ -4120,13 +3752,13 @@ function reorderSection(from, to){
 
 document.addEventListener('keydown', e => {
   if(!document.getElementById('perf-overlay').classList.contains('active')) return;
-  if(e.key===' ' || e.key==='Enter'){ e.preventDefault(); window.perfNext(); }
-  if(e.key==='Backspace'){ e.preventDefault(); window.perfBack(); }
-  if(e.key==='Escape') window.stopPerf();
-  if(e.key==='ArrowRight') window.perfNext();
-  if(e.key==='ArrowLeft')  window.perfBack();
-  if((e.key==='p'||e.key==='P') && audioAvailable()){ e.preventDefault(); window.toggleAudioPlay(); }
-  if(e.key==='f'||e.key==='F') window.setDisplayMode(displayMode==='focus'?'list':'focus');
+  if(e.target instanceof Element && e.target.closest('input, textarea, select')) return;
+  if(e.ctrlKey || e.metaKey || e.altKey) return;
+  if(e.key === ' ' || e.code === 'Space'){ e.preventDefault(); if(!e.repeat) window.toggleAudioPlay(); }
+  else if(e.key === 'ArrowLeft' || e.key === 'ArrowRight'){ e.preventDefault(); perfNudge((e.key === 'ArrowLeft' ? -1 : 1) * (e.shiftKey ? 1 : 5)); }
+  else if(e.key === 'ArrowUp'){ e.preventDefault(); if(!e.repeat) perfStep(-1); }
+  else if(e.key === 'ArrowDown'){ e.preventDefault(); if(!e.repeat) perfStep(1); }
+  else if(e.key === 'Escape'){ hideCtx(); window.stopPerf(); }
 });
 
 // ─── RIGHT-CLICK CONTEXT MENU + SECTION SELECTION ───
@@ -4241,10 +3873,6 @@ function addSectionMenu(at){
     TYPES.map(t => ({ id:'add-'+t.id, dot:t.color, label:t.label, key:t.key.toUpperCase(),
                       run:()=>window.addSectionAt(t.id, at) })) };
 }
-function cycleMode(){
-  const order = audioAvailable() ? ['auto','manual','sync'] : ['auto','manual'];
-  window.setMode(order[(order.indexOf(perfMode) + 1) % order.length]);
-}
 document.addEventListener('contextmenu', e => {
   // let text inputs keep their native copy/paste menu
   if(e.target.closest('input, textarea, select')) { hideCtx(); return; }
@@ -4261,24 +3889,11 @@ document.addEventListener('contextmenu', e => {
     ]);
     return;
   }
-  // performance mode menu (overlay is on top of everything)
+  // performance: the controls, plus a jump to the row that was right-clicked
   if(document.getElementById('perf-overlay').classList.contains('active')){
     e.preventDefault();
-    const song = currentSong(); const items = [];
-    const row = e.target.closest('.pl-row');
-    if(row && row.dataset.i != null){ const i = +row.dataset.i;
-      items.push({id:'jump', icon:'play', label:'Jump to '+sectionDisplay(song,i), run:()=>window.perfJump(i)}, '---'); }
-    if(perfIdx < song.sections.length-1) items.push({id:'nx', icon:'next', label:'Next section', run:()=>window.perfNext()});
-    if(perfIdx > 0) items.push({id:'pv', icon:'back', label:'Previous section', run:()=>window.perfBack()});
-    items.push({id:'rs', icon:'restart', label:'Restart from top', run:()=>window.perfJump(0)});
-    if(audioAvailable()) items.push({id:'pp', icon:isAudioPlaying()?'pause':'play', label:isAudioPlaying()?'Pause track':'Play track', run:()=>window.toggleAudioPlay()});
-    items.push('---');
-    items.push({id:'dp', icon: displayMode==='focus'?'list':'focus', label: displayMode==='focus'?'List view':'Focus view', run:()=>window.setDisplayMode(displayMode==='focus'?'list':'focus')});
-    items.push({id:'md', icon:'gauge', label:'Mode: '+perfMode.toUpperCase()+'  (next)', run:()=>cycleMode()});
-    items.push({id:'ci', icon:'metronome', label:'Count-in: '+countInMode().toUpperCase(), run:()=>window.cycleCountIn()});
-    items.push('---');
-    items.push({id:'ex', icon:'exit', label:'Exit performance', danger:true, run:()=>window.stopPerf()});
-    showCtx(e.clientX, e.clientY, items);
+    const row = e.target.closest('.tp-row');
+    showCtx(e.clientX, e.clientY, perfMenuItems(row ? +row.dataset.i : null));
     return;
   }
   const block = e.target.closest('#chart-list .section-block');
