@@ -2085,7 +2085,8 @@ function showToast(msg, type='saved', duration=1800){
   if(!el) return;
   el.textContent = msg;
   el.className = 'show ' + type;
-  setTimeout(() => { el.className = ''; }, duration);
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => { el.className = ''; }, duration);
 }
 
 window.save = async function(){
@@ -2838,7 +2839,7 @@ window.renderChart = function(){
     const mod = sec.mod === 'pre' ? 'Pre-' : sec.mod === 'post' ? 'Post-' : '';
     const cue = !hasAudio ? ''
       : sec.time != null
-        ? `<span class="lg-cue" title="Cue — type an exact time like 2:39.42">
+        ? `<span class="lg-cue" title="Cue — type an exact time like 2:39.42, or select the section and press , / . to nudge it">
              <button type="button" onclick="seekEditorToSection(${i})" title="Jump the track here" aria-label="Jump the track here">${ico('cue')}</button>
              <input type="text" inputmode="decimal" value="${fmtCue(sec.time)}" aria-label="Cue time" onchange="setCueText(${i},this.value)" onkeydown="if(event.key==='Enter')this.blur()">
              <button type="button" class="lg-cue-x" onclick="clearCue(${i})" title="Clear cue" aria-label="Clear cue">${ico('x')}</button>
@@ -3096,7 +3097,7 @@ function renderFillsModal(){
 function esc(str){ return String(str==null?'':str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function fmtTime(s){ s=Math.max(0,Math.round(s)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); }
 // like fmtTime but keeps hundredths-of-a-second — cue points are stored as floats, so show that precision
-function fmtCue(s){ s=Math.max(0,s); const cc=Math.floor((s%1)*100); return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0')+'.'+String(cc).padStart(2,'0'); }
+function fmtCue(s){ const cs=Math.round(Math.max(0,s)*100); return Math.floor(cs/6000)+':'+String(Math.floor(cs/100)%60).padStart(2,'0')+'.'+String(cs%100).padStart(2,'0'); }   // round to hundredths first: 62.37 is stored as 62.3699…, and flooring showed .36
 
 // ─── AUDIO / TRACK ───────────────────────────────────
 function parseYouTubeId(url){
@@ -3207,6 +3208,20 @@ function edSeek(t){
   if(edYtPlayer&&edYtReady){ edYtPlayer.seekTo(t, true); edYtPlayer.playVideo(); }
   else if(edAudioEl){ edAudioEl.currentTime = t; edAudioEl.play(); }
   setTimeout(updateEdPlayBtn, 200);
+}
+// , / . nudge a cue. The card updates in place and the save waits for a pause, so holding
+// the key is smooth, one burst is one undo step, and the library isn't re-synced per press.
+let cueNudgeTimer = null;
+function nudgeCue(i, dt){
+  const song = currentSong(), sec = song && song.sections[i];
+  if(!sec) return;
+  if(sec.time == null){ showToast(sectionDisplay(song, i) + ' has no cue yet — tap one with T', 'error'); return; }
+  sec.time = Math.max(0, Math.round((sec.time + dt) * 100) / 100);
+  const inp = document.querySelector(`#chart-list .section-block[data-idx="${i}"] .lg-cue input`);
+  if(inp) inp.value = fmtCue(sec.time);
+  showToast(sectionDisplay(song, i) + ' cue ' + fmtCue(sec.time));
+  clearTimeout(cueNudgeTimer);
+  cueNudgeTimer = setTimeout(() => window.save(), 450);
 }
 // move the track by dt seconds without changing whether it's playing (arrow keys)
 let edNudgeTarget = null, edNudgeAt = 0;
@@ -3344,6 +3359,7 @@ window.editTapCue = function(){
   edCueIdx++;
   window.save();
   renderSyncPanel();
+  setSelectedSection(i);  // , and . nudge whatever was just tapped
   window.renderChart();   // refresh the cue pills on the sections
   showToast(sectionDisplay(song, i) + ' cued at ' + fmtCue(song.sections[i].time));
 }
@@ -4333,6 +4349,16 @@ document.addEventListener('keydown', e => {
   }
   if(fillsIdx != null) return;                                // the fills editor owns the keyboard while it's open
   if(document.getElementById('settings-overlay').classList.contains('open')) return;
+  // , / . nudge the selected section's cue 10ms earlier / later (Shift: 100ms). By key code, so Shift still reads as , / .
+  // match the physical key, and the character as a fallback for keyboards that don't report a code
+  const nudgeDir = (e.code === 'Comma' || e.key === ',' || e.key === '<') ? -1
+                 : (e.code === 'Period' || e.key === '.' || e.key === '>') ? 1 : 0;
+  if(!meta && !e.altKey && nudgeDir){
+    e.preventDefault();
+    if(selectedSectionIdx == null){ showToast('Select a section to nudge its cue', 'error'); return; }
+    nudgeCue(selectedSectionIdx, nudgeDir * (e.shiftKey ? 0.1 : 0.01));
+    return;
+  }
   if(!meta && !e.altKey && k === 't'){
     e.preventDefault();
     if(e.repeat) return;                                       // holding the key must not stamp a run of cues
