@@ -1254,6 +1254,8 @@ kbd{font-family:var(--mono)}
 #view-editor .sync-tap .i{position:relative;width:13px;height:13px}
 #view-editor .sync-tap-next{position:relative;flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;font-weight:500;opacity:1}
 .tap-count{position:relative;flex-shrink:0;letter-spacing:.04em;font-variant-numeric:tabular-nums;opacity:.75}
+.tap-key{position:relative;flex-shrink:0;display:grid;place-items:center;width:17px;height:17px;border:1px solid currentColor;font-family:var(--mono);font-size:9.5px;line-height:1;opacity:.6}
+@media (hover:none){ .tap-key{display:none} }
 /* how much of the song is cued, as a fill along the button's bottom edge */
 .tap-fill{position:absolute;left:0;bottom:0;height:3px;background:currentColor;opacity:.55;transition:width .25s}
 .tr-missing{display:inline-flex;align-items:center;gap:8px;min-width:0;max-width:260px;font-family:var(--mono);font-size:11px;letter-spacing:.04em;color:var(--muted)}
@@ -1363,7 +1365,7 @@ kbd{font-family:var(--mono)}
 .lg-chips > *{transition:opacity .15s}
 .lg-chips > :not(.on){opacity:.28}
 #view-editor .section-block:is(:hover,.selected) .lg-chips > *,.lg-chips:focus-within > *{opacity:1}
-.lg-color{position:relative;display:block;width:22px;height:22px;flex-shrink:0;border-radius:50%;background:var(--sec);border:1px solid rgba(255,255,255,.18);overflow:hidden;cursor:pointer}
+.lg-color{position:relative;display:block;width:22px;height:22px;flex-shrink:0;margin-left:6px;border-radius:50%;background:var(--sec);border:1px solid rgba(255,255,255,.18);overflow:hidden;cursor:pointer}
 .lg-color input{position:absolute;inset:-6px;width:calc(100% + 12px);height:calc(100% + 12px);padding:0;border:0;opacity:0;cursor:pointer}
 .lg-cue{display:inline-flex;align-items:center;height:24px;border:1px solid var(--blue);color:var(--blue)}
 .lg-cue button{width:22px;height:22px;display:grid;place-items:center;padding:0;background:transparent;border:0;color:inherit;cursor:pointer}
@@ -2864,7 +2866,7 @@ window.renderChart = function(){
           <div class="lg-chips">
             <button type="button" class="chip${sec.mod==='pre' ? ' on' : ''}" onclick="setMod(${i},'pre')" aria-pressed="${sec.mod==='pre'}">Pre</button>
             <button type="button" class="chip${sec.mod==='post' ? ' on' : ''}" onclick="setMod(${i},'post')" aria-pressed="${sec.mod==='post'}">Post</button>
-            <button type="button" class="chip${sec.repeats > 1 ? ' on' : ''}" onclick="cycleRepeats(${i})" title="How many times this section plays">×${sec.repeats}</button>
+            <button type="button" class="chip${sec.repeats > 1 ? ' on' : ''}" onmousedown="if(event.shiftKey)event.preventDefault()" onclick="cycleRepeats(${i}, event.shiftKey ? -1 : 1)" title="How many times this section plays — Shift-click to count down">×${sec.repeats}</button>
             ${cue}
             <label class="lg-color" title="Section colour"><input type="color" value="${ec}" aria-label="Section colour" onchange="setSecColor(${i},this.value)"></label>
             ${sec.color ? `<button type="button" class="circ sm" onclick="resetSecColor(${i})" title="Back to the default colour" aria-label="Reset colour">${ico('restart')}</button>` : ''}
@@ -3206,6 +3208,30 @@ function edSeek(t){
   else if(edAudioEl){ edAudioEl.currentTime = t; edAudioEl.play(); }
   setTimeout(updateEdPlayBtn, 200);
 }
+// move the track by dt seconds without changing whether it's playing (arrow keys)
+let edNudgeTarget = null, edNudgeAt = 0;
+function edNudge(dt){
+  const dur = edGetDur(), now = performance.now();
+  // YouTube keeps reporting the old position for a moment after a seek, so quick
+  // presses build on the last target instead of all restarting from the same spot
+  const recent = edNudgeTarget != null && now - edNudgeAt < 900;
+  const from = recent ? edNudgeTarget + (edPlaying() ? (now - edNudgeAt) / 1000 : 0) : edGetTime();
+  const t = Math.max(0, Math.min(dur || Infinity, from + dt));
+  edNudgeTarget = t; edNudgeAt = now;
+  if(edYtPlayer && edYtReady) edYtPlayer.seekTo(t, true);
+  else if(edAudioEl) edAudioEl.currentTime = t;
+  return t;
+}
+// Clicking the YouTube player puts keyboard focus inside its iframe, where the page can't hear
+// keys. Hand focus straight back so T and the arrow keys keep working; the click still lands.
+window.addEventListener('blur', () => {
+  setTimeout(() => {
+    const a = document.activeElement;
+    if(!a || a.tagName !== 'IFRAME' || !a.closest('#audio-bar-player')) return;
+    a.blur();
+    if(document.activeElement === a) document.body.focus({ preventScroll:true });
+  }, 0);
+});
 // where a section starts in the track: its own cue, or estimated from the nearest earlier cue + bar lengths
 function sectionTrackTime(song, i){
   if(song.sections[i].time != null) return song.sections[i].time;
@@ -3303,9 +3329,9 @@ function renderSyncPanel(){
   // play · clock · tap-to-cue (carrying the cue count and a progress fill) · everything else behind ⋯
   panel.innerHTML = `<div class="sync-row">
       <button class="circ sync-play" onclick="edPlayPause()" title="Play / pause track" aria-label="Play or pause the track">${ico('play')}</button>
-      <span class="sync-time">0:00 / 0:00</span>
-      <button class="sync-tap" onclick="editTapCue()"${done || !total ? ' disabled' : ''} title="${done ? 'Every section is cued' : 'Tap on the downbeat of ' + esc(nextName)}">
-        <span class="tap-fill" style="width:${pct}%"></span>${ico('tap')}<span class="sync-tap-next">${done ? 'All cued' : 'Tap · ' + esc(nextName)}</span><span class="tap-count">${cued}/${total}</span>
+      <span class="sync-time" title="← / → move the track 5 seconds (Shift: 1 second)">0:00 / 0:00</span>
+      <button class="sync-tap" onclick="editTapCue()"${done || !total ? ' disabled' : ''} title="${done ? 'Every section is cued' : 'Tap on the downbeat of ' + esc(nextName) + ' (T)'}">
+        <span class="tap-fill" style="width:${pct}%"></span>${ico('tap')}<span class="sync-tap-next">${done ? 'All cued' : 'Tap · ' + esc(nextName)}</span>${done ? '' : '<kbd class="tap-key">T</kbd>'}<span class="tap-count">${cued}/${total}</span>
       </button>
       ${more}
     </div>`;
@@ -3313,12 +3339,13 @@ function renderSyncPanel(){
 window.editTapCue = function(){
   const song = currentSong(); if(!edAvailable()) return;
   if(edCueIdx >= song.sections.length) return;
-  song.sections[edCueIdx].time = edGetTime();
+  const i = edCueIdx;
+  song.sections[i].time = edGetTime();
   edCueIdx++;
   window.save();
   renderSyncPanel();
   window.renderChart();   // refresh the cue pills on the sections
-  showToast('Cue set');
+  showToast(sectionDisplay(song, i) + ' cued at ' + fmtCue(song.sections[i].time));
 }
 window.editResetCueCursor = function(){ edCueIdx = 0; renderSyncPanel(); }
 window.clearAllCues = function(){
@@ -3826,7 +3853,12 @@ window.updateBars = (i,v) => {
 }
 window.updateNotes = (i,v) => { currentSong().sections[i].notes = v; window.save(); }
 window.removeSection = (i) => { currentSong().sections.splice(i,1); window.save(); window.renderChart(); }
-window.cycleRepeats = (i) => { currentSong().sections[i].repeats = (currentSong().sections[i].repeats % 8) + 1; window.save(); window.renderChart(); }
+// ×1 → ×8 and round again; dir -1 (Shift-click) steps back down
+window.cycleRepeats = (i, dir = 1) => {
+  const sec = currentSong().sections[i];
+  sec.repeats = ((sec.repeats - 1 + dir + 8) % 8) + 1;
+  window.save(); window.renderChart();
+}
 
 // ── section copy / cut / paste / duplicate ──
 let sectionClipboard = null;
@@ -4289,12 +4321,27 @@ document.addEventListener('keydown', e => {
   }
   if(!document.getElementById('view-editor').classList.contains('active')) return;
   if(document.getElementById('perf-overlay').classList.contains('active')) return;
-  if(e.target.closest('input, textarea, select')) return;     // don't hijack typing
+  if(e.target instanceof Element && e.target.closest('input, textarea, select')) return;     // don't hijack typing
   const meta = e.ctrlKey || e.metaKey, k = e.key.toLowerCase();
   if(meta && k === 'z' && !e.shiftKey){ e.preventDefault(); window.undoEdit(); return; }
   if(meta && (k === 'y' || (e.shiftKey && k === 'z'))){ e.preventDefault(); window.redoEdit(); return; }
+  // ← / → move the track 5s (Shift: 1s) — works in the fills editor too; without a track the arrows still scroll
+  if(!meta && !e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight') && edAvailable()){
+    e.preventDefault();
+    edNudge((e.key === 'ArrowLeft' ? -1 : 1) * (e.shiftKey ? 1 : 5));
+    return;
+  }
   if(fillsIdx != null) return;                                // the fills editor owns the keyboard while it's open
   if(document.getElementById('settings-overlay').classList.contains('open')) return;
+  if(!meta && !e.altKey && k === 't'){
+    e.preventDefault();
+    if(e.repeat) return;                                       // holding the key must not stamp a run of cues
+    const song = currentSong();
+    if(!edAvailable()){ showToast(song && song.audio ? 'Re-load the audio file first' : 'Add a track to tap cues', 'error'); return; }
+    if(edCueIdx >= song.sections.length){ showToast('Every section is cued'); return; }
+    window.editTapCue();
+    return;
+  }
   if(!meta && !e.altKey && e.key.length === 1){
     const t = TYPES.find(t => t.key === k);
     if(t){ e.preventDefault(); window.addSection(t.id); return; }
