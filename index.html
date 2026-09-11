@@ -1660,6 +1660,7 @@ let fillSnap = 1;              // drawing grid: 1 = 1/16, 2 = 1/8, 'beat'
 let fmRenderedIdx = null;      // section the overlay last drew, so a re-render keeps its scroll
 let fillsDownOnBackdrop = false;
 let fmReveal16 = null;         // a fill position the next redraw should scroll into view
+let lastLaneTap = null;        // the previous click in the fills lane, to tell a double-click apart
 
 // Audio / sync state
 let ytPlayer = null;         // YouTube IFrame player
@@ -2772,7 +2773,7 @@ function renderFillsModal(){
       <div class="fm-ruler" style="width:${W}px">${ruler}</div>
       <div class="fill-timeline" data-i="${i}" data-px="${PX}" data-spb="${spb}" data-total="${total16}" data-unit="${unit}" style="width:${W}px;${gridBg}">${measures}${blocks}<div class="ftl-playhead"></div></div>
     </div>
-    <p class="fm-hint">${touch ? 'Tap the lane for a beat, drag for a longer fill · drag the bar numbers to scroll' : 'Click the lane for a beat, drag for a longer fill · drag a fill to move it, its right edge to resize'}</p>
+    <p class="fm-hint">${touch ? 'Tap to move the playhead · double-tap for a fill, drag for a longer one · drag the bar numbers to scroll' : 'Click to move the playhead · double-click for a fill, drag for a longer one · drag a fill to move it, its right edge to resize'}</p>
     <div class="fm-list">${items || '<div class="fm-empty">No fills in this section yet</div>'}</div>
     <div class="fm-foot">
       <button type="button" class="rect quiet danger" onclick="clearFills()"${sec.fills.length ? '' : ' disabled'}>${ico('trash')}Clear all</button>
@@ -3014,7 +3015,7 @@ function updateEdPlayhead(){
   document.querySelectorAll('.ftl-playhead').forEach(p => p.style.display='none');
   document.querySelectorAll('.section-block.playing').forEach(b => b.classList.remove('playing'));
   const song = currentSong();
-  if(!song || !edAvailable() || !edPlaying()) return;
+  if(!song || !edAvailable()) return;          // shown while paused too, so a click in the fills lane is visible
   const t = edGetTime();
   const cued = song.sections.map((s,i)=>({s,i})).filter(o=>o.s.time!=null).sort((a,b)=>a.s.time-b.s.time);
   if(!cued.length) return;
@@ -3022,7 +3023,7 @@ function updateEdPlayhead(){
   for(const o of cued){ if(t >= o.s.time - 0.05) cur = o; else break; }
   if(!cur) return;
   const block = document.querySelectorAll('#chart-list .section-block')[cur.i];
-  if(block) block.classList.add('playing');
+  if(block && edPlaying()) block.classList.add('playing');
   if(fillsIdx !== cur.i) return;                       // the lane only exists inside the open fills editor
   const tl = document.querySelector('#fills-box .fill-timeline'), ph = tl && tl.querySelector('.ftl-playhead');
   if(!tl || !ph) return;
@@ -3044,7 +3045,8 @@ function updateEdPlayhead(){
   ph.style.left = (pos16 * PX) + 'px';
   ph.style.display = 'block';
   const wrap = tl.closest('.fm-wrap');
-  if(wrap){ const x = pos16*PX; if(x < wrap.scrollLeft+30 || x > wrap.scrollLeft+wrap.clientWidth-30) wrap.scrollLeft = Math.max(0, x - wrap.clientWidth/2); }
+  // follow the playhead only while playing — scrolling a paused lane would slide it out from under the cursor
+  if(wrap && edPlaying()){ const x = pos16*PX; if(x < wrap.scrollLeft+30 || x > wrap.scrollLeft+wrap.clientWidth-30) wrap.scrollLeft = Math.max(0, x - wrap.clientWidth/2); }
 }
 
 // ── cue tapping in the editor: play the track, tap on each section's downbeat ──
@@ -3605,6 +3607,31 @@ window.updateFillField = (i, fi, field, v) => {
   }
 }
 
+// A click in the fills lane moves the track to that spot, on the same clock the lane's playhead follows:
+// cued sections stretch to the next cue in "cue points" mode, everything else runs at BPM from its start.
+function fillLaneSeek(i, pos16){
+  const song = currentSong(), sec = song && song.sections[i];
+  if(!sec) return;
+  if(!edAvailable()){ showToast(song.audio ? 'Re-load the audio file first' : 'Add a track to move through it', 'error'); return; }
+  const total16 = Math.max(1, Math.round(sec.bars * sixteenthsPerBar(effTS(song, sec))));
+  let t;
+  if(sec.time != null && playheadMode() === 'cue'){
+    const next = song.sections.filter(s => s.time != null && s.time > sec.time).sort((a, b) => a.time - b.time)[0];
+    const end = next ? next.time : sec.time + barMsFor(song, sec) * sec.bars * sec.repeats / 1000;
+    t = sec.time + (pos16 / total16) * (end - sec.time);
+  } else {
+    const start = sectionTrackTime(song, i);
+    if(start == null){ showToast('Tap a cue first — T on the first downbeat', 'error'); return; }
+    t = start + pos16 * msPer16(song) / 1000;
+  }
+  edNudgeTarget = null;                     // a fresh position, not part of an arrow-key run
+  const wasPlaying = edPlaying();
+  if(edYtPlayer && edYtReady){
+    edYtPlayer.seekTo(Math.max(0, t), true);
+    if(!wasPlaying) edYtPlayer.pauseVideo();  // YouTube starts an unplayed video on a seek — a click should only move the playhead
+  }
+  else if(edAudioEl) edAudioEl.currentTime = Math.max(0, t);
+}
 // drag-to-draw fill timeline (pointer events → mouse + touch); snaps to 16th notes
 function attachFillTimeline(tl, blockEl){
   const i = +tl.dataset.i, PX = +tl.dataset.px, total = +tl.dataset.total;
@@ -3695,12 +3722,24 @@ function attachFillTimeline(tl, blockEl){
       const s2 = currentSong().sections[i];
       if(mode === 'create'){
         let a = +ghost.dataset.a, b = +ghost.dataset.b;
-        if(!moved){   // a tap → a beat-long fill (a grid cell, if the grid is coarser) in the cell that was tapped
+        ghost.remove();
+        if(!moved){
+          // Detected here rather than with dblclick: no redraw between the clicks, and a double-tap works on phones too
+          const now = performance.now();
+          const again = lastLaneTap && lastLaneTap.i === i && now - lastLaneTap.at < 380 && Math.abs(downRaw - lastLaneTap.pos) * PX < 14;   // compared in the lane, so a scroll between clicks can't misplace a fill
+          if(!again){                                   // one click: move the playhead here
+            lastLaneTap = { i, at:now, pos:downRaw };
+            fillLaneSeek(i, downRaw);
+            return;
+          }
+          lastLaneTap = null;                           // double click: a beat-long fill (a grid cell, if coarser) in that cell
           const len = Math.min(total, Math.max(unit, sixteenthsPerBeat(effTS(currentSong(), s2))));
           a = Math.max(0, Math.min(Math.floor(downRaw / unit) * unit, total - len)); b = a + len;
         }
         s2.fills.push({ start16: a, len16: Math.max(1, b - a), notes: '' });
-        ghost.remove();
+      } else if(mode === 'move' && !moved){             // clicking a fill without dragging it: just move the playhead
+        fillLaneSeek(i, downRaw);
+        return;
       } else if(mode === 'move' && ghost.dataset.ns !== undefined){
         s2.fills[fi].start16 = +ghost.dataset.ns;
       } else if(mode === 'resize' && ghost.dataset.nl !== undefined){
@@ -4061,6 +4100,8 @@ function renderShortcuts(){
     row('Paste below it', K(M, 'V')) +
     row('Delete it', IS_MAC ? K('⌘', '⌫') : K('Del')) +
     row('Count repeats down', K('⇧', '+') + '<span class="k-click">click ×N</span>') +
+    row('Add a fill in the fills lane', '<span class="k-click">double-click</span>') +
+    row('Move the playhead in the fills lane', '<span class="k-click">click</span>') +
     row('Close the fills editor or a menu', K('Esc')));
   const add = group('Add a section', '<div class="k-pal">' +
     TYPES.map(t => `<span style="--sec:${t.color}"><kbd>${t.key.toUpperCase()}</kbd><i></i>${t.label}</span>`).join('') + '</div>');
