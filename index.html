@@ -1357,6 +1357,37 @@ kbd{font-family:var(--mono)}
 @media (prefers-reduced-motion: reduce){
   #perf-overlay.active,.tp-row.beat .tp-blk{animation:none}
 }
+
+/* ── keyboard shortcuts sheet (/) ── */
+#keys-overlay{position:fixed;inset:0;z-index:1250;display:none;align-items:flex-start;justify-content:center;padding:8vh 16px 16px;overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;background:rgba(6,5,4,.76);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+#keys-overlay.open{display:flex;animation:fmFade .16s ease}
+#keys-box{position:relative;width:min(840px,100%);background:var(--bg2);border:1px solid var(--border2);box-shadow:0 30px 80px rgba(0,0,0,.6);outline:none;animation:fmRise .22s cubic-bezier(.2,.7,.2,1)}
+.k-head{display:flex;align-items:center;gap:12px;padding:18px 18px 14px;border-bottom:1px solid var(--border)}
+.k-titles{flex:1;min-width:0}
+.k-title{font-family:var(--display);font-weight:900;font-stretch:72%;font-size:26px;line-height:1;text-transform:uppercase}
+.k-sub{margin-top:7px;font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted2)}
+.k-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:6px 36px;padding:14px 18px 22px}
+.k-group{padding:8px 0 6px}
+.k-group h3{margin:0 0 6px;font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+.k-row{display:flex;align-items:center;gap:14px;min-height:34px;border-bottom:1px solid var(--border)}
+.k-row:last-child{border-bottom:0}
+.k-desc{flex:1;min-width:0;font-family:var(--font);font-size:13.5px;color:var(--text)}
+.k-keys{display:flex;align-items:center;gap:4px;flex-shrink:0}
+#keys-box kbd{display:inline-grid;place-items:center;min-width:24px;height:24px;padding:0 6px;background:var(--bg3);border:1px solid var(--border2);border-bottom-width:2px;font-family:var(--mono);font-size:11.5px;font-weight:500;line-height:1;color:var(--text)}
+.k-sub kbd{min-width:18px!important;height:18px!important;padding:0 4px!important;margin:0 2px;font-size:10px!important;vertical-align:1px}
+.k-plus,.k-click{font-family:var(--mono);font-size:11px;color:var(--muted2)}
+.k-click{margin-left:4px;letter-spacing:.04em}
+.k-pal{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 12px;padding-top:4px}
+.k-pal span{display:flex;align-items:center;gap:8px;min-width:0;font-family:var(--display);font-weight:650;font-stretch:80%;font-size:13px;letter-spacing:.03em;text-transform:uppercase;color:var(--text);white-space:nowrap}
+.k-pal i{width:8px;height:8px;flex-shrink:0;border-radius:50%;background:var(--sec)}
+@media (max-width: 560px){
+  #keys-overlay{padding:0;align-items:stretch}
+  #keys-box{width:100%;min-height:100%;border:0;box-shadow:none}
+  .k-head{position:sticky;top:0;z-index:2;background:var(--bg2);padding-top:calc(14px + env(safe-area-inset-top))}
+  .k-grid{grid-template-columns:1fr;padding:8px 14px 28px}
+  .k-pal{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (prefers-reduced-motion: reduce){ #keys-overlay.open,#keys-box{animation:none} }
 </style>
 </head>
 <body>
@@ -1403,6 +1434,7 @@ kbd{font-family:var(--mono)}
   <symbol id="i-tap" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><circle cx="8" cy="8" r="1.7" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-check" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7"/></symbol>
   <symbol id="i-grip" viewBox="0 0 16 16"><g fill="currentColor" stroke="none"><circle cx="6" cy="4" r="1.1"/><circle cx="10" cy="4" r="1.1"/><circle cx="6" cy="8" r="1.1"/><circle cx="10" cy="8" r="1.1"/><circle cx="6" cy="12" r="1.1"/><circle cx="10" cy="12" r="1.1"/></g></symbol>
+  <symbol id="i-keyboard" viewBox="0 0 16 16"><path d="M1.5 4h13v8.5h-13z"/><path d="M4 6.8h.01M6.5 6.8h.01M9.5 6.8h.01M12 6.8h.01M4.5 9.7h7"/></symbol>
 </svg>
 
 <div id="view-auth" class="view">
@@ -1576,6 +1608,9 @@ kbd{font-family:var(--mono)}
 </div>
 <div id="fills-overlay" aria-hidden="true">
   <div id="fills-box" role="dialog" aria-modal="true" aria-labelledby="fm-title" tabindex="-1"></div>
+</div>
+<div id="keys-overlay" aria-hidden="true">
+  <div id="keys-box" role="dialog" aria-modal="true" aria-labelledby="keys-title" tabindex="-1"></div>
 </div>
 <div id="ctx-menu" role="menu"></div>
 
@@ -3476,6 +3511,7 @@ function perfMenuItems(rowIdx){
     {id:'nx', icon:'down', label:'Next section', key:'↓', run:()=>perfStep(1)},
     '---',
     {id:'ci', icon:'metronome', label:'Count-in: ' + countInMode(), run:()=>window.cycleCountIn()},
+    {id:'keys', icon:'keyboard', label:'Keyboard shortcuts', key:'/', run:()=>window.openShortcuts()},
     '---',
     {id:'ex', icon:'exit', label:'Exit', key:'Esc', danger:true, run:()=>window.stopPerf()},
   );
@@ -3934,6 +3970,8 @@ document.addEventListener('contextmenu', e => {
       '---',
       {id:'share', icon:'link', label:'Copy share link', run:()=>window.shareSong()},
       {id:'perform', icon:'play', label:'Perform', disabled:!nSec, run:()=>window.startPerf()},
+      '---',
+      {id:'keys', icon:'keyboard', label:'Keyboard shortcuts', key:'/', run:()=>window.openShortcuts()},
     ]); return;
   }
   hideCtx();
@@ -3994,6 +4032,81 @@ document.addEventListener('keydown', e => {
   else if(meta && k === 'd'){ e.preventDefault(); window.duplicateSection(i); }
   else if(e.key === 'Delete' || (meta && e.key === 'Backspace')){ e.preventDefault(); window.removeSection(i); selectedSectionIdx = null; }
 });
+
+// ─── KEYBOARD SHORTCUTS SHEET (/) ────────────────────
+let shortcutsReturnFocus = null;
+function renderShortcuts(){
+  const K = (...keys) => keys.map(x => x === '+' ? '<span class="k-plus">+</span>' : `<kbd>${esc(x)}</kbd>`).join('');
+  const M = IS_MAC ? '⌘' : 'Ctrl';
+  const row = (desc, keys) => `<div class="k-row"><span class="k-desc">${desc}</span><span class="k-keys">${keys}</span></div>`;
+  const group = (title, body) => `<section class="k-group"><h3>${title}</h3>${body}</section>`;
+  const perform = group('Performing',
+    row('Play or pause', K('Space')) +
+    row('Back or forward 5 seconds', K('←', '→')) +
+    row('Back or forward 1 second', K('⇧', '+', '←', '→')) +
+    row('Previous or next section', K('↑', '↓')) +
+    row('Leave performance', K('Esc')));
+  const track = group('Track and cues',
+    row('Tap the next cue', K('T')) +
+    row('Nudge the selected cue 10 ms', K(',', '.')) +
+    row('Nudge it 100 ms', K('⇧', '+', ',', '.')) +
+    row('Move the track 5 seconds', K('←', '→')) +
+    row('Move it 1 second', K('⇧', '+', '←', '→')));
+  const editing = group('Editing',
+    row('Undo', K(M, 'Z')) +
+    row('Redo', IS_MAC ? K('⇧', '⌘', 'Z') : K('Ctrl', 'Y')) +
+    row('Duplicate the selected section', K(M, 'D')) +
+    row('Copy it', K(M, 'C')) +
+    row('Cut it', K(M, 'X')) +
+    row('Paste below it', K(M, 'V')) +
+    row('Delete it', IS_MAC ? K('⌘', '⌫') : K('Del')) +
+    row('Count repeats down', K('⇧', '+') + '<span class="k-click">click ×N</span>') +
+    row('Close the fills editor or a menu', K('Esc')));
+  const add = group('Add a section', '<div class="k-pal">' +
+    TYPES.map(t => `<span style="--sec:${t.color}"><kbd>${t.key.toUpperCase()}</kbd><i></i>${t.label}</span>`).join('') + '</div>');
+  const performing = document.getElementById('perf-overlay').classList.contains('active');
+  return `<div class="k-head">
+      <div class="k-titles"><div class="k-title" id="keys-title">Keyboard shortcuts</div><div class="k-sub">Press <kbd>/</kbd> to open or close</div></div>
+      <button type="button" class="circ" onclick="closeShortcuts()" title="Close (Esc)" aria-label="Close shortcuts">${ico('x')}</button>
+    </div>
+    <div class="k-grid">${performing ? perform + track + editing + add : track + editing + add + perform}</div>`;
+}
+window.openShortcuts = function(){
+  hideCtx();
+  const ov = document.getElementById('keys-overlay');
+  shortcutsReturnFocus = document.activeElement;
+  document.getElementById('keys-box').innerHTML = renderShortcuts();
+  ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false');
+  document.getElementById('keys-box').focus({ preventScroll:true });
+};
+window.closeShortcuts = function(){
+  const ov = document.getElementById('keys-overlay');
+  if(!ov.classList.contains('open')) return;
+  ov.classList.remove('open'); ov.setAttribute('aria-hidden', 'true');
+  if(shortcutsReturnFocus && shortcutsReturnFocus.focus) shortcutsReturnFocus.focus({ preventScroll:true });
+  shortcutsReturnFocus = null;
+};
+{
+  const ov = document.getElementById('keys-overlay');
+  let downOnBackdrop = false;
+  ov.addEventListener('pointerdown', e => { downOnBackdrop = e.target === ov; });
+  ov.addEventListener('click', e => { if(e.target === ov && downOnBackdrop) window.closeShortcuts(); });
+  // capture phase, so the sheet sees keys before the editor and performance handlers do
+  window.addEventListener('keydown', e => {
+    const slash = (e.key === '/' || e.key === '?' || e.code === 'Slash') && !e.ctrlKey && !e.metaKey && !e.altKey;
+    if(ov.classList.contains('open')){
+      if(e.key === 'Tab') return;
+      e.preventDefault(); e.stopImmediatePropagation();          // it's modal: nothing behind it reacts (Esc mustn't also leave performance)
+      if(e.key === 'Escape' || slash) window.closeShortcuts();
+      return;
+    }
+    if(!slash) return;
+    if(e.target instanceof Element && e.target.closest('input, textarea, select, [contenteditable]')) return;
+    if(document.getElementById('view-auth').classList.contains('active')) return;
+    e.preventDefault(); e.stopImmediatePropagation();            // also keeps Firefox's quick-find out of the way
+    window.openShortcuts();
+  }, true);
+}
 
 // All functions are now defined — if the page was opened via a share link, render the read-only viewer
 checkSharedLink();
