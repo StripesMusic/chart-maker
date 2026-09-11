@@ -2766,7 +2766,7 @@ function renderFillsModal(){
       <div class="fm-field"><span class="ed-lbl">Time</span><span class="fm-ts${custom ? ' custom' : ''}"><input type="number" inputmode="numeric" min="1" max="15" value="${ets.n}" aria-label="Beats per bar" onchange="updateSecTS(${i},'n',this.value)"><span>/</span><select aria-label="Note value" onchange="updateSecTS(${i},'d',this.value)"><option value="4"${ets.d==4?' selected':''}>4</option><option value="8"${ets.d==8?' selected':''}>8</option></select></span></div>
       <span class="fm-spacer"></span>
       <div class="fm-seg" role="group" aria-label="Snap to"><span class="ed-lbl">Snap</span>${snapBtn(1, '1/16')}${snapBtn(2, '1/8')}${snapBtn('beat', 'Beat')}</div>
-      ${audio ? `<button type="button" class="circ fm-play" onclick="edPlayPause()" title="Play / pause the track" aria-label="Play or pause the track">${ico('play')}</button>` : ''}
+      ${audio ? `<button type="button" class="circ fm-play" onclick="edPlayPause()" title="Play / pause (Space)" aria-label="Play or pause the track">${ico('play')}</button>` : ''}
     </div>
     <div class="fm-wrap">
       <div class="fm-ruler" style="width:${W}px">${ruler}</div>
@@ -3070,7 +3070,7 @@ function renderSyncPanel(){
   const pct = total ? Math.round(cued / total * 100) : 0;
   // play · clock · tap-to-cue (carrying the cue count and a progress fill) · everything else behind ⋯
   panel.innerHTML = `<div class="sync-row">
-      <button class="circ sync-play" onclick="edPlayPause()" title="Play / pause track" aria-label="Play or pause the track">${ico('play')}</button>
+      <button class="circ sync-play" onclick="edPlayPause()" title="Play / pause (Space)" aria-label="Play or pause the track">${ico('play')}</button>
       <span class="sync-time" title="← / → move the track 5 seconds (Shift: 1 second)">0:00 / 0:00</span>
       <button class="sync-tap" onclick="editTapCue()"${done || !total ? ' disabled' : ''} title="${done ? 'Every section is cued' : 'Tap on the downbeat of ' + esc(nextName) + ' (T)'}">
         <span class="tap-fill" style="width:${pct}%"></span>${ico('tap')}<span class="sync-tap-next">${done ? 'All cued' : 'Tap · ' + esc(nextName)}</span>${done ? '' : '<kbd class="tap-key">T</kbd>'}<span class="tap-count">${cued}/${total}</span>
@@ -3790,8 +3790,7 @@ document.addEventListener('keydown', e => {
   if(!document.getElementById('perf-overlay').classList.contains('active')) return;
   if(e.target instanceof Element && e.target.closest('input, textarea, select')) return;
   if(e.ctrlKey || e.metaKey || e.altKey) return;
-  if(e.key === ' ' || e.code === 'Space'){ e.preventDefault(); if(!e.repeat) window.toggleAudioPlay(); }
-  else if(e.key === 'ArrowLeft' || e.key === 'ArrowRight'){ e.preventDefault(); perfNudge((e.key === 'ArrowLeft' ? -1 : 1) * (e.shiftKey ? 1 : 5)); }
+  if(e.key === 'ArrowLeft' || e.key === 'ArrowRight'){ e.preventDefault(); perfNudge((e.key === 'ArrowLeft' ? -1 : 1) * (e.shiftKey ? 1 : 5)); }
   else if(e.key === 'ArrowUp'){ e.preventDefault(); if(!e.repeat) perfStep(-1); }
   else if(e.key === 'ArrowDown'){ e.preventDefault(); if(!e.repeat) perfStep(1); }
   else if(e.key === 'Escape'){ hideCtx(); window.stopPerf(); }
@@ -4047,6 +4046,7 @@ function renderShortcuts(){
     row('Previous or next section', K('↑', '↓')) +
     row('Leave performance', K('Esc')));
   const track = group('Track and cues',
+    row('Play or pause the track', K('Space')) +
     row('Tap the next cue', K('T')) +
     row('Nudge the selected cue 10 ms', K(',', '.')) +
     row('Nudge it 100 ms', K('⇧', '+', ',', '.')) +
@@ -4091,6 +4091,24 @@ window.closeShortcuts = function(){
   let downOnBackdrop = false;
   ov.addEventListener('pointerdown', e => { downOnBackdrop = e.target === ov; });
   ov.addEventListener('click', e => { if(e.target === ov && downOnBackdrop) window.closeShortcuts(); });
+  // Space plays / pauses the track from anywhere it's loaded — the editor, the fills editor, settings,
+  // an open menu, this sheet, performing. Registered first so nothing in front of it swallows the key.
+  let spaceHandled = false;
+  window.addEventListener('keydown', e => {
+    if(!(e.key === ' ' || e.code === 'Space') || e.ctrlKey || e.metaKey || e.altKey) return;
+    if(e.target instanceof Element && e.target.closest('input, textarea, select, [contenteditable]')) return;   // typing a space
+    const performing = document.getElementById('perf-overlay').classList.contains('active');
+    const editing = document.getElementById('view-editor').classList.contains('active');
+    if(!(performing ? audioAvailable() : editing && edAvailable())) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    spaceHandled = true;
+    if(e.repeat) return;                                         // holding it mustn't flicker play / pause
+    if(performing) window.toggleAudioPlay(); else window.edPlayPause();
+  }, true);
+  // a focused button would otherwise also "click" when Space comes back up
+  window.addEventListener('keyup', e => {
+    if((e.key === ' ' || e.code === 'Space') && spaceHandled){ e.preventDefault(); e.stopImmediatePropagation(); spaceHandled = false; }
+  }, true);
   // capture phase, so the sheet sees keys before the editor and performance handlers do
   window.addEventListener('keydown', e => {
     const slash = (e.key === '/' || e.key === '?' || e.code === 'Slash') && !e.ctrlKey && !e.metaKey && !e.altKey;
