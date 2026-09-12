@@ -1077,7 +1077,7 @@ kbd{font-family:var(--mono)}
 .fm-seg .ed-lbl{margin-right:4px}
 .fm-seg .chip{height:30px;padding:0 10px}
 .fm-wrap{margin:16px 16px 0;overflow-x:auto;overflow-y:hidden;background:var(--bg);border:1px solid var(--border);overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
-.fm-ruler{position:relative;height:26px;border-bottom:1px solid var(--border);touch-action:pan-x;user-select:none}
+.fm-ruler{position:relative;height:26px;border-bottom:1px solid var(--border);touch-action:pan-x;user-select:none;cursor:pointer}
 .fm-ruler span{position:absolute;top:0;bottom:0;padding:8px 0 0 6px;border-left:1px solid var(--border2);font-family:var(--mono);font-size:10px;line-height:1;color:var(--muted2);font-variant-numeric:tabular-nums}
 .fm-ruler span:first-child{border-left-color:transparent}
 .fm-ruler span.odd{color:var(--accent)}
@@ -1093,9 +1093,9 @@ kbd{font-family:var(--mono)}
 #fills-box .ftl-fill-resize::after{content:'';position:absolute;left:4px;top:13px;bottom:13px;width:4px;border-left:1px solid rgba(0,0,0,.4);border-right:1px solid rgba(0,0,0,.4)}
 #fills-box .ftl-ghost{opacity:.5}
 #fills-box .ftl-beat-n{bottom:5px;font-family:var(--mono)}
-.fm-hint{margin:0;padding:9px 16px 0;font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--muted2)}
 .fm-list{display:flex;flex-direction:column;gap:4px;padding:14px 16px 4px}
-.fm-item{display:flex;align-items:center;gap:12px;min-height:46px;padding:0 8px 0 4px;background:var(--bg3)}
+.fm-item{display:flex;align-items:center;gap:12px;min-height:46px;padding:0 8px 0 4px;background:var(--bg3);cursor:pointer}
+.fm-item:hover{background:var(--bg4)}
 .fm-item.dragging{opacity:.4}
 .fm-item.fdrag-over{box-shadow:0 -2px 0 var(--accent)}
 .fm-grip{width:24px;align-self:stretch;display:grid;place-items:center;color:var(--muted2);cursor:grab}
@@ -1235,7 +1235,6 @@ kbd{font-family:var(--mono)}
   .fm-tools{gap:8px 10px;padding:10px 12px}
   .fm-seg{flex:1 1 100%}
   .fm-wrap{margin:12px 12px 0}
-  .fm-hint{padding:8px 12px 0}
   .fm-list{padding:12px 12px 4px}
   .fm-item{flex-wrap:wrap;gap:6px 10px;padding:8px 6px 8px 2px}
   #fills-box .fill-note-input{flex:1 1 100%;order:5;padding-left:6px}
@@ -2773,7 +2772,6 @@ function renderFillsModal(){
       <div class="fm-ruler" style="width:${W}px">${ruler}</div>
       <div class="fill-timeline" data-i="${i}" data-px="${PX}" data-spb="${spb}" data-total="${total16}" data-unit="${unit}" style="width:${W}px;${gridBg}">${measures}${blocks}<div class="ftl-playhead"></div></div>
     </div>
-    <p class="fm-hint">${touch ? 'Tap to move the playhead · double-tap for a fill, drag for a longer one · drag the bar numbers to scroll' : 'Click to move the playhead · double-click for a fill, drag for a longer one · drag a fill to move it, its right edge to resize'}</p>
     <div class="fm-list">${items || '<div class="fm-empty">No fills in this section yet</div>'}</div>
     <div class="fm-foot">
       <button type="button" class="rect quiet danger" onclick="clearFills()"${sec.fills.length ? '' : ' disabled'}>${ico('trash')}Clear all</button>
@@ -2787,11 +2785,18 @@ function renderFillsModal(){
   const reveal = fmReveal16 != null ? fmReveal16
                : (!sameSection && sec.fills.length ? Math.min(...sec.fills.map(f => f.start16)) : null);
   fmReveal16 = null;
-  if(reveal != null){
-    const x = reveal * PX;
+  const revealIn16 = pos16 => {
+    const x = pos16 * PX;
     if(x < wrap.scrollLeft + 24 || x > wrap.scrollLeft + wrap.clientWidth - 80) wrap.scrollLeft = Math.max(0, x - wrap.clientWidth / 2);
-  }
+  };
+  if(reveal != null) revealIn16(reveal);
   attachFillTimeline(box.querySelector('.fill-timeline'), null);
+  // click the bar numbers to move the playhead there, same as clicking the lane below them
+  const rulerEl = box.querySelector('.fm-ruler');
+  rulerEl.addEventListener('click', ev => {
+    const rect = rulerEl.getBoundingClientRect();
+    fillLaneSeek(i, Math.max(0, Math.min(total16, (ev.clientX - rect.left) / PX)));
+  });
   // drag a ⠿ grip to reorder the fill notes
   let dragFrom = null;
   box.querySelectorAll('.fm-item').forEach(item => {
@@ -2801,6 +2806,13 @@ function renderFillsModal(){
     item.addEventListener('dragover',  ev => { ev.preventDefault(); item.classList.add('fdrag-over'); });
     item.addEventListener('dragleave', () => item.classList.remove('fdrag-over'));
     item.addEventListener('drop',      ev => { ev.preventDefault(); window.reorderFills(i, dragFrom, +item.dataset.pos); });
+    // clicking the row itself jumps the track to where that fill starts
+    item.addEventListener('click', ev => {
+      if(ev.target.closest('input, button, .fm-grip')) return;
+      const f = order[+item.dataset.pos].f;
+      revealIn16(f.start16);
+      fillLaneSeek(i, f.start16);
+    });
   });
 }
 // close on a click that both starts and ends on the dimmed backdrop — never on a drag released outside the box
