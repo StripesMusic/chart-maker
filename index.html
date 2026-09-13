@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0c0b09">
+<!-- Add to Home Screen on a phone opens the chart full screen, with no browser chrome -->
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Drum Charts">
 <title>Drum Chart Pro</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%F0%9F%A5%81</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -484,6 +490,8 @@ body{background:var(--bg);color:var(--text);height:100vh;height:100dvh;overflow:
   font-family:var(--mono); cursor:grab; touch-action:none; user-select:none; z-index:4;
 }
 .ftl-odd-ts:hover{ box-shadow:0 0 0 2px rgba(255,140,43,.35); }
+.ftl-odd-ts.nocount{ color:var(--accent); background:transparent; box-shadow:inset 0 0 0 1px var(--accent); }
+.ftl-measure.ftl-nocount{ background:repeating-linear-gradient(135deg,rgba(255,140,43,.10) 0 6px,transparent 6px 12px); }
 .ftl-odd-ts.dragging{ cursor:grabbing; box-shadow:0 0 0 2px var(--accent); }
 .ftl-measure.ftl-odd-target{ box-shadow:inset 0 0 0 2px var(--accent); }
 .ftl-beat-n{
@@ -1081,6 +1089,7 @@ kbd{font-family:var(--mono)}
 .fm-ruler span{position:absolute;top:0;bottom:0;padding:8px 0 0 6px;border-left:1px solid var(--border2);font-family:var(--mono);font-size:10px;line-height:1;color:var(--muted2);font-variant-numeric:tabular-nums}
 .fm-ruler span:first-child{border-left-color:transparent}
 .fm-ruler span.odd{color:var(--accent)}
+.fm-ruler span.nocount{color:var(--accent);opacity:.55}
 #fills-box .fill-timeline{height:92px;border:0;border-radius:0;background-color:var(--bg);cursor:crosshair}
 #fills-box .ftl-measure{border-left:1px solid var(--border2)}
 #fills-box .ftl-measure:first-child{border-left:0}
@@ -1234,6 +1243,7 @@ kbd{font-family:var(--mono)}
   .fm-title{font-size:22px}
   .fm-tools{gap:8px 10px;padding:10px 12px}
   .fm-seg{flex:1 1 100%}
+  .fm-seg .chip{height:34px}
   .fm-wrap{margin:12px 12px 0}
   .fm-list{padding:12px 12px 4px}
   .fm-item{flex-wrap:wrap;gap:6px 10px;padding:8px 6px 8px 2px}
@@ -1263,9 +1273,10 @@ kbd{font-family:var(--mono)}
 
 .tp-row{--blk:84px;position:relative;display:flex;align-items:stretch;min-height:66px;background:var(--bg2);cursor:pointer;transition:opacity .3s,background .2s}
 .tp-row:hover{background:#171513}
-.tp-blk{width:var(--blk);flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;background:var(--sec);color:var(--on-sec)}
+.tp-blk{width:auto;min-width:var(--blk);flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;background:var(--sec);color:var(--on-sec)}
 .tp-num{font-family:var(--display);font-weight:900;font-stretch:64%;font-size:30px;line-height:.82;letter-spacing:-.5px;font-variant-numeric:lining-nums tabular-nums}
 .tp-unit{margin-top:5px;padding-left:.2em;font-family:var(--mono);font-size:8.5px;font-weight:700;line-height:1;letter-spacing:.2em;text-transform:uppercase;opacity:.72}
+.tp-unit:empty{display:none}
 .tp-beats{display:none;gap:clamp(5px,.7vw,9px);margin-top:clamp(9px,1.4vw,16px)}
 .tp-beats i{display:block;width:clamp(10px,1.3vw,16px);height:clamp(10px,1.3vw,16px);border-radius:50%;border:2px solid currentColor;opacity:.42}
 .tp-beats i.on{background:currentColor;opacity:1}
@@ -1283,10 +1294,11 @@ kbd{font-family:var(--mono)}
 .tp-row.done .tp-unit,.tp-row.done .tp-meta{display:none}
 .tp-row.done .tp-name{font-size:16px}
 
-.tp-row.now{--blk:clamp(104px,14vw,176px);cursor:default;background:var(--bg3);outline:2px solid var(--accent);outline-offset:-2px}
-.tp-row.now .tp-blk{padding:14px 6px}
-.tp-row.now .tp-num{font-size:clamp(58px,9vw,128px)}
-.tp-row.now .tp-unit{margin-top:clamp(6px,1vw,12px);font-size:clamp(9px,1.1vw,12px)}
+.tp-row.now{--blk:clamp(130px,17vw,240px);cursor:default;background:var(--bg3);outline:2px solid var(--accent);outline-offset:-2px}
+.tp-row.now .tp-blk{padding:14px 10px}
+.tp-row.now .tp-num{font-size:clamp(76px,11.5vw,176px)}
+/* the bar count is the figure you read while playing, so "OF 24" is set as big type too */
+.tp-row.now .tp-unit{margin-top:clamp(4px,.8vw,12px);padding-left:0;font-family:var(--display);font-weight:900;font-stretch:64%;font-size:clamp(26px,4vw,60px);letter-spacing:.005em;line-height:1;opacity:.62}
 .tp-row.now .tp-beats{display:flex}
 .tp-row.now .tp-body{gap:clamp(8px,1.2vw,14px);padding:clamp(12px,2vw,26px) clamp(14px,2.4vw,32px)}
 .tp-row.now .tp-name{font-size:clamp(34px,6vw,88px);line-height:.9;white-space:normal}
@@ -1297,9 +1309,10 @@ kbd{font-family:var(--mono)}
 .tp-row.now .tp-fills:empty{display:none}
 .tp-row.now .tp-prog{display:block;position:absolute;left:var(--blk);right:0;bottom:0;height:3px;background:var(--bg4)}
 .tp-prog i{display:block;width:0;height:100%;background:var(--sec)}
-.tp-fill{display:inline-flex;align-items:center;gap:8px;padding:5px 9px;border:1px solid transparent;font-family:var(--mono);font-size:clamp(12px,1.3vw,16px);letter-spacing:.02em;color:var(--accent);transition:opacity .2s}
+.tp-fill{display:inline-flex;align-items:center;gap:8px;padding:5px 9px;background:none;border:1px solid transparent;border-radius:0;font-family:var(--mono);font-size:clamp(13px,1.45vw,18px);letter-spacing:.02em;text-align:left;color:var(--accent);cursor:pointer;transition:opacity .2s,border-color .15s}
+.tp-fill:hover{border-color:rgba(255,140,43,.5)}
 .tp-fill.past{opacity:.38}
-.tp-cnt{display:none;font-weight:700}
+.tp-cnt{display:none;font-weight:700;white-space:nowrap}
 .tp-fill.soon{border-color:var(--accent);opacity:1}
 .tp-fill.hit{background:var(--accent);border-color:var(--accent);color:#160f06;opacity:1}
 .tp-fill.soon .tp-cnt,.tp-fill.hit .tp-cnt{display:inline}
@@ -1333,12 +1346,29 @@ kbd{font-family:var(--mono)}
   #tp-head{gap:10px;padding:8px 12px;padding-top:calc(8px + env(safe-area-inset-top))}
   #tp-song{font-size:18px}
   #tp-rows{padding:8px 8px 55vh}
-  .tp-row{--blk:62px;min-height:58px}
-  .tp-num{font-size:24px}
-  .tp-name{font-size:19px}
+  .tp-row{--blk:68px;min-height:60px}
+  .tp-num{font-size:26px}
+  .tp-name{font-size:21px}
+  .tp-meta{font-size:11.5px}
   .tp-body{padding:8px 12px}
   #tp-foot{gap:10px;padding:8px 12px;padding-bottom:calc(8px + env(safe-area-inset-bottom))}
   #tp-video,#tp-video iframe{width:112px;height:63px}
+  /* On a phone the playing section owns the screen: the colour band and its bar count on top,
+     then the name, the note and the fills, all sized to be read from behind a kit. */
+  .tp-row.now{flex-direction:column;min-height:calc(100vh - 196px);min-height:calc(100dvh - 196px)}
+  .tp-row.now .tp-blk{width:auto;min-width:0;padding:clamp(10px,3vw,20px) 12px}
+  .tp-row.now .tp-num{font-size:clamp(96px,28vw,220px)}
+  .tp-row.now .tp-unit{margin-top:clamp(2px,1vw,8px);font-size:clamp(34px,10vw,76px)}
+  .tp-row.now .tp-beats{gap:clamp(8px,2.6vw,15px);margin-top:clamp(10px,3vw,18px)}
+  .tp-row.now .tp-beats i{width:clamp(15px,4.4vw,24px);height:clamp(15px,4.4vw,24px);border-width:3px}
+  .tp-row.now .tp-body{flex:1;justify-content:center;gap:clamp(10px,3.2vw,20px);padding:clamp(16px,4.6vw,26px) clamp(14px,4vw,22px)}
+  .tp-row.now .tp-name{font-size:clamp(42px,13vw,86px);line-height:.92}
+  .tp-row.now .tp-notes{max-width:none;font-size:clamp(22px,6.2vw,38px);line-height:1.25}
+  .tp-row.now .tp-fills{align-self:stretch;gap:8px}
+  .tp-row.now .tp-fill{font-size:clamp(16px,4.4vw,24px);padding:10px 12px;border-color:rgba(255,140,43,.35)}
+  .tp-row.now .tp-prog{left:0;height:5px}
+  .tp-row.incoming .tp-num{font-size:clamp(54px,16vw,96px)}
+  .tp-row.incoming .tp-name{font-size:clamp(27px,7.6vw,42px)}
 }
 @media (max-width: 560px){
   #perform-btn .lbl-long{display:none}
@@ -1349,9 +1379,16 @@ kbd{font-family:var(--mono)}
   #tp-head{padding-top:6px;padding-bottom:6px}
   #tp-foot{padding-top:6px;padding-bottom:6px}
   #tp-video,#tp-video iframe{width:96px;height:54px}
+  .tp-row.now{flex-direction:row;min-height:0}
+  .tp-row.now .tp-blk{width:auto;min-width:var(--blk);padding:10px 8px}
   .tp-row.now .tp-num{font-size:clamp(46px,15vh,96px)}
+  .tp-row.now .tp-unit{font-size:clamp(18px,5.5vh,34px)}
+  .tp-row.now .tp-beats i{width:clamp(10px,1.3vw,16px);height:clamp(10px,1.3vw,16px);border-width:2px}
+  .tp-row.now .tp-body{justify-content:center;gap:7px;padding:10px 14px}
   .tp-row.now .tp-name{font-size:clamp(28px,11vh,60px)}
   .tp-row.now .tp-notes{font-size:15px}
+  .tp-row.now .tp-fill{font-size:13px;padding:5px 9px}
+  .tp-row.now .tp-prog{left:var(--blk)}
 }
 @media (prefers-reduced-motion: reduce){
   #perf-overlay.active,.tp-row.beat .tp-blk{animation:none}
@@ -1660,6 +1697,10 @@ let fmRenderedIdx = null;      // section the overlay last drew, so a re-render 
 let fillsDownOnBackdrop = false;
 let fmReveal16 = null;         // a fill position the next redraw should scroll into view
 let lastLaneTap = null;        // the previous click in the fills lane, to tell a double-click apart
+let fillZoom = 1;              // lane zoom: 1 = the default width, down to "whole section visible"
+let fmZoomMin = 1, fmPX = 14;  // what the last redraw worked out: the zoom-out floor and px per 16th
+let fmZoomKeep = null;         // {pos16, offset} — the spot to hold still under the cursor while zooming
+const FM_ZOOM_MAX = 10;
 
 // Audio / sync state
 let ytPlayer = null;         // YouTube IFrame player
@@ -1951,6 +1992,7 @@ function migrateSong(song){
     if(s.tsd === undefined)  s.tsd = null;   // per-section time-sig override: denominator (null = inherit song)
     if(s.color === undefined) s.color = null;// custom per-section color override (null = use type/modifier color)
     if(s.oddAt === undefined) s.oddAt = null;// which bar is the short 'odd' bar (null = the last one)
+    if(s.oddSkip === undefined) s.oddSkip = false;// true = the short bar is a pickup, left out of the bar count
     // the old "Pre-Chorus" type is gone — fold it into a Chorus flagged "pre"
     if(s.typeId === 'pre'){ s.typeId = 'chorus'; if(!s.mod) s.mod = 'pre'; }
     if(s.repeats === undefined) s.repeats = 1;
@@ -2369,29 +2411,40 @@ function oddBarBeats(ets, bars){
   return Math.max(1, Math.round(frac * ets.n));   // beats in that trailing bar
 }
 function wholeBarsOf(bars){ return Math.floor(bars + 1e-9); }
-// The bars of a section, in order, as {start16,len16,beats,isOdd}. The odd bar defaults to
-// last but can sit anywhere via sec.oddAt, so an extra beat can fall mid-phrase.
-function barLayout(ets, bars, oddAt){
+// The bars of a section, in order, as {start16,len16,beats,isOdd,num}. The odd bar defaults to
+// last but can sit anywhere via sec.oddAt, so an extra beat can fall mid-phrase. `num` is the
+// bar's number in the count; skipOdd makes the short bar a pickup with no number of its own,
+// so the bar after it counts as 1.
+function barLayout(ets, bars, oddAt, skipOdd){
   const spb = sixteenthsPerBar(ets), s16b = sixteenthsPerBeat(ets);
   const whole = wholeBarsOf(bars), ob = oddBarBeats(ets, bars);
   const count = whole + (ob ? 1 : 0);
   const oddIdx = ob ? Math.max(0, Math.min(oddAt == null ? count - 1 : oddAt, count - 1)) : -1;
-  const out = []; let pos = 0;
+  const out = []; let pos = 0, num = 1;
   for(let k = 0; k < count; k++){
     const isOdd = k === oddIdx;
     const len = isOdd ? ob * s16b : spb;
-    out.push({ start16: pos, len16: len, beats: isOdd ? ob : ets.n, isOdd });
+    out.push({ start16: pos, len16: len, beats: isOdd ? ob : ets.n, isOdd, num: isOdd && skipOdd ? null : num++ });
     pos += len;
   }
   return out;
 }
-function secLayout(song, sec){ return barLayout(effTS(song, sec), sec.bars, sec.oddAt); }
+function secLayout(song, sec){ return barLayout(effTS(song, sec), sec.bars, sec.oddAt, sec.oddSkip); }
+// bars that carry a number — a skipped pickup isn't one of them
+function countedBars(layout){ return layout.reduce((a, b) => a + (b.num == null ? 0 : 1), 0); }
+// does this section have a short bar that could be left out of the count?
+function hasOddBar(song, sec){ return oddBarBeats(effTS(song, sec), sec.bars) > 0; }
 // "8 bars" / "4 bars + 2 beats"
 function barsLabel(ets, bars){
   const w = wholeBarsOf(bars), ob = oddBarBeats(ets, bars);
   if(!ob) return `${w} bars`;
   if(!w)  return `${ob} beat${ob!==1?'s':''}`;
   return `${w} bars + ${ob} beat${ob!==1?'s':''}`;
+}
+// where a fill sits, in words. A pickup bar has no number, so it's named instead.
+function barBeatLabel(bb, lower){
+  const b = bb.bar == null ? (lower ? 'pickup' : 'Pickup') : (lower ? 'bar ' : 'Bar ') + bb.bar;
+  return b + ' \u00b7 beat ' + bb.beat;
 }
 function msPer16(song){ return (60000 / song.bpm) / 4; }       // a 16th note is always a quarter ÷ 4
 // where (bar, beat) a fill's start16 lands, for labels
@@ -2403,7 +2456,7 @@ function fillBarBeat(ets, start16, layout){
       const b = layout[k];
       if(start16 < b.start16 + b.len16 - 1e-9 || k === layout.length - 1){
         const off = Math.max(0, start16 - b.start16);
-        return { bar:k+1, beat: Math.floor(off/s16b)+1, sub: Math.round((off % s16b)/(s16b/4)) };
+        return { bar:b.num === undefined ? k+1 : b.num, beat: Math.floor(off/s16b)+1, sub: Math.round((off % s16b)/(s16b/4)) };
       }
     }
   }
@@ -2456,7 +2509,7 @@ window.addSection = function(typeId){ window.addSectionAt(typeId, null); }
 // insert a new section at a given index (null = append) and let just that one animate in
 window.addSectionAt = function(typeId, index){
   const song = currentSong(); if(!song) return;
-  const sec = {id:idCounter++, typeId, bars:8, notes:'', repeats:1, mod:null, fills:[], time:null, num:null, ts:null, tsd:null, color:null, oddAt:null};
+  const sec = {id:idCounter++, typeId, bars:8, notes:'', repeats:1, mod:null, fills:[], time:null, num:null, ts:null, tsd:null, color:null, oddAt:null, oddSkip:false};
   const at = Math.max(0, Math.min(index == null ? song.sections.length : index, song.sections.length));
   song.sections.splice(at, 0, sec);
   window.save(); window.renderChart();
@@ -2659,6 +2712,7 @@ window.openFills = function(i){
   const song = currentSong(); if(!song || !song.sections[i]) return;
   hideCtx();
   fillsIdx = i;
+  fillZoom = 1; fmZoomKeep = null;
   setSelectedSection(i);
   const ov = document.getElementById('fills-overlay');
   ov.classList.add('open'); ov.setAttribute('aria-hidden', 'false');   // open first: the lane sizes itself to the box
@@ -2680,9 +2734,25 @@ window.toggleFills = i => (fillsIdx === i ? window.closeFills() : window.openFil
 window.stepFills = dir => {
   const song = currentSong(); if(fillsIdx == null || !song) return;
   const j = fillsIdx + dir; if(j < 0 || j >= song.sections.length) return;
-  fillsIdx = j; setSelectedSection(j); renderFillsModal();
+  fillsIdx = j; fillZoom = 1; fmZoomKeep = null; setSelectedSection(j); renderFillsModal();
 };
 window.setFillSnap = v => { fillSnap = v; renderFillsModal(); };
+// Zoom the lane, holding one spot still: pos16 is the 16th under the pointer, offset how far
+// that pointer sits from the lane's left edge.
+function applyFillZoom(z, pos16, offset){
+  const next = Math.max(fmZoomMin, Math.min(FM_ZOOM_MAX, z));
+  if(Math.abs(next - fillZoom) < 1e-4) return;
+  fillZoom = next;
+  fmZoomKeep = { pos16, offset };
+  renderFillsModal();
+}
+// the buttons zoom about the middle of what's on screen
+window.zoomFills = function(dir){
+  const wrap = document.querySelector('#fills-box .fm-wrap'); if(!wrap) return;
+  const offset = wrap.clientWidth / 2;
+  applyFillZoom(fillZoom * (dir > 0 ? 1.6 : 1/1.6), (wrap.scrollLeft + offset) / fmPX, offset);
+};
+window.fitFillZoom = function(){ applyFillZoom(fmZoomMin, 0, 0); };
 // fills lead into whatever comes next, so a new one lands as late in the section as it fits
 window.addFillNext = function(){
   const song = currentSong(), sec = song && song.sections[fillsIdx]; if(!sec) return;
@@ -2697,6 +2767,24 @@ window.addFillNext = function(){
   fmReveal16 = start;
   window.save(); window.renderChart();
 };
+// A fractional section ends on (or contains) a short bar. Counting it makes the next bar 2;
+// leaving it out makes that next bar 1, which is how a pickup or lead-in is actually counted.
+window.toggleOddSkip = function(i){
+  const song = currentSong(), sec = song && song.sections[i]; if(!sec) return;
+  if(!hasOddBar(song, sec)){ showToast('This section has no short bar to leave out', 'error'); return; }
+  sec.oddSkip = !sec.oddSkip;
+  const beats = oddBarBeats(effTS(song, sec), sec.bars);
+  const msg = sec.oddSkip
+    ? `${beats === 1 ? 'That beat' : beats + ' beats'} won't be counted — the next bar is bar 1`
+    : 'The short bar is counted again';
+  window.save().then(() => showToast(msg));        // after save's own "Synced", so it isn't overwritten
+  window.renderChart();
+};
+// how a section's short bar reads in a menu — "1 beat", "2 beats"
+function oddBarWords(song, sec){
+  const b = oddBarBeats(effTS(song, sec), sec.bars);
+  return b === 1 ? '1 beat' : b + ' beats';
+}
 window.clearFills = function(){
   const sec = currentSong()?.sections[fillsIdx]; if(!sec || !sec.fills.length) return;
   if(!confirm('Remove all ' + sec.fills.length + ' fill' + (sec.fills.length > 1 ? 's' : '') + ' from this section?')) return;
@@ -2712,34 +2800,42 @@ function renderFillsModal(){
   const ec = effColor(sec), ets = effTS(song, sec), custom = sectionHasTSOverride(sec);
   const spb = sixteenthsPerBar(ets), s16b = sixteenthsPerBeat(ets), unit = fillUnit(ets);
   const total16 = Math.max(1, Math.round(sec.bars * spb));
-  const layout = barLayout(ets, sec.bars, sec.oddAt);
+  const layout = secLayout(song, sec);
   const oldWrap = box.querySelector('.fm-wrap');
   const sameSection = !!oldWrap && fmRenderedIdx === i;
   const keepScroll = sameSection ? oldWrap.scrollLeft : 0;
   const touch = matchMedia('(pointer:coarse)').matches;
-  // short sections stretch to the lane; long ones keep a workable 16th width and scroll
+  // short sections stretch to the lane; long ones keep a workable 16th width and scroll.
+  // Zoom scales that default, and can pull back until the whole section is on screen.
   const laneW = Math.max(240, box.clientWidth - 34);
-  const PX = Math.max(touch ? 12 : 14, Math.floor(laneW / total16));
+  const basePX = Math.max(touch ? 12 : 14, Math.floor(laneW / total16));
+  fmZoomMin = Math.min(1, (laneW / total16) / basePX);
+  fillZoom = Math.max(fmZoomMin, Math.min(FM_ZOOM_MAX, fillZoom));
+  const PX = basePX * fillZoom;
+  fmPX = PX;
   const W = total16 * PX;
   const gridBg = `background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.045) 0 1px,transparent 1px ${PX}px),repeating-linear-gradient(90deg,rgba(255,255,255,.12) 0 1px,transparent 1px ${s16b*PX}px)`;
-  const ruler = layout.map((bar, b) =>
-    `<span class="${bar.isOdd ? 'odd' : ''}" style="left:${bar.start16*PX}px;width:${bar.len16*PX}px">${b+1}</span>`).join('');
+  const ruler = layout.map(bar =>
+    `<span class="${bar.isOdd ? 'odd' : ''}${bar.num == null ? ' nocount' : ''}" style="left:${bar.start16*PX}px;width:${bar.len16*PX}px"${bar.num == null ? ' title="Pickup — left out of the bar count"' : ''}>${bar.num == null ? '&middot;' : bar.num}</span>`).join('');
   const measures = layout.map((bar, b) => {
     const beatNums = bar.isOdd
       ? Array.from({length: bar.beats}, (_, k) => `<span class="ftl-beat-n" style="left:${k*s16b*PX}px">${k+1}</span>`).join('')
       : '';
-    return `<div class="ftl-measure${bar.isOdd ? ' ftl-odd' : ''}" data-bar="${b}" style="left:${bar.start16*PX}px;width:${bar.len16*PX}px">${bar.isOdd ? `<span class="ftl-odd-ts" data-odd-handle="${i}" title="Drag to move this odd bar">${bar.beats}/${ets.d}</span>` : ''}${beatNums}</div>`;
+    const badge = bar.isOdd
+      ? `<span class="ftl-odd-ts${bar.num == null ? ' nocount' : ''}" data-odd-handle="${i}" title="${bar.num == null ? 'Pickup — left out of the bar count. Right-click to count it' : 'Drag to move this short bar · right-click to leave it out of the count'}">${bar.beats}/${ets.d}</span>`
+      : '';
+    return `<div class="ftl-measure${bar.isOdd ? ' ftl-odd' : ''}${bar.num == null ? ' ftl-nocount' : ''}" data-bar="${b}"${bar.isOdd ? ' data-odd="1"' : ''} style="left:${bar.start16*PX}px;width:${bar.len16*PX}px">${badge}${beatNums}</div>`;
   }).join('');
   const blocks = sec.fills.map((f, fi) => {
     const bb = fillBarBeat(ets, f.start16, layout);
-    return `<div class="ftl-fill" data-fi="${fi}" style="left:${f.start16*PX}px;width:${Math.max(PX, f.len16*PX)}px" title="Bar ${bb.bar}, beat ${bb.beat} · ${fmtFillLen(ets, f.len16)}"><span class="ftl-fill-label">${esc(f.notes || '')}</span><span class="ftl-fill-resize"></span></div>`;
+    return `<div class="ftl-fill" data-fi="${fi}" style="left:${f.start16*PX}px;width:${Math.max(PX, f.len16*PX)}px" title="${barBeatLabel(bb)} · ${fmtFillLen(ets, f.len16)}"><span class="ftl-fill-label">${esc(f.notes || '')}</span><span class="ftl-fill-resize"></span></div>`;
   }).join('');
   const order = sec.fills.map((f, fi) => ({ f, fi })).sort((a, b) => a.f.start16 - b.f.start16);
   const items = order.map((o, pos) => {
     const bb = fillBarBeat(ets, o.f.start16, layout);
     return `<div class="fm-item" data-pos="${pos}">
         <span class="fm-grip" title="Drag to reorder">${ico('grip')}</span>
-        <span class="fm-where">Bar ${bb.bar} · beat ${bb.beat}</span>
+        <span class="fm-where">${barBeatLabel(bb)}</span>
         <span class="fm-len">${fmtFillLen(ets, o.f.len16)}</span>
         <input class="fill-note-input" type="text" value="${esc(o.f.notes)}" placeholder="Fill idea — tom roll into the crash" aria-label="Fill note" onchange="updateFillField(${i},${o.fi},'notes',this.value)" onkeydown="if(event.key==='Enter')this.blur()">
         <button type="button" class="circ sm" onclick="duplicateFill(${i},${o.fi})" title="Duplicate" aria-label="Duplicate fill">${ico('dup')}</button>
@@ -2766,9 +2862,14 @@ function renderFillsModal(){
       <div class="fm-field"><span class="ed-lbl">Time</span><span class="fm-ts${custom ? ' custom' : ''}"><input type="number" inputmode="numeric" min="1" max="15" value="${ets.n}" aria-label="Beats per bar" onchange="updateSecTS(${i},'n',this.value)"><span>/</span><select aria-label="Note value" onchange="updateSecTS(${i},'d',this.value)"><option value="4"${ets.d==4?' selected':''}>4</option><option value="8"${ets.d==8?' selected':''}>8</option></select></span></div>
       <span class="fm-spacer"></span>
       <div class="fm-seg" role="group" aria-label="Snap to"><span class="ed-lbl">Snap</span>${snapBtn(1, '1/16')}${snapBtn(2, '1/8')}${snapBtn('beat', 'Beat')}</div>
+      <div class="fm-seg" role="group" aria-label="Zoom"><span class="ed-lbl">Zoom</span>
+        <button type="button" class="chip" onclick="zoomFills(-1)"${fillZoom <= fmZoomMin + 1e-4 ? ' disabled' : ''} title="Zoom out — or scroll down over the lane" aria-label="Zoom out">&minus;</button>
+        <button type="button" class="chip" onclick="fitFillZoom()"${fillZoom <= fmZoomMin + 1e-4 ? ' disabled' : ''} title="Fit the whole section">Fit</button>
+        <button type="button" class="chip" onclick="zoomFills(1)"${fillZoom >= FM_ZOOM_MAX - 1e-4 ? ' disabled' : ''} title="Zoom in — or scroll up over the lane" aria-label="Zoom in">+</button>
+      </div>
       ${audio ? `<button type="button" class="circ fm-play" onclick="edPlayPause()" title="Play / pause (Space)" aria-label="Play or pause the track">${ico('play')}</button>` : ''}
     </div>
-    <div class="fm-wrap">
+    <div class="fm-wrap" title="Scroll to zoom">
       <div class="fm-ruler" style="width:${W}px">${ruler}</div>
       <div class="fill-timeline" data-i="${i}" data-px="${PX}" data-spb="${spb}" data-total="${total16}" data-unit="${unit}" style="width:${W}px;${gridBg}">${measures}${blocks}<div class="ftl-playhead"></div></div>
     </div>
@@ -2782,7 +2883,11 @@ function renderFillsModal(){
   fmRenderedIdx = i;
   const wrap = box.querySelector('.fm-wrap');
   wrap.scrollLeft = keepScroll;
-  const reveal = fmReveal16 != null ? fmReveal16
+  const zoomKeep = sameSection ? fmZoomKeep : null;
+  fmZoomKeep = null;
+  if(zoomKeep) wrap.scrollLeft = Math.max(0, zoomKeep.pos16 * PX - zoomKeep.offset);
+  const reveal = zoomKeep ? null
+               : fmReveal16 != null ? fmReveal16
                : (!sameSection && sec.fills.length ? Math.min(...sec.fills.map(f => f.start16)) : null);
   fmReveal16 = null;
   const revealIn16 = pos16 => {
@@ -2791,6 +2896,15 @@ function renderFillsModal(){
   };
   if(reveal != null) revealIn16(reveal);
   attachFillTimeline(box.querySelector('.fill-timeline'), null);
+  // scroll to zoom: the 16th under the pointer stays put, so you zoom into what you're looking at
+  wrap.addEventListener('wheel', ev => {
+    if(!ev.ctrlKey && Math.abs(ev.deltaX) > Math.abs(ev.deltaY)) return;    // two-finger sideways = pan
+    if(!ev.deltaY) return;
+    ev.preventDefault();
+    const offset = ev.clientX - wrap.getBoundingClientRect().left;
+    const step = ev.deltaMode === 1 ? 18 : ev.deltaMode === 2 ? 400 : 1;    // lines / pages / pixels
+    applyFillZoom(fillZoom * Math.exp(-ev.deltaY * step * 0.0018), (wrap.scrollLeft + offset) / PX, offset);
+  }, { passive:false });
   // click the bar numbers to move the playhead there, same as clicking the lane below them
   const rulerEl = box.querySelector('.fm-ruler');
   rulerEl.addEventListener('click', ev => {
@@ -3057,8 +3171,14 @@ function updateEdPlayhead(){
   ph.style.left = (pos16 * PX) + 'px';
   ph.style.display = 'block';
   const wrap = tl.closest('.fm-wrap');
-  // follow the playhead only while playing — scrolling a paused lane would slide it out from under the cursor
-  if(wrap && edPlaying()){ const x = pos16*PX; if(x < wrap.scrollLeft+30 || x > wrap.scrollLeft+wrap.clientWidth-30) wrap.scrollLeft = Math.max(0, x - wrap.clientWidth/2); }
+  // The lane follows the playhead frame by frame, holding it about 45% in, so the music scrolls
+  // past a steady line instead of the view jumping a half-screen whenever it reaches the edge.
+  // Only while playing — scrolling a paused lane would slide it out from under the cursor.
+  if(wrap && edPlaying()){
+    const x = pos16 * PX, cw = wrap.clientWidth, max = Math.max(0, tl.offsetWidth - cw);
+    const want = Math.max(0, Math.min(max, x - cw * 0.45));
+    if(Math.abs(want - wrap.scrollLeft) > 0.5) wrap.scrollLeft = want;
+  }
 }
 
 // ── cue tapping in the editor: play the track, tap on each section's downbeat ──
@@ -3209,13 +3329,13 @@ function buildPerfTimeline(song){
   const bpm = playheadMode() === 'bpm';
   const secs = song.sections.map((sec, i) => {
     const ets = effTS(song, sec);
-    const layout = barLayout(ets, sec.bars, sec.oddAt);
+    const layout = secLayout(song, sec);
     const pass16 = layout.reduce((a, b) => a + b.len16, 0);
     const total16 = pass16 * sec.repeats;
     const end = i < n - 1 ? start[i+1] : start[i] + dur[i];
     const span = bpm ? dur[i] : Math.max(0.05, end - start[i]);
     return { i, sec, ets, layout, pass16, total16, start:start[i], per16:span / total16,
-             beat16:sixteenthsPerBeat(ets), bars:layout.length * sec.repeats };
+             beat16:sixteenthsPerBeat(ets), counted:countedBars(layout), bars:countedBars(layout) * sec.repeats };
   });
   const events = [];
   secs.forEach(x => {
@@ -3237,13 +3357,13 @@ function perfPosition(tl, t){
   for(let j = 0; j < x.layout.length; j++) if(within16 < x.layout[j].start16 + x.layout[j].len16 - 1e-9){ k = j; break; }
   const b = x.layout[k];
   const beatsInBar = Math.max(1, Math.round(b.len16 / x.beat16));
-  return { ci, bar:rep * x.layout.length + k + 1, bars:x.bars, beatsInBar, within16,
+  return { ci, bar:b.num == null ? 0 : rep * x.counted + b.num, bars:x.bars, beatsInBar, within16,
            beat:Math.min(beatsInBar, Math.floor((within16 - b.start16) / x.beat16) + 1), prog:pos16 / x.total16 };
 }
 
 function renderPerfRows(song){
   document.getElementById('tp-rows').innerHTML = '<div class="tp-list">' + song.sections.map((sec, i) => {
-    const ec = effColor(sec), ets = effTS(song, sec), lay = barLayout(ets, sec.bars, sec.oddAt);
+    const ec = effColor(sec), ets = effTS(song, sec), lay = secLayout(song, sec);
     const fills = (sec.fills || []).map((f, fi) => ({ f, fi, bb:fillBarBeat(ets, f.start16, lay) })).sort((a, b) => a.f.start16 - b.f.start16);
     const name = esc(sectionDisplay(song, i));
     return `<div class="tp-row" data-i="${i}" role="button" title="Jump here" aria-label="Jump to ${name}" style="--sec:${ec};--on-sec:${onColor(ec)}" onclick="perfSeekSection(${i})">
@@ -3252,7 +3372,7 @@ function renderPerfRows(song){
         <div class="tp-name">${name}${sec.repeats > 1 ? `<span class="tp-rep">×${sec.repeats}</span>` : ''}</div>
         <div class="tp-meta"><span class="tp-when"></span><span class="tp-mn">${esc(sec.notes || '')}</span></div>
         <div class="tp-notes">${esc(sec.notes || '')}</div>
-        <div class="tp-fills">${fills.map(o => `<span class="tp-fill" data-fi="${o.fi}"><span class="tp-cnt"></span>Fill · bar ${o.bb.bar} beat ${o.bb.beat}${o.f.notes ? ' — ' + esc(o.f.notes) : ''}</span>`).join('')}</div>
+        <div class="tp-fills">${fills.map(o => `<button type="button" class="tp-fill" data-fi="${o.fi}" title="Jump to this fill" onclick="perfSeekFill(${i},${o.fi},event)"><span class="tp-cnt"></span>Fill · ${barBeatLabel(o.bb, true)}${o.f.notes ? ' — ' + esc(o.f.notes) : ''}</button>`).join('')}</div>
       </div>
       <div class="tp-prog"><i></i></div>
     </div>`;
@@ -3284,7 +3404,7 @@ function perfScrollTo(rows, ci, instant){
   });
 }
 function perfUpdateWhen(rows, tl, p){
-  let acc = p.bars - p.bar + 1;
+  let acc = p.bars - Math.max(1, p.bar) + 1;
   rows.forEach((r, k) => {
     const w = r.querySelector('.tp-when');
     if(k <= p.ci){ w.textContent = ''; return; }
@@ -3393,6 +3513,16 @@ window.perfSeekSection = function(i){
   perfManualScrollUntil = 0;
   seekAudioTo(x.start);
 };
+window.perfSeekFill = function(si, fi, ev){
+  if(ev) ev.stopPropagation();                     // the row itself jumps to the section
+  if(!perfTL) return;
+  const hits = perfTL.events.filter(e => e.type === 'fill' && e.si === si && e.fi === fi);
+  if(!hits.length) return;
+  const t = getAudioTime();
+  const e = hits.find(h => h.t > t + 0.25) || hits[hits.length - 1];
+  perfManualScrollUntil = 0;
+  seekAudioTo(Math.max(0, e.t));
+};
 // ↑ early in a section goes to the one before; later, back to this one's top
 function perfStep(dir){
   if(!perfTL) return;
@@ -3432,6 +3562,24 @@ function perfNudge(dt){
   rowsBox.addEventListener('wheel', hold, { passive:true });
   rowsBox.addEventListener('touchmove', hold, { passive:true });
 }
+
+// ── full screen ──
+// The whole document goes full screen, not just the overlay, so menus and toasts still draw.
+function fullscreenOn(){ return !!(document.fullscreenElement || document.webkitFullscreenElement); }
+window.toggleFullscreen = function(){
+  try{
+    if(fullscreenOn()){
+      const exit = document.exitFullscreen || document.webkitExitFullscreen;
+      if(exit) exit.call(document);
+      return;
+    }
+    const el = document.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if(!req){ showToast('This browser has no full screen — on iPhone use Share \u2192 Add to Home Screen', 'error'); return; }
+    const r = req.call(el, { navigationUI:'hide' });
+    if(r && r.catch) r.catch(() => showToast('Full screen was blocked', 'error'));
+  }catch(_){ showToast('Full screen was blocked', 'error'); }
+};
 
 // ── keep the screen awake while performing ──
 async function requestWakeLock(){
@@ -3524,6 +3672,7 @@ function perfMenuItems(rowIdx){
     {id:'pv', icon:'up', label:'Previous section', key:'↑', run:()=>perfStep(-1)},
     {id:'nx', icon:'down', label:'Next section', key:'↓', run:()=>perfStep(1)},
     '---',
+    {id:'fs', icon:'focus', label: fullscreenOn() ? 'Leave full screen' : 'Full screen', key:'F', run:()=>window.toggleFullscreen()},
     {id:'ci', icon:'metronome', label:'Count-in: ' + countInMode(), run:()=>window.cycleCountIn()},
     {id:'keys', icon:'keyboard', label:'Keyboard shortcuts', key:'/', run:()=>window.openShortcuts()},
     '---',
@@ -3550,6 +3699,17 @@ window.updateBars = (i,v) => {
   window.save(); window.renderChart();
 }
 window.updateNotes = (i,v) => { currentSong().sections[i].notes = v; window.save(); }
+// Turn a section into another type in place — bars, time signature, notes, fills, repeats and
+// cue all stay put, so there's no need to add a replacement and delete the old one.
+window.setSectionType = function(i, typeId){
+  const song = currentSong(), sec = song && song.sections[i];
+  if(!sec || !TM[typeId] || sec.typeId === typeId) return;
+  sec.typeId = typeId;
+  sec.num = null;          // let auto-numbering work out which Verse / Chorus this one is now
+  sec.color = null;        // and take the new type's colour, unless a custom one is picked again
+  window.renderChart();
+  window.save().then(() => showToast('Now ' + sectionDisplay(song, i)));
+};
 window.removeSection = (i) => { currentSong().sections.splice(i,1); window.save(); window.renderChart(); }
 // ×1 → ×8 and round again; dir -1 (Shift-click) steps back down
 window.cycleRepeats = (i, dir = 1) => {
@@ -3663,7 +3823,7 @@ function attachFillTimeline(tl, blockEl){
       setDrag(false);
       const song = currentSong(), sec = song.sections[i];
       const ets = effTS(song, sec);
-      const slots = barLayout(ets, sec.bars, sec.oddAt).length;
+      const slots = secLayout(song, sec).length;
       const rect = tl.getBoundingClientRect();
       const spbPX = sixteenthsPerBar(ets) * PX;
       try { handle.setPointerCapture(e.pointerId); } catch(_){}
@@ -3844,7 +4004,8 @@ document.addEventListener('keydown', e => {
   if(e.key === 'ArrowLeft' || e.key === 'ArrowRight'){ e.preventDefault(); perfNudge((e.key === 'ArrowLeft' ? -1 : 1) * (e.shiftKey ? 1 : 5)); }
   else if(e.key === 'ArrowUp'){ e.preventDefault(); if(!e.repeat) perfStep(-1); }
   else if(e.key === 'ArrowDown'){ e.preventDefault(); if(!e.repeat) perfStep(1); }
-  else if(e.key === 'Escape'){ hideCtx(); window.stopPerf(); }
+  else if(e.key === 'f' || e.key === 'F'){ if(!e.repeat){ e.preventDefault(); window.toggleFullscreen(); } }
+  else if(e.key === 'Escape'){ hideCtx(); if(fullscreenOn()) return; window.stopPerf(); }
 });
 
 // ─── RIGHT-CLICK CONTEXT MENU + SECTION SELECTION ───
@@ -3901,6 +4062,7 @@ function sectionMenuItems(i){
     {id:'redo', icon:'redo', label:'Redo', key:KEYS.redo, disabled:!redoStack.length, run:()=>window.redoEdit()},
     '---',
     addSectionMenu(i + 1),
+    setTypeMenu(i, sec),
     '---',
     {id:'dup', icon:'dup', label:'Duplicate', key:KEYS.dup, run:()=>window.duplicateSection(i)},
     {id:'copy', icon:'copy', label:'Copy', key:KEYS.copy, run:()=>window.copySection(i)},
@@ -3910,6 +4072,7 @@ function sectionMenuItems(i){
     {id:'fills', icon:'fills', label:'Edit fills', run:()=>window.openFills(i)},
     {id:'x2', icon:'repeat', label:'Repeat ×' + ((sec?.repeats || 1) % 8 + 1), run:()=>window.cycleRepeats(i)},
     {id:'mod', icon:'half', label: sec?.mod ? 'Clear pre / post' : 'Mark as pre-', run:()=>window.setMod(i, sec?.mod ? sec.mod : 'pre')},
+    ...(sec && hasOddBar(song, sec) ? [oddSkipItem(i, sec)] : []),
     ...(edAvailable() ? [{id:'cue', icon:'cue', label: sec?.time != null ? 'Clear cue' : 'Cue at play time',
           run:()=> sec?.time != null ? window.clearCue(i) : window.setCueHere(i)}] : []),
     '---',
@@ -3953,6 +4116,20 @@ function insertIndexFromPoint(clientY){
   }
   return song.sections.length;
 }
+// leave a section's short bar out of the count, or put it back
+function oddSkipItem(i, sec){
+  const song = currentSong();
+  return { id:'pickup', icon:'half',
+           label: sec.oddSkip ? 'Count the ' + oddBarWords(song, sec) + ' again (they become bar 1)'
+                              : "Don't count the " + oddBarWords(song, sec) + ' — make them a pickup',
+           run:()=>window.toggleOddSkip(i) };
+}
+// the "Set this section to ▸" submenu — the type it already is sits disabled
+function setTypeMenu(i, sec){
+  return { id:'settype', icon:'edit', label:'Set this section to', submenu:
+    TYPES.map(t => ({ id:'set-'+t.id, dot:t.color, label:t.label, disabled: sec && sec.typeId === t.id,
+                      run:()=>window.setSectionType(i, t.id) })) };
+}
 // the "Add section ▸" submenu, with each type's colour swatch
 function addSectionMenu(at){
   return { id:'addsec', icon:'plus', label:'Add section', submenu:
@@ -3966,6 +4143,13 @@ document.addEventListener('contextmenu', e => {
   // the fills editor owns right-clicks while it's open
   if(e.target.closest('#fills-overlay')){
     const fillEl = e.target.closest('.ftl-fill:not(.ftl-ghost)');
+    const oddEl = fillEl ? null : e.target.closest('.ftl-measure[data-odd]');
+    if(oddEl && fillsIdx != null){
+      e.preventDefault();
+      const i = fillsIdx, sec = currentSong().sections[i];
+      showCtx(e.clientX, e.clientY, [oddSkipItem(i, sec)]);
+      return;
+    }
     if(!fillEl || fillsIdx == null){ hideCtx(); return; }
     e.preventDefault();
     const i = fillsIdx, fi = +fillEl.dataset.fi;
@@ -4027,7 +4211,7 @@ document.addEventListener('contextmenu', e => {
   hideCtx();
 });
 document.addEventListener('click', e => { if(!e.target.closest('#ctx-menu')) hideCtx(); });
-document.addEventListener('scroll', e => { if(e.target instanceof Element && e.target.closest('#ctx-menu')) return; hideCtx(); }, true);
+document.addEventListener('scroll', e => { if(e.target instanceof Element && (e.target.closest('#ctx-menu') || e.target.classList.contains('fm-wrap'))) return; hideCtx(); }, true);
 window.addEventListener('blur', hideCtx);
 window.addEventListener('resize', hideCtx);
 
@@ -4050,7 +4234,14 @@ document.addEventListener('keydown', e => {
     edNudge((e.key === 'ArrowLeft' ? -1 : 1) * (e.shiftKey ? 1 : 5));
     return;
   }
-  if(fillsIdx != null) return;                                // the fills editor owns the keyboard while it's open
+  if(fillsIdx != null){                                       // the fills editor owns the keyboard while it's open
+    if(!meta && !e.altKey){
+      if(e.key === '+' || e.key === '='){ e.preventDefault(); window.zoomFills(1); }
+      else if(e.key === '-' || e.key === '_'){ e.preventDefault(); window.zoomFills(-1); }
+      else if(e.key === '0'){ e.preventDefault(); window.fitFillZoom(); }
+    }
+    return;
+  }
   if(document.getElementById('settings-overlay').classList.contains('open')) return;
   // , / . nudge the selected section's cue 10ms earlier / later (Shift: 100ms). By key code, so Shift still reads as , / .
   // match the physical key, and the character as a fallback for keyboards that don't report a code
@@ -4095,6 +4286,8 @@ function renderShortcuts(){
     row('Back or forward 5 seconds', K('←', '→')) +
     row('Back or forward 1 second', K('⇧', '+', '←', '→')) +
     row('Previous or next section', K('↑', '↓')) +
+    row('Full screen', K('F')) +
+    row('Jump to a section or a fill', '<span class="k-click">click a row or a fill</span>') +
     row('Leave performance', K('Esc')));
   const track = group('Track and cues',
     row('Play or pause the track', K('Space')) +
@@ -4114,6 +4307,8 @@ function renderShortcuts(){
     row('Count repeats down', K('⇧', '+') + '<span class="k-click">click ×N</span>') +
     row('Add a fill in the fills lane', '<span class="k-click">double-click</span>') +
     row('Move the playhead in the fills lane', '<span class="k-click">click</span>') +
+    row('Zoom the fills lane', '<span class="k-click">scroll</span><kbd>+</kbd><kbd>&minus;</kbd>') +
+    row('Fit the whole section in the lane', K('0')) +
     row('Close the fills editor or a menu', K('Esc')));
   const add = group('Add a section', '<div class="k-pal">' +
     TYPES.map(t => `<span style="--sec:${t.color}"><kbd>${t.key.toUpperCase()}</kbd><i></i>${t.label}</span>`).join('') + '</div>');
