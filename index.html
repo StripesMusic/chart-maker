@@ -1298,7 +1298,8 @@ kbd{font-family:var(--mono)}
 .tp-row.now .tp-blk{padding:14px 10px}
 .tp-row.now .tp-num{font-size:clamp(76px,11.5vw,176px)}
 /* the bar count is the figure you read while playing, so "OF 24" is set as big type too */
-.tp-row.now .tp-unit{margin-top:clamp(4px,.8vw,12px);padding-left:0;font-family:var(--display);font-weight:900;font-stretch:64%;font-size:clamp(26px,4vw,60px);letter-spacing:.005em;line-height:1;opacity:.62}
+.tp-row.now .tp-unit{position:relative;display:inline-block;margin-top:clamp(4px,.8vw,12px);padding-left:0;font-family:var(--display);font-weight:900;font-stretch:64%;font-size:clamp(34px,5.2vw,80px);letter-spacing:.005em;line-height:1;opacity:.62}
+.tp-row.now .tp-unit i{position:absolute;right:100%;bottom:.08em;margin-right:.1em;font-size:.44em;font-style:normal;letter-spacing:.05em;white-space:nowrap;opacity:.75}
 .tp-row.now .tp-beats{display:flex}
 .tp-row.now .tp-body{gap:clamp(8px,1.2vw,14px);padding:clamp(12px,2vw,26px) clamp(14px,2.4vw,32px)}
 .tp-row.now .tp-name{font-size:clamp(34px,6vw,88px);line-height:.9;white-space:normal}
@@ -1358,7 +1359,7 @@ kbd{font-family:var(--mono)}
   .tp-row.now{flex-direction:column;min-height:calc(100vh - 196px);min-height:calc(100dvh - 196px)}
   .tp-row.now .tp-blk{width:auto;min-width:0;padding:clamp(10px,3vw,20px) 12px}
   .tp-row.now .tp-num{font-size:clamp(96px,28vw,220px)}
-  .tp-row.now .tp-unit{margin-top:clamp(2px,1vw,8px);font-size:clamp(34px,10vw,76px)}
+  .tp-row.now .tp-unit{margin-top:clamp(2px,1vw,8px);font-size:clamp(44px,12.5vw,96px)}
   .tp-row.now .tp-beats{gap:clamp(8px,2.6vw,15px);margin-top:clamp(10px,3vw,18px)}
   .tp-row.now .tp-beats i{width:clamp(15px,4.4vw,24px);height:clamp(15px,4.4vw,24px);border-width:3px}
   .tp-row.now .tp-body{flex:1;justify-content:center;gap:clamp(10px,3.2vw,20px);padding:clamp(16px,4.6vw,26px) clamp(14px,4vw,22px)}
@@ -1382,7 +1383,7 @@ kbd{font-family:var(--mono)}
   .tp-row.now{flex-direction:row;min-height:0}
   .tp-row.now .tp-blk{width:auto;min-width:var(--blk);padding:10px 8px}
   .tp-row.now .tp-num{font-size:clamp(46px,15vh,96px)}
-  .tp-row.now .tp-unit{font-size:clamp(18px,5.5vh,34px)}
+  .tp-row.now .tp-unit{font-size:clamp(22px,7vh,44px)}
   .tp-row.now .tp-beats i{width:clamp(10px,1.3vw,16px);height:clamp(10px,1.3vw,16px);border-width:2px}
   .tp-row.now .tp-body{justify-content:center;gap:7px;padding:10px 14px}
   .tp-row.now .tp-name{font-size:clamp(28px,11vh,60px)}
@@ -3443,7 +3444,7 @@ function perfFollow(){
       if(p.bar !== st.bar){
         st.bar = p.bar;
         cur.querySelector('.tp-num').textContent = p.bar;
-        cur.querySelector('.tp-unit').textContent = 'of ' + p.bars;
+        cur.querySelector('.tp-unit').innerHTML = '<i>of </i>' + p.bars;
         perfUpdateWhen(rows, tl, p);
         cur.querySelectorAll('.tp-fill').forEach(el => {
           const f = x.sec.fills[+el.dataset.fi];
