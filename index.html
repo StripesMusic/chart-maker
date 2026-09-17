@@ -1027,6 +1027,10 @@ kbd{font-family:var(--mono)}
 .lg-cue .i{width:11px;height:11px}
 .lg-cue input{width:62px;height:22px;padding:0;background:transparent;border:0;font-family:var(--mono);font-size:11px;text-align:center;color:inherit;outline:none;font-variant-numeric:tabular-nums}
 .lg-cue .lg-cue-x:hover{color:var(--red)}
+.lg-cue.lg-end{border-color:var(--muted);color:var(--muted)}
+.lg-end-lbl{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.8}
+.lg-cue.lg-end input{width:58px;padding-left:2px}
+.tp-mark.tp-mark-end{width:3px;height:20px;margin-top:-10px;background:var(--text)}
 .lg-notes{
   width:100%;height:26px;padding:0;margin:0;background:transparent;border:0;border-bottom:1px solid transparent;border-radius:0;
   font-family:var(--font);font-size:13.5px;color:var(--muted);outline:none;
@@ -1313,6 +1317,10 @@ kbd{font-family:var(--mono)}
 .tp-fill{display:inline-flex;align-items:center;gap:8px;padding:5px 9px;background:none;border:1px solid transparent;border-radius:0;font-family:var(--mono);font-size:clamp(13px,1.45vw,18px);letter-spacing:.02em;text-align:left;color:var(--accent);cursor:pointer;transition:opacity .2s,border-color .15s}
 .tp-fill:hover{border-color:rgba(255,140,43,.5)}
 .tp-fill.past{opacity:.38}
+.tp-fk{font-weight:700;white-space:nowrap}
+.tp-flong{white-space:nowrap}
+.tp-at{display:none;font-weight:700;white-space:nowrap;font-variant-numeric:tabular-nums}
+.tp-fn{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .tp-cnt{display:none;font-weight:700;white-space:nowrap}
 .tp-fill.soon{border-color:var(--accent);opacity:1}
 .tp-fill.hit{background:var(--accent);border-color:var(--accent);color:#160f06;opacity:1}
@@ -1343,53 +1351,82 @@ kbd{font-family:var(--mono)}
 #perform-btn .tap-key{margin-left:2px}
 #perform-btn .lbl-short{display:none}
 
-@media (max-width: 820px){
-  #tp-head{gap:10px;padding:8px 12px;padding-top:calc(8px + env(safe-area-inset-top))}
+/* ═══ THE STAGE (phones) ═══════════════════════════════════
+   The playing section is the whole screen: bar count over the section's
+   name, note and fills, in the section's own colour, with the transport
+   floating over it and fading away while the track runs. Portrait stacks
+   it; sideways it splits — counts and names left, fills right.
+   ═════════════════════════════════════════════════════════ */
+@media (max-width: 820px), (max-width: 1024px) and (max-height: 560px) and (orientation: landscape){
   #tp-song{font-size:18px}
-  #tp-rows{padding:8px 8px 55vh}
   .tp-row{--blk:68px;min-height:60px}
   .tp-num{font-size:26px}
   .tp-name{font-size:21px}
   .tp-meta{font-size:11.5px}
   .tp-body{padding:8px 12px}
-  #tp-foot{gap:10px;padding:8px 12px;padding-bottom:calc(8px + env(safe-area-inset-bottom))}
-  #tp-video,#tp-video iframe{width:112px;height:63px}
-  /* On a phone the playing section owns the screen: the colour band and its bar count on top,
-     then the name, the note and the fills, all sized to be read from behind a kit. */
-  .tp-row.now{flex-direction:column;min-height:calc(100vh - 196px);min-height:calc(100dvh - 196px)}
-  .tp-row.now .tp-blk{width:auto;min-width:0;padding:clamp(10px,3vw,20px) 12px}
-  .tp-row.now .tp-num{font-size:clamp(96px,28vw,220px)}
-  .tp-row.now .tp-unit{margin-top:clamp(2px,1vw,8px);font-size:clamp(44px,12.5vw,96px)}
-  .tp-row.now .tp-beats{gap:clamp(8px,2.6vw,15px);margin-top:clamp(10px,3vw,18px)}
-  .tp-row.now .tp-beats i{width:clamp(15px,4.4vw,24px);height:clamp(15px,4.4vw,24px);border-width:3px}
-  .tp-row.now .tp-body{flex:1;justify-content:center;gap:clamp(10px,3.2vw,20px);padding:clamp(16px,4.6vw,26px) clamp(14px,4vw,22px)}
-  .tp-row.now .tp-name{font-size:clamp(42px,13vw,86px);line-height:.92}
-  .tp-row.now .tp-notes{max-width:none;font-size:clamp(22px,6.2vw,38px);line-height:1.25}
-  .tp-row.now .tp-fills{align-self:stretch;gap:8px}
-  .tp-row.now .tp-fill{font-size:clamp(16px,4.4vw,24px);padding:10px 12px;border-color:rgba(255,140,43,.35)}
-  .tp-row.now .tp-prog{left:0;height:5px}
+  #tp-video,#tp-video iframe{width:84px;height:47px}
   .tp-row.incoming .tp-num{font-size:clamp(54px,16vw,96px)}
   .tp-row.incoming .tp-name{font-size:clamp(27px,7.6vw,42px)}
+
+  /* transport and title float over the stage, and slide away while playing */
+  #tp-head{position:absolute;top:0;left:0;right:0;z-index:6;gap:10px;padding:8px 12px;padding-top:calc(8px + env(safe-area-inset-top));border-bottom:0;
+           background:linear-gradient(180deg,rgba(12,11,9,.94) 0%,rgba(12,11,9,.78) 62%,rgba(12,11,9,0) 100%);transition:opacity .25s ease,transform .25s ease}
+  #tp-foot{position:absolute;bottom:0;left:0;right:0;z-index:6;gap:10px;padding:8px 12px;padding-bottom:calc(8px + env(safe-area-inset-bottom));border-top:0;
+           background:linear-gradient(0deg,rgba(12,11,9,.96) 0%,rgba(12,11,9,.8) 62%,rgba(12,11,9,0) 100%);transition:opacity .25s ease,transform .25s ease}
+  #perf-overlay.chrome-off #tp-head{opacity:0;transform:translateY(-101%);pointer-events:none}
+  #perf-overlay.chrome-off #tp-foot{opacity:0;transform:translateY(101%);pointer-events:none}
+  #tp-rows{padding:0 0 42vh}
+  .tp-list{gap:6px}
+
+  .tp-row.now{--blk:0;flex-direction:column;justify-content:center;min-height:100vh;min-height:100dvh;
+              padding:calc(64px + env(safe-area-inset-top)) 0 calc(76px + env(safe-area-inset-bottom));
+              background:var(--bg);outline:0;overflow:hidden}
+  .tp-row.now::before{content:'';position:absolute;inset:0;background:var(--sec);opacity:.08;pointer-events:none}   /* the section's colour, washed over the screen */
+  /* bar count: "2/9" on one line, in the section's colour, with the beats under it */
+  .tp-row.now .tp-blk{width:auto;min-width:0;flex-direction:row;flex-wrap:wrap;align-items:baseline;justify-content:center;
+                      padding:0 14px;background:transparent;color:var(--sec)}
+  .tp-row.now .tp-num{font-size:clamp(104px,30vw,240px);line-height:.8}
+  .tp-row.now .tp-unit{margin-top:0;font-size:clamp(74px,21vw,170px);opacity:.78}
+  .tp-row.now .tp-unit i{display:none}                       /* the word gives way to a slash */
+  .tp-row.now .tp-unit::before{content:'/';margin:0 .06em 0 .02em;font-size:.82em;opacity:.5}
+  .tp-row.now .tp-beats{flex:0 0 100%;justify-content:center;gap:clamp(9px,3vw,16px);margin-top:clamp(8px,2.6vw,16px)}
+  .tp-row.now .tp-beats i{width:clamp(16px,4.6vw,26px);height:clamp(16px,4.6vw,26px);border-width:3px}
+  .tp-row.now .tp-body{flex:0 1 auto;min-height:0;justify-content:flex-start;gap:clamp(6px,2vw,12px);
+                       padding:clamp(14px,5vw,30px) clamp(14px,4.5vw,24px) 0;text-align:center}
+  .tp-row.now .tp-name{font-size:clamp(40px,12.5vw,88px);line-height:.92}
+  .tp-row.now .tp-notes{max-width:none;font-size:clamp(21px,6vw,38px);line-height:1.22}
+  .tp-row.now .tp-fills{align-self:stretch;margin-top:0;padding-top:clamp(18px,6vh,54px);gap:clamp(6px,2vw,10px);align-items:stretch}
+  .tp-row.now .tp-fill{flex-wrap:wrap;justify-content:center;gap:4px 8px;font-size:clamp(17px,4.8vw,26px);padding:clamp(7px,2.2vw,12px) 10px;border-color:rgba(255,140,43,.3)}
+  .tp-row.now .tp-fn{white-space:normal}
+  .tp-row.now .tp-flong{display:none}                        /* "1.3" instead of "bar 1 · beat 3" */
+  .tp-row.now .tp-at{display:inline}
+  .tp-row.now .tp-fk{letter-spacing:.1em}
+  .tp-row.now .tp-prog{left:0;height:6px;background:rgba(255,255,255,.1)}
 }
 @media (max-width: 560px){
   #perform-btn .lbl-long{display:none}
   #perform-btn .lbl-short{display:inline}
 }
-/* a phone turned sideways: the playing row still has to fit */
-@media (max-height: 520px) and (orientation: landscape){
-  #tp-head{padding-top:6px;padding-bottom:6px}
-  #tp-foot{padding-top:6px;padding-bottom:6px}
+/* the phone turned sideways: counts and names on the left, fills on the right */
+@media (max-width: 1024px) and (max-height: 560px) and (orientation: landscape){
+  #tp-head{padding-top:calc(6px + env(safe-area-inset-top));padding-bottom:6px}
+  #tp-foot{padding-top:6px;padding-bottom:calc(6px + env(safe-area-inset-bottom))}
   #tp-video,#tp-video iframe{width:96px;height:54px}
-  .tp-row.now{flex-direction:row;min-height:0}
-  .tp-row.now .tp-blk{width:auto;min-width:var(--blk);padding:10px 8px}
-  .tp-row.now .tp-num{font-size:clamp(46px,15vh,96px)}
-  .tp-row.now .tp-unit{font-size:clamp(22px,7vh,44px)}
-  .tp-row.now .tp-beats i{width:clamp(10px,1.3vw,16px);height:clamp(10px,1.3vw,16px);border-width:2px}
-  .tp-row.now .tp-body{justify-content:center;gap:7px;padding:10px 14px}
-  .tp-row.now .tp-name{font-size:clamp(28px,11vh,60px)}
-  .tp-row.now .tp-notes{font-size:15px}
-  .tp-row.now .tp-fill{font-size:13px;padding:5px 9px}
-  .tp-row.now .tp-prog{left:var(--blk)}
+  .tp-row.now{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-rows:auto auto 1fr;
+              grid-template-areas:"blk fills" "name fills" "notes fills";align-content:start;
+              padding:calc(46px + env(safe-area-inset-top)) clamp(12px,3vw,22px) calc(52px + env(safe-area-inset-bottom)) clamp(12px,3vw,22px);
+              column-gap:clamp(14px,3.5vw,30px)}
+  .tp-row.now .tp-body{display:contents}                     /* so the fills can take their own column */
+  .tp-row.now .tp-blk{grid-area:blk;justify-content:flex-start;padding:0}
+  .tp-row.now .tp-num{font-size:clamp(64px,26vh,150px)}
+  .tp-row.now .tp-unit{font-size:clamp(46px,18.5vh,108px)}
+  .tp-row.now .tp-beats{flex-basis:100%;justify-content:flex-start;gap:clamp(7px,2.4vh,14px);margin-top:clamp(5px,1.8vh,12px)}
+  .tp-row.now .tp-beats i{width:clamp(13px,4vh,22px);height:clamp(13px,4vh,22px)}
+  .tp-row.now .tp-name{grid-area:name;margin-top:clamp(6px,2.4vh,16px);font-size:clamp(32px,13vh,76px);text-align:left}
+  .tp-row.now .tp-notes{grid-area:notes;margin-top:.18em;font-size:clamp(17px,5.4vh,32px);line-height:1.2;text-align:left}
+  .tp-row.now .tp-fills{grid-area:fills;align-self:start;margin-top:0;padding-top:0;gap:clamp(6px,1.9vh,12px)}
+  .tp-row.now .tp-fill{flex-wrap:wrap;justify-content:flex-start;font-size:clamp(15px,4.6vh,26px);padding:clamp(5px,1.6vh,11px) 10px}
+  .tp-row.now .tp-fn{white-space:nowrap;text-overflow:ellipsis}
 }
 @media (prefers-reduced-motion: reduce){
   #perf-overlay.active,.tp-row.beat .tp-blk{animation:none}
@@ -1982,6 +2019,7 @@ function migrateSong(song){
   if(song.shareCode === undefined) song.shareCode = null; // Firestore short-link code (null = not published)
   if(song.countIn === undefined) song.countIn = 'all';    // count-in: 'all' | 'sections' | 'off'
   if(song.playheadMode === undefined) song.playheadMode = 'cue'; // 'cue' = stretch between cue points, 'bpm' = strict tempo
+  if(song.endTime === undefined) song.endTime = null;     // where the song ends, so the last section knows how long it runs
   // a local audio-file URL can't survive a reload — drop the dead blob ref, keep cues
   if(song.audio && song.audio.type === 'file') song.audio = null;
   (song.sections||[]).forEach(s => {
@@ -2442,6 +2480,8 @@ function barsLabel(ets, bars){
   if(!w)  return `${ob} beat${ob!==1?'s':''}`;
   return `${w} bars + ${ob} beat${ob!==1?'s':''}`;
 }
+// the same spot in the fewest characters — "1.3" is bar 1 beat 3, "PU.3" a pickup
+function barBeatShort(bb){ return (bb.bar == null ? 'PU' : bb.bar) + '.' + bb.beat; }
 // where a fill sits, in words. A pickup bar has no number, so it's named instead.
 function barBeatLabel(bb, lower){
   const b = bb.bar == null ? (lower ? 'pickup' : 'Pickup') : (lower ? 'bar ' : 'Bar ') + bb.bar;
@@ -2623,6 +2663,16 @@ window.renderChart = function(){
              <button type="button" class="lg-cue-x" onclick="clearCue(${i})" title="Clear cue" aria-label="Clear cue">${ico('x')}</button>
            </span>`
         : `<button type="button" class="chip" onclick="setCueHere(${i})" title="Cue this section at the current play time">${ico('cue')}Cue</button>`;
+    // the song's own end, on the last card: it closes off the last section instead of letting its bars run on
+    const endCue = (!hasAudio || i !== song.sections.length - 1) ? ''
+      : song.endTime != null
+        ? `<span class="lg-cue lg-end" title="Where the song ends — the last section runs to here">
+             <button type="button" onclick="seekEditorToEnd()" title="Hear the ending" aria-label="Hear the ending">${ico('bottom')}</button>
+             <span class="lg-end-lbl">End</span>
+             <input type="text" inputmode="decimal" value="${fmtCue(song.endTime)}" aria-label="End of the song" onchange="setEndText(this.value)" onkeydown="if(event.key==='Enter')this.blur()">
+             <button type="button" class="lg-cue-x" onclick="clearEndCue()" title="Clear the end cue" aria-label="Clear the end cue">${ico('x')}</button>
+           </span>`
+        : `<button type="button" class="chip" onclick="setEndHere()" title="Mark where the song ends at the current play time">${ico('bottom')}End</button>`;
     const nf = sec.fills.length;
     const el = document.createElement('div');
     el.className = 'section-block' + (animate ? ' anim-in' : '');
@@ -2647,6 +2697,7 @@ window.renderChart = function(){
             <button type="button" class="chip${sec.mod==='post' ? ' on' : ''}" onclick="setMod(${i},'post')" aria-pressed="${sec.mod==='post'}">Post</button>
             <button type="button" class="chip${sec.repeats > 1 ? ' on' : ''}" onmousedown="if(event.shiftKey)event.preventDefault()" onclick="cycleRepeats(${i}, event.shiftKey ? -1 : 1)" title="How many times this section plays — Shift-click to count down">×${sec.repeats}</button>
             ${cue}
+            ${endCue}
             <label class="lg-color" title="Section colour"><input type="color" value="${ec}" aria-label="Section colour" onchange="setSecColor(${i},this.value)"></label>
             ${sec.color ? `<button type="button" class="circ sm" onclick="resetSecColor(${i})" title="Back to the default colour" aria-label="Reset colour">${ico('restart')}</button>` : ''}
           </div>
@@ -3101,6 +3152,8 @@ window.addEventListener('blur', () => {
     if(document.activeElement === a) document.body.focus({ preventScroll:true });
   }, 0);
 });
+// where the last cued section should stop — the end cue, when it's set and actually later
+function songEndAfter(song, t){ return song && song.endTime != null && song.endTime > t + 0.05 ? song.endTime : null; }
 // where a section starts in the track: its own cue, or estimated from the nearest earlier cue + bar lengths
 function sectionTrackTime(song, i){
   if(song.sections[i].time != null) return song.sections[i].time;
@@ -3162,7 +3215,7 @@ function updateEdPlayhead(){
     // click, so pacing by BPM would run ahead or lag; the cues are the real anchors.
     const nxt = cued.find(o => o.s.time > cur.s.time);
     const bpmEnd = cur.s.time + (barMsFor(song, cur.s) * cur.s.bars * cur.s.repeats) / 1000;
-    const endT = nxt ? nxt.s.time : bpmEnd;          // no next cue -> fall back to tempo
+    const endT = nxt ? nxt.s.time : (songEndAfter(song, cur.s.time) || bpmEnd);   // no next cue -> the end cue, else tempo
     const span = Math.max(0.05, endT - cur.s.time);
     pos16 = Math.max(0, Math.min(total16, ((t - cur.s.time) / span) * total16));
   } else {
@@ -3333,7 +3386,7 @@ function buildPerfTimeline(song){
     const layout = secLayout(song, sec);
     const pass16 = layout.reduce((a, b) => a + b.len16, 0);
     const total16 = pass16 * sec.repeats;
-    const end = i < n - 1 ? start[i+1] : start[i] + dur[i];
+    const end = i < n - 1 ? start[i+1] : (songEndAfter(song, start[i]) || start[i] + dur[i]);
     const span = bpm ? dur[i] : Math.max(0.05, end - start[i]);
     return { i, sec, ets, layout, pass16, total16, start:start[i], per16:span / total16,
              beat16:sixteenthsPerBeat(ets), counted:countedBars(layout), bars:countedBars(layout) * sec.repeats };
@@ -3367,13 +3420,13 @@ function renderPerfRows(song){
     const ec = effColor(sec), ets = effTS(song, sec), lay = secLayout(song, sec);
     const fills = (sec.fills || []).map((f, fi) => ({ f, fi, bb:fillBarBeat(ets, f.start16, lay) })).sort((a, b) => a.f.start16 - b.f.start16);
     const name = esc(sectionDisplay(song, i));
-    return `<div class="tp-row" data-i="${i}" role="button" title="Jump here" aria-label="Jump to ${name}" style="--sec:${ec};--on-sec:${onColor(ec)}" onclick="perfSeekSection(${i})">
+    return `<div class="tp-row" data-i="${i}" role="button" title="Jump here" aria-label="Jump to ${name}" style="--sec:${ec};--on-sec:${onColor(ec)}" onclick="perfRowTap(${i},event)">
       <div class="tp-blk"><b class="tp-num">${fmtBars(sec.bars)}</b><span class="tp-unit">${sec.bars == 1 ? 'Bar' : 'Bars'}</span><span class="tp-beats"></span></div>
       <div class="tp-body">
         <div class="tp-name">${name}${sec.repeats > 1 ? `<span class="tp-rep">×${sec.repeats}</span>` : ''}</div>
         <div class="tp-meta"><span class="tp-when"></span><span class="tp-mn">${esc(sec.notes || '')}</span></div>
         <div class="tp-notes">${esc(sec.notes || '')}</div>
-        <div class="tp-fills">${fills.map(o => `<button type="button" class="tp-fill" data-fi="${o.fi}" title="Jump to this fill" onclick="perfSeekFill(${i},${o.fi},event)"><span class="tp-cnt"></span>Fill · ${barBeatLabel(o.bb, true)}${o.f.notes ? ' — ' + esc(o.f.notes) : ''}</button>`).join('')}</div>
+        <div class="tp-fills">${fills.map(o => `<button type="button" class="tp-fill" data-fi="${o.fi}" title="Jump to this fill · ${barBeatLabel(o.bb)}" onclick="perfSeekFill(${i},${o.fi},event)"><span class="tp-cnt"></span><span class="tp-fk">Fill</span><span class="tp-flong">· ${barBeatLabel(o.bb, true)}</span><span class="tp-at">· ${barBeatShort(o.bb)}</span>${o.f.notes ? `<span class="tp-fn">— ${esc(o.f.notes)}</span>` : ''}</button>`).join('')}</div>
       </div>
       <div class="tp-prog"><i></i></div>
     </div>`;
@@ -3395,12 +3448,14 @@ function perfSetCurrent(rows, ci){
     if(i === ci) r.dataset.live = '1'; else perfRestRow(r, secs[i]);
   });
 }
-// hold the playing row about a fifth of the way down, unless someone is scrolling by hand
+// hold the playing row about a fifth of the way down, unless someone is scrolling by hand.
+// On the phone stage the row is the screen, so it sits flush at the top instead.
 function perfScrollTo(rows, ci, instant){
   if(performance.now() < perfManualScrollUntil) return;
   const box = document.getElementById('tp-rows');
   requestAnimationFrame(() => {
-    const top = ci < 0 ? 0 : rows[ci].getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop - box.clientHeight * 0.18;
+    const bias = perfStage() ? 0 : 0.18;
+    const top = ci < 0 ? 0 : rows[ci].getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop - box.clientHeight * bias;
     box.scrollTo({ top:Math.max(0, top), behavior:instant ? 'auto' : 'smooth' });
   });
 }
@@ -3414,8 +3469,11 @@ function perfUpdateWhen(rows, tl, p){
   });
 }
 function perfDrawMarks(tl, dur){
+  const song = currentSong();
+  const end = song && song.endTime != null
+    ? `<i class="tp-mark tp-mark-end" style="left:${Math.min(100, song.endTime / dur * 100)}%" title="End of the song"></i>` : '';
   document.getElementById('tp-seek-marks').innerHTML = tl.secs.map(x =>
-    `<i class="tp-mark" style="left:${Math.min(100, x.start / dur * 100)}%;--sec:${effColor(x.sec)}"></i>`).join('');
+    `<i class="tp-mark" style="left:${Math.min(100, x.start / dur * 100)}%;--sec:${effColor(x.sec)}"></i>`).join('') + end;
 }
 
 function perfFollow(){
@@ -3498,7 +3556,11 @@ function perfFollow(){
     }
 
     const playing = isAudioPlaying();
-    if(playing !== st.playing){ st.playing = playing; document.getElementById('tp-play').innerHTML = ico(playing ? 'pause' : 'play'); }
+    if(playing !== st.playing){
+      st.playing = playing;
+      document.getElementById('tp-play').innerHTML = ico(playing ? 'pause' : 'play');
+      perfShowChrome(playing);                   // playing: fade it out shortly. paused: stay put.
+    }
     const nowS = fmtTime(t);
     if(nowS !== st.nowS){ st.nowS = nowS; document.getElementById('tp-now').textContent = nowS; }
     if(dur && Math.round(dur) !== st.dur){ st.dur = Math.round(dur); document.getElementById('tp-dur').textContent = fmtTime(dur); perfDrawMarks(tl, dur); }
@@ -3509,6 +3571,31 @@ function perfFollow(){
 }
 
 // ── transport ──
+// Phone-sized screens perform on the stage: the playing section fills the screen and the
+// transport floats over it, out of the way while the track runs and back on a tap.
+const PERF_STAGE_Q = '(max-width: 820px), (max-width: 1024px) and (max-height: 560px) and (orientation: landscape)';
+function perfStage(){ return matchMedia(PERF_STAGE_Q).matches; }
+let perfChromeTimer = null;
+function perfShowChrome(hold = true){
+  const ov = document.getElementById('perf-overlay');
+  ov.classList.remove('chrome-off');
+  clearTimeout(perfChromeTimer);
+  if(!hold || !perfStage()) return;
+  perfChromeTimer = setTimeout(() => {           // only get out of the way while it's actually playing
+    if(perfStage() && isAudioPlaying()) ov.classList.add('chrome-off');
+  }, 3400);
+}
+window.perfToggleChrome = function(){
+  const ov = document.getElementById('perf-overlay');
+  if(ov.classList.contains('chrome-off')) perfShowChrome();
+  else { clearTimeout(perfChromeTimer); ov.classList.add('chrome-off'); }
+};
+// a tap on the section that's playing is for the transport; on any other row it jumps there
+window.perfRowTap = function(i, ev){
+  const row = ev && ev.currentTarget;
+  if(perfStage() && row && row.classList.contains('now')){ window.perfToggleChrome(); return; }
+  window.perfSeekSection(i);
+};
 window.perfSeekSection = function(i){
   const x = perfTL && perfTL.secs[i]; if(!x) return;
   perfManualScrollUntil = 0;
@@ -3555,11 +3642,12 @@ function perfNudge(dt){
       perfSeeking = false;
     };
     show(e);
+    perfShowChrome();
     bar.addEventListener('pointermove', show); bar.addEventListener('pointerup', done); bar.addEventListener('pointercancel', done);
   });
   const rowsBox = document.getElementById('tp-rows');
   window.addEventListener('resize', () => { perfRecenter = true; });
-  const hold = () => { perfManualScrollUntil = performance.now() + 4000; };
+  const hold = () => { perfManualScrollUntil = performance.now() + 4000; perfShowChrome(); };
   rowsBox.addEventListener('wheel', hold, { passive:true });
   rowsBox.addEventListener('touchmove', hold, { passive:true });
 }
@@ -3646,12 +3734,15 @@ window.startPerf = function(){
   renderPerfRows(song);
   updateCountInToggle();
   document.getElementById('perf-overlay').classList.add('active');
+  perfShowChrome(false);
   setupPerfAudio(song);
   requestWakeLock();
   perfFollow();
 };
 window.stopPerf = function(){
   cancelAnimationFrame(perfRAF); perfRAF = null;
+  clearTimeout(perfChromeTimer);
+  document.getElementById('perf-overlay').classList.remove('chrome-off');
   pauseAudio();
   if(ytPlayer){ try{ ytPlayer.destroy(); }catch(e){} ytPlayer = null; ytReady = false; }
   if(htmlAudio){ htmlAudio.pause(); htmlAudio = null; }
@@ -3790,7 +3881,7 @@ function fillLaneSeek(i, pos16){
   let t;
   if(sec.time != null && playheadMode() === 'cue'){
     const next = song.sections.filter(s => s.time != null && s.time > sec.time).sort((a, b) => a.time - b.time)[0];
-    const end = next ? next.time : sec.time + barMsFor(song, sec) * sec.bars * sec.repeats / 1000;
+    const end = next ? next.time : (songEndAfter(song, sec.time) || sec.time + barMsFor(song, sec) * sec.bars * sec.repeats / 1000);
     t = sec.time + (pos16 / total16) * (end - sec.time);
   } else {
     const start = sectionTrackTime(song, i);
@@ -3972,6 +4063,36 @@ window.setCueHere = (i) => {
   showToast(sectionDisplay(currentSong(), i) + ' cued at ' + fmtCue(sec.time));
 }
 
+// The end cue closes off the last section: without it the last section runs for as long as its
+// bars say, which is rarely where the track actually stops.
+window.setEndHere = () => {
+  const song = currentSong(); if(!song) return;
+  if(!edAvailable()){ showToast('Add a track first', 'error'); return; }
+  song.endTime = Math.round(edGetTime() * 100) / 100;
+  window.renderChart(); renderSyncPanel();
+  window.save().then(() => showToast('Song ends at ' + fmtCue(song.endTime)));
+};
+window.setEndText = (v) => {
+  const song = currentSong(); if(!song) return;
+  const t = parseCue(v);
+  if(t == null){ showToast('Use M:SS.cc — e.g. 3:41.20', 'error'); window.renderChart(); return; }
+  song.endTime = t;
+  window.renderChart(); renderSyncPanel();
+  window.save().then(() => showToast('Song ends at ' + fmtCue(t)));
+};
+window.clearEndCue = () => {
+  const song = currentSong(); if(!song || song.endTime == null) return;
+  song.endTime = null;
+  window.renderChart(); renderSyncPanel();
+  window.save().then(() => showToast('End cue cleared'));
+};
+window.seekEditorToEnd = () => {
+  const song = currentSong();
+  if(!song || song.endTime == null || !edAvailable()) return;
+  edSeek(Math.max(0, song.endTime - 4));      // a few bars before it, so you can hear it land
+  showToast('Playing the last 4 seconds');
+};
+
 // drag reorder
 function reorderSection(from, to){
   if(from==null || from===to || to===from+1) { dragSrc=null; return; }
@@ -4002,6 +4123,7 @@ document.addEventListener('keydown', e => {
   if(!document.getElementById('perf-overlay').classList.contains('active')) return;
   if(e.target instanceof Element && e.target.closest('input, textarea, select')) return;
   if(e.ctrlKey || e.metaKey || e.altKey) return;
+  if(!e.repeat) perfShowChrome();
   if(e.key === 'ArrowLeft' || e.key === 'ArrowRight'){ e.preventDefault(); perfNudge((e.key === 'ArrowLeft' ? -1 : 1) * (e.shiftKey ? 1 : 5)); }
   else if(e.key === 'ArrowUp'){ e.preventDefault(); if(!e.repeat) perfStep(-1); }
   else if(e.key === 'ArrowDown'){ e.preventDefault(); if(!e.repeat) perfStep(1); }
@@ -4076,6 +4198,8 @@ function sectionMenuItems(i){
     ...(sec && hasOddBar(song, sec) ? [oddSkipItem(i, sec)] : []),
     ...(edAvailable() ? [{id:'cue', icon:'cue', label: sec?.time != null ? 'Clear cue' : 'Cue at play time',
           run:()=> sec?.time != null ? window.clearCue(i) : window.setCueHere(i)}] : []),
+    ...(edAvailable() && i === n - 1 ? [{id:'endcue', icon:'bottom', label: song.endTime != null ? 'Clear the song\u2019s end cue' : 'End the song at play time',
+          run:()=> song.endTime != null ? window.clearEndCue() : window.setEndHere()}] : []),
     '---',
     {id:'up', icon:'up', label:'Move up', disabled:i === 0, run:()=>window.moveSection(i, -1)},
     {id:'down', icon:'down', label:'Move down', disabled:i === n-1, run:()=>window.moveSection(i, 1)},
