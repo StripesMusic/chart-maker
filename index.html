@@ -1345,6 +1345,16 @@ kbd{font-family:var(--mono)}
 #tp-seek-fill{position:absolute;left:0;top:50%;width:0;height:4px;margin-top:-2px;background:var(--text)}
 .tp-mark{position:absolute;top:50%;width:2px;height:14px;margin:-7px 0 0 -1px;background:var(--sec)}
 
+/* the count-in number, over the middle of the stage */
+#tp-count{position:absolute;inset:0;z-index:7;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+          background:rgba(8,7,6,.58);-webkit-backdrop-filter:blur(1px);backdrop-filter:blur(1px);pointer-events:none}
+#tp-count.on{display:flex}
+#tp-count-n{font-family:var(--display);font-weight:900;font-stretch:64%;font-size:clamp(150px,44vmin,340px);line-height:.8;color:var(--accent);
+            font-variant-numeric:lining-nums tabular-nums;text-shadow:0 0 40px rgba(8,7,6,.7)}
+#tp-count-n.beat{animation:tpCount .18s ease-out}
+@keyframes tpCount{from{transform:scale(1.14)}to{transform:none}}
+#tp-count-lbl{max-width:80vw;font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);text-align:center}
+
 /* the Perform button says what's missing */
 #perform-btn.blocked{background:transparent;border-color:var(--border2);color:var(--muted)}
 #perform-btn.blocked:hover{border-color:var(--accent);color:var(--accent)}
@@ -1373,6 +1383,7 @@ kbd{font-family:var(--mono)}
            background:linear-gradient(180deg,rgba(12,11,9,.94) 0%,rgba(12,11,9,.78) 62%,rgba(12,11,9,0) 100%);transition:opacity .25s ease,transform .25s ease}
   #tp-foot{position:absolute;bottom:0;left:0;right:0;z-index:6;gap:10px;padding:8px 12px;padding-bottom:calc(8px + env(safe-area-inset-bottom));border-top:0;
            background:linear-gradient(0deg,rgba(12,11,9,.96) 0%,rgba(12,11,9,.8) 62%,rgba(12,11,9,0) 100%);transition:opacity .25s ease,transform .25s ease}
+  #tp-countin{display:none}
   #perf-overlay.chrome-off #tp-head{opacity:0;transform:translateY(-101%);pointer-events:none}
   #perf-overlay.chrome-off #tp-foot{opacity:0;transform:translateY(101%);pointer-events:none}
   #tp-rows{padding:0 0 42vh}
@@ -1631,10 +1642,12 @@ kbd{font-family:var(--mono)}
   <div id="tp-head">
     <button class="circ" onclick="stopPerf()" title="Exit (Esc)" aria-label="Exit performance"><svg class="i" aria-hidden="true"><use href="#i-back"/></svg></button>
     <div id="tp-id"><div id="tp-song"></div><div id="tp-artist"></div></div>
-    <button class="chip on" id="tp-countin" onclick="cycleCountIn()" title="Count-in before sections and fills">Count-in · all</button>
+    <button class="chip" id="tp-lead" onclick="cycleLeadIn()" title="Clicks a bar in before the track starts, to count a band in">Click in · 1 bar</button>
+    <button class="chip on" id="tp-countin" onclick="cycleCountIn()" title="The on-screen count into a section or a fill — the row lights up and counts down the bar before it">Count-in · all</button>
     <button class="circ" onclick="openPerfMenu(event)" title="Controls" aria-label="Controls"><svg class="i" aria-hidden="true"><use href="#i-more"/></svg></button>
   </div>
   <div id="tp-rows"></div>
+  <div id="tp-count" aria-hidden="true"><span id="tp-count-n">1</span><span id="tp-count-lbl">Counting in</span></div>
   <div id="tp-foot">
     <div id="tp-video"></div>
     <button class="circ" id="tp-play" onclick="toggleAudioPlay()" title="Play / pause (Space)" aria-label="Play or pause"><svg class="i" aria-hidden="true"><use href="#i-play"/></svg></button>
@@ -1670,6 +1683,16 @@ kbd{font-family:var(--mono)}
         <option value="off">Off</option>
       </select>
     </label>
+
+    <label class="set-row">
+      <span class="set-name">Click the band in</span>
+      <select class="set-select" id="set-leadin" onchange="setLeadIn(this.value)">
+        <option value="0">Off</option>
+        <option value="1">1 bar</option>
+        <option value="2">2 bars</option>
+      </select>
+    </label>
+    <div class="set-note">Play in performance counts that many bars of clicks first, then starts the track on the downbeat.</div>
 
     <label class="set-row">
       <span class="set-name">Numbering</span>
@@ -2020,6 +2043,7 @@ function migrateSong(song){
   if(song.countIn === undefined) song.countIn = 'all';    // count-in: 'all' | 'sections' | 'off'
   if(song.playheadMode === undefined) song.playheadMode = 'cue'; // 'cue' = stretch between cue points, 'bpm' = strict tempo
   if(song.endTime === undefined) song.endTime = null;     // where the song ends, so the last section knows how long it runs
+  if(song.leadIn === undefined) song.leadIn = 1;          // bars of clicks before the track starts (0 = straight in)
   // a local audio-file URL can't survive a reload — drop the dead blob ref, keep cues
   if(song.audio && song.audio.type === 'file') song.audio = null;
   (song.sections||[]).forEach(s => {
@@ -2581,6 +2605,7 @@ function renderSettings(){
   document.getElementById('set-playhead').value = mode;
   document.getElementById('set-playhead-note').textContent = PLAYHEAD_NOTE[mode];
   document.getElementById('set-countin').value = countInMode();
+  document.getElementById('set-leadin').value = String(leadInBars());
   document.getElementById('set-number').value = song.autoNumber === false ? 'off' : 'on';
 }
 window.setPlayheadMode = function(m){
@@ -2885,7 +2910,7 @@ function renderFillsModal(){
   const order = sec.fills.map((f, fi) => ({ f, fi })).sort((a, b) => a.f.start16 - b.f.start16);
   const items = order.map((o, pos) => {
     const bb = fillBarBeat(ets, o.f.start16, layout);
-    return `<div class="fm-item" data-pos="${pos}">
+    return `<div class="fm-item" data-pos="${pos}" data-fi="${o.fi}">
         <span class="fm-grip" title="Drag to reorder">${ico('grip')}</span>
         <span class="fm-where">${barBeatLabel(bb)}</span>
         <span class="fm-len">${fmtFillLen(ets, o.f.len16)}</span>
@@ -3333,7 +3358,133 @@ function seekAudioTo(t){
   if(ytPlayer && ytReady) ytPlayer.seekTo(t, true);
   else if(htmlAudio) htmlAudio.currentTime = t;
 }
-window.toggleAudioPlay = function(){ if(isAudioPlaying()) pauseAudio(); else playAudio(); };
+function audioVolume(){
+  if(ytPlayer && ytReady && ytPlayer.getVolume) return ytPlayer.getVolume();
+  if(htmlAudio) return htmlAudio.volume * 100;
+  return 100;
+}
+function setAudioVolume(v){
+  if(ytPlayer && ytReady && ytPlayer.setVolume) ytPlayer.setVolume(v);
+  else if(htmlAudio) htmlAudio.volume = Math.max(0, Math.min(1, v / 100));
+}
+
+// ── counting the band in ──────────────────────────────
+// Hitting play counts a bar of clicks first, so a band has something to come in on. The clicks
+// are scheduled on the audio clock (not timers, which drift), and the track is started silently
+// a moment early and unmuted on the downbeat, so it arrives exactly on the last click.
+let metroCtx = null, countIn = null;
+function metroCtxGet(){
+  if(!metroCtx) metroCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if(metroCtx.state === 'suspended') metroCtx.resume();
+  return metroCtx;
+}
+function metroClick(ctx, at, accent){
+  const osc = ctx.createOscillator(), g = ctx.createGain();
+  osc.type = 'square';
+  osc.frequency.value = accent ? 1560 : 1040;
+  g.gain.setValueAtTime(0.0001, at);
+  g.gain.linearRampToValueAtTime(accent ? 0.5 : 0.3, at + 0.004);
+  g.gain.exponentialRampToValueAtTime(0.0001, at + 0.09);
+  osc.connect(g); g.connect(ctx.destination);
+  osc.start(at); osc.stop(at + 0.1);
+  return osc;
+}
+function leadInBars(){ const s = currentSong(); return s && s.leadIn != null ? s.leadIn : 1; }
+// the beat where the track is sitting: the playing section's own pace, in its own time signature
+function countInBeat(){
+  const song = currentSong();
+  let sec = song && song.sections[0], per = null;
+  if(perfTL){
+    const p = perfPosition(perfTL, getAudioTime());
+    const x = perfTL.secs[p.ci >= 0 ? p.ci : 0];
+    if(x){ sec = x.sec; per = x.per16 * x.beat16; }
+  }
+  const ets = effTS(song, sec || {});
+  const fallback = (60 / ((song && song.bpm) || 120)) * (4 / ets.d);
+  return { beats: Math.max(1, ets.n), beatSec: per && isFinite(per) ? Math.max(0.2, Math.min(2.5, per)) : fallback };
+}
+function countInShow(n){
+  const el = document.getElementById('tp-count'); if(!el) return;
+  el.classList.add('on');
+  const num = document.getElementById('tp-count-n');
+  if(num.textContent !== String(n)){ num.textContent = n; num.classList.remove('beat'); void num.offsetWidth; num.classList.add('beat'); }
+}
+function countInEnd(){
+  const el = document.getElementById('tp-count'); if(el) el.classList.remove('on');
+}
+function cancelCountIn(){
+  if(!countIn) return;
+  const c = countIn; countIn = null;
+  c.oscs.forEach(o => { try{ o.stop(); }catch(_){} });
+  cancelAnimationFrame(c.raf);
+  if(c.started) pauseAudio();
+  setAudioVolume(c.vol);
+  seekAudioTo(c.target);                 // back to where play was pressed
+  countInEnd();
+}
+function startCountIn(){
+  const bars = leadInBars();
+  const { beats, beatSec } = countInBeat();
+  const ctx = metroCtxGet();
+  const n = Math.max(1, bars * beats);
+  const t0 = ctx.currentTime + 0.22;                 // a beat of slack so the first click isn't clipped
+  const endAt = t0 + n * beatSec;
+  const target = getAudioTime();
+  // Start the track silently a moment early from just before where it sits, so it lands on the
+  // downbeat rather than after the player's own start-up lag. At the very top of a track there's
+  // nothing to roll through, so there it simply starts on the beat.
+  const lead = Math.min(ytPlayer ? 0.36 : 0.14, Math.max(0, target));
+  const vol = audioVolume();
+  seekAudioTo(Math.max(0, target - lead));
+  const oscs = [];
+  for(let k = 0; k < n; k++) oscs.push(metroClick(ctx, t0 + k * beatSec, k % beats === 0));
+  countIn = { oscs, raf:0, started:false, vol, target, endAt };
+  const tick = () => {
+    if(!countIn) return;
+    const now = ctx.currentTime;
+    if(!countIn.started && now >= endAt - lead){
+      countIn.started = true;
+      if(lead > 0) setAudioVolume(0);                // nothing to hide when it starts on the beat
+      playAudio();
+    }
+    if(now >= endAt){                                // downbeat: the track is rolling, bring it up
+      setAudioVolume(vol);
+      countIn = null; countInEnd();
+      return;
+    }
+    const k = Math.max(0, Math.floor((now - t0) / beatSec));
+    countInShow((k % beats) + 1);
+    countIn.raf = requestAnimationFrame(tick);
+  };
+  const into = perfTL && perfPosition(perfTL, target).ci;
+  const lbl = document.getElementById('tp-count-lbl');
+  if(lbl) lbl.textContent = 'Counting in' + (into >= 0 ? ' \u00b7 ' + sectionDisplay(currentSong(), into) : '');
+  countInShow(1);
+  tick();
+}
+window.toggleAudioPlay = function(){
+  if(countIn){ cancelCountIn(); return; }            // pressing play again during the count stops it
+  if(isAudioPlaying()){ pauseAudio(); return; }
+  const performing = document.getElementById('perf-overlay').classList.contains('active');
+  if(performing && leadInBars() > 0 && audioAvailable()){ startCountIn(); return; }
+  playAudio();
+};
+function leadInLabel(){ const b = leadInBars(); return b ? b + ' bar' + (b > 1 ? 's' : '') : 'off'; }
+function updateLeadInToggle(){
+  const b = document.getElementById('tp-lead'); if(!b) return;
+  b.textContent = 'Click in · ' + leadInLabel();
+  b.classList.toggle('on', leadInBars() > 0);
+}
+window.cycleLeadIn = function(){
+  const s = currentSong(); if(!s) return;
+  s.leadIn = leadInBars() === 0 ? 1 : leadInBars() === 1 ? 2 : 0;
+  window.save(); updateLeadInToggle(); renderSettings();
+};
+window.setLeadIn = function(v){
+  const s = currentSong(); if(!s) return;
+  s.leadIn = Math.max(0, Math.min(2, parseInt(v) || 0));
+  window.save(); updateLeadInToggle(); renderSettings();
+};
 
 function songCueCount(song){ return (song?.sections||[]).filter(s => s.time != null).length; }
 function countInMode(){ const s = currentSong(); return (s && s.countIn) || 'all'; }
@@ -3734,12 +3885,14 @@ window.startPerf = function(){
   renderPerfRows(song);
   updateCountInToggle();
   document.getElementById('perf-overlay').classList.add('active');
+  updateLeadInToggle();
   perfShowChrome(false);
   setupPerfAudio(song);
   requestWakeLock();
   perfFollow();
 };
 window.stopPerf = function(){
+  cancelCountIn();
   cancelAnimationFrame(perfRAF); perfRAF = null;
   clearTimeout(perfChromeTimer);
   document.getElementById('perf-overlay').classList.remove('chrome-off');
@@ -3765,7 +3918,8 @@ function perfMenuItems(rowIdx){
     {id:'nx', icon:'down', label:'Next section', key:'↓', run:()=>perfStep(1)},
     '---',
     {id:'fs', icon:'focus', label: fullscreenOn() ? 'Leave full screen' : 'Full screen', key:'F', run:()=>window.toggleFullscreen()},
-    {id:'ci', icon:'metronome', label:'Count-in: ' + countInMode(), run:()=>window.cycleCountIn()},
+    {id:'lead', icon:'metronome', label:'Click the band in: ' + leadInLabel(), run:()=>window.cycleLeadIn()},
+    {id:'ci', icon:'tap', label:'On-screen count-in: ' + countInMode(), run:()=>window.cycleCountIn()},
     {id:'keys', icon:'keyboard', label:'Keyboard shortcuts', key:'/', run:()=>window.openShortcuts()},
     '---',
     {id:'ex', icon:'exit', label:'Exit', key:'Esc', danger:true, run:()=>window.stopPerf()},
@@ -3854,6 +4008,51 @@ window.setMod = (i, m) => {
 }
 // ── drum fills: positioned at a bar, starting on a beat, lasting N beats ──
 // click a bar in the grid to add/remove a fill there
+// Fills copy by the bar: what's on the clipboard is a set of fills with their offsets inside
+// that bar, so pasting them into another bar puts them on the same beats.
+let fillClipboard = null;         // {items:[{off16,len16,notes}], from}
+function barIndexAt16(layout, s16){
+  for(let k = 0; k < layout.length; k++) if(s16 < layout[k].start16 + layout[k].len16 - 1e-9) return k;
+  return layout.length - 1;
+}
+function barName(bar){ return !bar ? 'this bar' : bar.num == null ? 'the pickup' : 'bar ' + bar.num; }
+function fillsInBar(sec, bar){
+  return bar ? sec.fills.filter(f => f.start16 >= bar.start16 - 1e-9 && f.start16 < bar.start16 + bar.len16 - 1e-9) : [];
+}
+function copiedCount(){ return fillClipboard ? fillClipboard.items.length : 0; }
+function plural(n, word){ return n + ' ' + word + (n === 1 ? '' : 's'); }
+window.copyFill = (i, fi) => {
+  const song = currentSong(), sec = song.sections[i], f = sec && sec.fills[fi]; if(!f) return;
+  const bar = secLayout(song, sec)[barIndexAt16(secLayout(song, sec), f.start16)];
+  fillClipboard = { items:[{ off16:f.start16 - bar.start16, len16:f.len16, notes:f.notes || '' }] };
+  showToast('Fill copied');
+};
+window.copyBarFills = (i, barIdx) => {
+  const song = currentSong(), sec = song.sections[i]; if(!sec) return;
+  const bar = secLayout(song, sec)[barIdx]; if(!bar) return;
+  const inBar = fillsInBar(sec, bar);
+  if(!inBar.length){ showToast('No fills in ' + barName(bar), 'error'); return; }
+  fillClipboard = { items: inBar.map(f => ({ off16:f.start16 - bar.start16, len16:f.len16, notes:f.notes || '' })) };
+  showToast(plural(inBar.length, 'fill') + ' copied from ' + barName(bar));
+};
+// paste onto the same beats of another bar — anything hanging off the end is trimmed to fit
+window.pasteFillsInto = (i, barIdx) => {
+  const song = currentSong(), sec = song.sections[i]; if(!sec || !fillClipboard) return;
+  const layout = secLayout(song, sec), bar = layout[barIdx]; if(!bar) return;
+  const total16 = Math.max(1, Math.round(sec.bars * sixteenthsPerBar(effTS(song, sec))));
+  let added = 0;
+  fillClipboard.items.forEach(it => {
+    const start = bar.start16 + it.off16;
+    if(start >= Math.min(total16, bar.start16 + bar.len16) - 1e-9) return;     // doesn't land in this bar
+    const len = Math.max(1, Math.min(it.len16, total16 - start));
+    sec.fills.push({ start16:start, len16:len, notes:it.notes });
+    added++;
+  });
+  if(!added){ showToast(barName(bar) + ' is too short for that', 'error'); return; }
+  fmReveal16 = bar.start16;
+  window.renderChart();
+  window.save().then(() => showToast(plural(added, 'fill') + ' pasted into ' + barName(bar)));
+};
 window.removeFill = (i, fi) => { currentSong().sections[i].fills.splice(fi, 1); window.save(); window.renderChart(); }
 window.duplicateFill = (i, fi) => {
   const sec = currentSong().sections[i]; const f = sec.fills[fi];
@@ -4268,20 +4467,28 @@ document.addEventListener('contextmenu', e => {
   // the fills editor owns right-clicks while it's open
   if(e.target.closest('#fills-overlay')){
     const fillEl = e.target.closest('.ftl-fill:not(.ftl-ghost)');
-    const oddEl = fillEl ? null : e.target.closest('.ftl-measure[data-odd]');
-    if(oddEl && fillsIdx != null){
-      e.preventDefault();
-      const i = fillsIdx, sec = currentSong().sections[i];
-      showCtx(e.clientX, e.clientY, [oddSkipItem(i, sec)]);
-      return;
-    }
-    if(!fillEl || fillsIdx == null){ hideCtx(); return; }
+    const itemEl = e.target.closest('.fm-item');
+    const laneEl = e.target.closest('.ftl-measure');
+    if(fillsIdx == null || !(fillEl || itemEl || laneEl)){ hideCtx(); return; }
     e.preventDefault();
-    const i = fillsIdx, fi = +fillEl.dataset.fi;
-    showCtx(e.clientX, e.clientY, [
-      {id:'fd', icon:'dup', label:'Duplicate fill', run:()=>window.duplicateFill(i, fi)},
-      {id:'fx', icon:'trash', label:'Delete fill', danger:true, run:()=>window.removeFill(i, fi)},
-    ]);
+    const i = fillsIdx, song = currentSong(), sec = song.sections[i], layout = secLayout(song, sec);
+    const fi = fillEl ? +fillEl.dataset.fi : itemEl ? +itemEl.dataset.fi : null;
+    // which bar was clicked: the one holding that fill, or the measure under the pointer
+    const barIdx = fi != null && sec.fills[fi] ? barIndexAt16(layout, sec.fills[fi].start16)
+                 : laneEl ? Math.max(0, Math.min(+laneEl.dataset.bar, layout.length - 1)) : 0;
+    const bar = layout[barIdx], inBar = fillsInBar(sec, bar);
+    const items = [];
+    if(fi != null) items.push({id:'fcopy', icon:'copy', label:'Copy this fill', run:()=>window.copyFill(i, fi)});
+    if(inBar.length) items.push({id:'bcopy', icon:'copy', label:'Copy ' + plural(inBar.length, 'fill') + ' in ' + barName(bar), run:()=>window.copyBarFills(i, barIdx)});
+    if(copiedCount()) items.push({id:'bpaste', icon:'paste', label:'Paste ' + plural(copiedCount(), 'fill') + ' into ' + barName(bar), run:()=>window.pasteFillsInto(i, barIdx)});
+    if(bar && bar.isOdd){ if(items.length) items.push('---'); items.push(oddSkipItem(i, sec)); }
+    if(fi != null){
+      if(items.length) items.push('---');
+      items.push({id:'fd', icon:'dup', label:'Duplicate fill', run:()=>window.duplicateFill(i, fi)},
+                 {id:'fx', icon:'trash', label:'Delete fill', danger:true, run:()=>window.removeFill(i, fi)});
+    }
+    if(!items.length) items.push({id:'none', icon:'fills', label:'Nothing to copy in ' + barName(bar), disabled:true, run:()=>{}});
+    showCtx(e.clientX, e.clientY, items);
     return;
   }
   // performance: the controls, plus a jump to the row that was right-clicked
@@ -4412,6 +4619,7 @@ function renderShortcuts(){
     row('Back or forward 1 second', K('⇧', '+', '←', '→')) +
     row('Previous or next section', K('↑', '↓')) +
     row('Full screen', K('F')) +
+    row('Play — counts the band in first', K('Space')) +
     row('Jump to a section or a fill', '<span class="k-click">click a row or a fill</span>') +
     row('Leave performance', K('Esc')));
   const track = group('Track and cues',
