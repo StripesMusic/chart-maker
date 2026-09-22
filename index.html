@@ -3382,7 +3382,11 @@ function pauseAudio(){
   else if(htmlAudio) htmlAudio.pause();
 }
 function seekAudioTo(t){
-  if(ytPlayer && ytReady) ytPlayer.seekTo(t, true);
+  if(ytPlayer && ytReady){
+    const wasPlaying = isAudioPlaying();
+    ytPlayer.seekTo(t, true);
+    if(!wasPlaying) ytPlayer.pauseVideo();   // YouTube starts an unplayed or cued video on a seek
+  }
   else if(htmlAudio) htmlAudio.currentTime = t;
 }
 function audioVolume(){
@@ -3465,24 +3469,35 @@ function startCountIn(){
   const n = Math.max(1, bars * beats);
   const t0 = ctx.currentTime + 0.22;                 // a beat of slack so the first click isn't clipped
   const endAt = t0 + n * beatSec;
-  // Nothing is heard but the clicks. A file's volume is a plain property, so it can be started
-  // a hair early in silence to beat its own start-up lag; YouTube's takes a round trip to the
-  // iframe and can leak a moment of the track, so there the count is followed by a plain play.
-  const lead = htmlAudio && !ytPlayer ? Math.min(0.14, Math.max(0, target)) : 0;
+  // Nothing at all is heard until the downbeat — not a frame of the track. It stays paused and
+  // turned down for the whole count. A file can be rolled silently into the downbeat because its
+  // volume is a plain property; YouTube is left paused and started on the beat, with the volume
+  // set in the same breath — the iframe applies the two in the order they were sent.
+  const yt = !!(ytPlayer && ytReady);
+  const lead = yt ? 0 : Math.min(0.14, Math.max(0, target));
   const vol = audioVolume(), from = getAudioTime();
+  setAudioVolume(0);                                 // down first, so a seek that starts the track is still silent
+  pauseAudio();
   seekAudioTo(Math.max(0, target - lead));           // buffer at the downbeat while the count runs
   const oscs = [];
   for(let k = 0; k < n; k++) oscs.push(metroClick(ctx, t0 + k * beatSec, k % beats === 0));
-  countIn = { oscs, raf:0, started:false, vol, from, endAt };
+  countIn = { oscs, raf:0, started:false, up:false, vol, from, endAt };
   const tick = () => {
     if(!countIn) return;
     const now = ctx.currentTime;
-    if(!countIn.started && now >= endAt - lead){
-      countIn.started = true;
-      if(lead > 0) setAudioVolume(0);                // nothing to hide when it starts on the beat
-      playAudio();
+    if(!countIn.started){
+      if(isAudioPlaying()) pauseAudio();             // the player started itself — sit back down
+      if(now >= endAt - lead){
+        countIn.started = true;
+        if(!lead){ countIn.up = true; setAudioVolume(vol); }   // sent before play, so it lands first
+        playAudio();
+      }
     }
-    if(now >= endAt){                                // downbeat: the track is rolling, bring it up
+    if(!countIn.up && now >= endAt){                 // a file rolls in silently and comes up on the beat
+      countIn.up = true;
+      setAudioVolume(vol);
+    }
+    if(now >= endAt){
       setAudioVolume(vol);
       countIn = null; countInEnd();
       return;
