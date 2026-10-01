@@ -482,7 +482,7 @@ body{background:var(--bg);color:var(--text);height:100vh;height:100dvh;overflow:
 }
 .ftl-measure{ position:absolute; top:0; bottom:0; border-left:2px solid var(--border2); }
 .ftl-measure:first-child{ border-left:none; }
-/* trailing odd bar (e.g. the 2/4 in "4.5 bars of 4/4") reads as its own measure */
+/* a short bar (a 2/4 among 4/4 bars) reads as its own measure */
 .ftl-measure.ftl-odd{ background:#2a1c10; border-left-color:var(--accent); }
 .ftl-odd-ts{
   position:absolute; top:2px; right:4px; font-size:9px; font-weight:700; letter-spacing:.5px;
@@ -491,6 +491,7 @@ body{background:var(--bg);color:var(--text);height:100vh;height:100dvh;overflow:
 }
 .ftl-odd-ts:hover{ box-shadow:0 0 0 2px rgba(255,140,43,.35); }
 .ftl-odd-ts.nocount{ color:var(--accent); background:transparent; box-shadow:inset 0 0 0 1px var(--accent); }
+.ftl-insert{ position:absolute; top:-2px; bottom:-2px; width:3px; margin-left:-1px; background:var(--accent); box-shadow:0 0 10px var(--accent); pointer-events:none; z-index:5; }
 .ftl-measure.ftl-nocount{ background:repeating-linear-gradient(135deg,rgba(255,140,43,.10) 0 6px,transparent 6px 12px); }
 .ftl-odd-ts.dragging{ cursor:grabbing; box-shadow:0 0 0 2px var(--accent); }
 .ftl-measure.ftl-odd-target{ box-shadow:inset 0 0 0 2px var(--accent); }
@@ -984,8 +985,9 @@ kbd{font-family:var(--mono)}
   font-variant-numeric:lining-nums tabular-nums;text-align:center;color:inherit;outline:none;cursor:text;
 }
 .lg-bars:is(:focus,:focus-visible){outline:none;background:rgba(0,0,0,.14)}
+.lg-extra{font-style:normal;margin-left:.3em;letter-spacing:.04em;opacity:1}
 .lg-unit{
-  display:block;height:10px;margin-top:2.7px;padding-left:.2em;
+  display:block;height:10px;margin-top:2.7px;padding-left:.2em;white-space:nowrap;
   font-family:var(--mono);font-size:9px;font-weight:700;line-height:10px;letter-spacing:.2em;text-transform:uppercase;opacity:.72;
 }
 .lg-ts{display:flex;align-items:center;justify-content:center;height:16px;margin-top:1.7px}
@@ -1086,6 +1088,7 @@ kbd{font-family:var(--mono)}
 }
 #fills-box .fm-num:focus{border-color:var(--accent)}
 .fm-seg{display:inline-flex;align-items:center;gap:4px}
+.fm-short{height:30px;padding:0 11px}
 .fm-seg .ed-lbl{margin-right:4px}
 .fm-seg .chip{height:30px;padding:0 10px}
 .fm-wrap{margin:16px 16px 0;overflow-x:auto;overflow-y:hidden;background:var(--bg);border:1px solid var(--border);overscroll-behavior-x:contain;scrollbar-width:thin;scrollbar-color:var(--border2) transparent}
@@ -2081,8 +2084,19 @@ function migrateSong(song){
     if(s.ts === undefined)   s.ts = null;    // per-section time-sig override: numerator (null = inherit song)
     if(s.tsd === undefined)  s.tsd = null;   // per-section time-sig override: denominator (null = inherit song)
     if(s.color === undefined) s.color = null;// custom per-section color override (null = use type/modifier color)
-    if(s.oddAt === undefined) s.oddAt = null;// which bar is the short 'odd' bar (null = the last one)
-    if(s.oddSkip === undefined) s.oddSkip = false;// true = the short bar is a pickup, left out of the bar count
+    // short bars: [{at, beats, skip}] slotted among the whole bars. Charts from before had one at
+    // most, implied by a fractional bar count (4.5 = 4 bars + a 2-beat bar) — turn that into an entry
+    if(!Array.isArray(s.extras)){
+      s.extras = [];
+      const n1 = s.ts || song.ts || 4, b = Number(s.bars) || 0;
+      const whole = Math.floor(b + 1e-9), frac = b - whole;
+      if(frac > 1e-9){
+        const at = s.oddAt == null ? whole : Math.max(0, Math.min(s.oddAt, whole));
+        s.extras.push({ at, beats:Math.max(1, Math.round(frac * n1)), skip:!!s.oddSkip });
+      }
+      s.bars = whole || (s.extras.length ? 0 : 1);
+    }
+    delete s.oddAt; delete s.oddSkip;
     // the old "Pre-Chorus" type is gone — fold it into a Chorus flagged "pre"
     if(s.typeId === 'pre'){ s.typeId = 'chorus'; if(!s.mod) s.mod = 'pre'; }
     if(s.repeats === undefined) s.repeats = 1;
@@ -2207,7 +2221,7 @@ function openSharedChart(song, id){
 function renderSharedView(){
   const song = sharedSong; if(!song) return;
   document.getElementById('shared-title').textContent = song.name || 'Untitled Song';
-  const totalBars = song.sections.reduce((a,s)=>a+(s.bars*s.repeats),0);
+  const totalBars = song.sections.reduce((a,s)=>a+(secBarsShown(s)*s.repeats),0);
   document.getElementById('shared-meta').textContent =
     `${song.bpm} BPM · ${song.ts}/${song.tsd||4} · ${song.sections.length} sections · ${fmtBars(totalBars)} bars`
     + (song.audio && song.audio.type==='youtube' ? ' · ♪ track' : '');
@@ -2224,7 +2238,7 @@ function renderSharedView(){
         <div class="sv-body">
           <div class="sv-row1">
             <span class="sv-name" style="color:${ec}">${esc(baseLabel(sec))}</span>${numHtml}
-            <span class="sv-meta">${fill} ${barsLabel(effTS(song,sec), sec.bars)} ${sec.repeats>1?'×'+sec.repeats:''} · ${tsLabel(song,sec)}</span>
+            <span class="sv-meta">${fill} ${barsLabel(song, sec)} ${sec.repeats>1?'×'+sec.repeats:''} · ${tsLabel(song,sec)}</span>
           </div>
           ${sec.notes ? `<div class="sv-notes">${esc(sec.notes)}</div>` : ''}
         </div>
@@ -2282,10 +2296,10 @@ function generatedCover(song){
   if(!secs.length) return 'linear-gradient(148deg,#232019 0%,#100e0c 100%)';
   const h = songHash(song);
   const angle = -(8 + h % 30);          // each chart rakes at its own angle
-  const total = secs.reduce((a,s)=>a+(s.bars*s.repeats),0) || 1;
+  const total = secs.reduce((a,s)=>a+(secBarsShown(s)*s.repeats),0) || 1;
   let y = 0, bands = '';
   secs.forEach(s => {
-    const bh = (s.bars*s.repeats)/total*150;
+    const bh = (secBarsShown(s)*s.repeats)/total*150;
     bands += '<rect x="-60" y="'+y.toFixed(2)+'" width="220" height="'+(bh+.6).toFixed(2)+'" fill="'+effColor(s)+'"/>';
     y += bh;
   });
@@ -2360,7 +2374,7 @@ window.renderLibrary = function(){
   empty.style.display = 'none';
   [...library].reverse().forEach((song, i) => {
     const secs = song.sections || [];
-    const totalBars = secs.reduce((a,s)=>a+(s.bars*s.repeats),0);
+    const totalBars = secs.reduce((a,s)=>a+(secBarsShown(s)*s.repeats),0);
     const name = song.name || 'Untitled';
     const card = document.createElement('article');
     card.className = 'tile';
@@ -2489,47 +2503,53 @@ function barMsFor(song, sec){ const {n,d} = effTS(song, sec); return n * (4/d) *
 function sectionHasTSOverride(sec){ return sec.ts != null || sec.tsd != null; }
 // ── 16th-note geometry for fills ──
 function sixteenthsPerBar(ets){ return ets.n * 16 / ets.d; }   // n beats × (16/d) 16ths per beat
-// bars can be fractional (4.25) — print without trailing zeros
+// bars print without trailing zeros
 function fmtBars(n){ return Number(n).toFixed(2).replace(/\.?0+$/,''); }
 function sixteenthsPerBeat(ets){ return 16 / ets.d; }
-// A fractional bar count means the section ends on a short "odd" bar — e.g. 4.5 bars of 4/4
-// is 4 bars plus a 2/4 bar. These derive that odd bar so it can be drawn, counted and
-// counted-in as a real measure instead of a smear of leftover time.
-function oddBarBeats(ets, bars){
-  const frac = bars - Math.floor(bars + 1e-9);
-  if(frac < 1e-9) return 0;                       // whole bars, no odd bar
-  return Math.max(1, Math.round(frac * ets.n));   // beats in that trailing bar
-}
-function wholeBarsOf(bars){ return Math.floor(bars + 1e-9); }
-// The bars of a section, in order, as {start16,len16,beats,isOdd,num}. The odd bar defaults to
-// last but can sit anywhere via sec.oddAt, so an extra beat can fall mid-phrase. `num` is the
-// bar's number in the count; skipOdd makes the short bar a pickup with no number of its own,
-// so the bar after it counts as 1.
-function barLayout(ets, bars, oddAt, skipOdd){
+// A section is whole bars plus any number of short bars slotted in among them — a 2/4 bar to turn
+// a phrase around, a beat of air before a chorus. Each is {at, beats, skip}: `at` is how many whole
+// bars come before it (0 = the very front, sec.bars = the end), `beats` its length, and `skip`
+// leaves it out of the bar count, so a pickup doesn't push bar 1 along.
+function secExtras(sec){ return sec && Array.isArray(sec.extras) ? sec.extras : []; }
+// The bars of a section, in order, as {start16,len16,beats,isOdd,num, slot|xi}. Whole bars carry
+// their `slot` (0-based among whole bars), short bars `xi`, their index in sec.extras.
+function barLayout(ets, bars, extras){
   const spb = sixteenthsPerBar(ets), s16b = sixteenthsPerBeat(ets);
-  const whole = wholeBarsOf(bars), ob = oddBarBeats(ets, bars);
-  const count = whole + (ob ? 1 : 0);
-  const oddIdx = ob ? Math.max(0, Math.min(oddAt == null ? count - 1 : oddAt, count - 1)) : -1;
-  const out = []; let pos = 0, num = 1;
-  for(let k = 0; k < count; k++){
-    const isOdd = k === oddIdx;
-    const len = isOdd ? ob * s16b : spb;
-    out.push({ start16: pos, len16: len, beats: isOdd ? ob : ets.n, isOdd, num: isOdd && skipOdd ? null : num++ });
-    pos += len;
+  const whole = Math.max(0, Math.round(bars || 0));
+  const list = (extras || []).map((e, xi) => ({ e, xi })).sort((a, b) => (a.e.at - b.e.at) || (a.xi - b.xi));
+  const out = []; let pos = 0, num = 1, li = 0;
+  const pushExtra = ({ e, xi }) => {
+    const beats = Math.max(1, Math.round(e.beats || 1));
+    out.push({ start16:pos, len16:beats * s16b, beats, isOdd:true, xi, num: e.skip ? null : num++ });
+    pos += beats * s16b;
+  };
+  for(let k = 0; k <= whole; k++){
+    while(li < list.length && list[li].e.at <= k) pushExtra(list[li++]);
+    if(k < whole){ out.push({ start16:pos, len16:spb, beats:ets.n, isOdd:false, slot:k, num:num++ }); pos += spb; }
   }
+  while(li < list.length) pushExtra(list[li++]);
+  if(!out.length) out.push({ start16:0, len16:spb, beats:ets.n, isOdd:false, slot:0, num:1 });
   return out;
 }
-function secLayout(song, sec){ return barLayout(effTS(song, sec), sec.bars, sec.oddAt, sec.oddSkip); }
+function secLayout(song, sec){ return barLayout(effTS(song, sec), sec.bars, secExtras(sec)); }
+// one pass of the section, in 16ths and in ms at the song's tempo
+function secTotal16(song, sec){ return Math.max(1, secLayout(song, sec).reduce((a, b) => a + b.len16, 0)); }
+function secMs(song, sec){ return secTotal16(song, sec) * msPer16(song); }
+// the bar count a person reads: whole bars, plus the short ones that count
+function secBarsShown(sec){ return (Number(sec.bars) || 0) + secExtras(sec).filter(e => !e.skip).length; }
 // bars that carry a number — a skipped pickup isn't one of them
 function countedBars(layout){ return layout.reduce((a, b) => a + (b.num == null ? 0 : 1), 0); }
-// does this section have a short bar that could be left out of the count?
-function hasOddBar(song, sec){ return oddBarBeats(effTS(song, sec), sec.bars) > 0; }
-// "8 bars" / "4 bars + 2 beats"
-function barsLabel(ets, bars){
-  const w = wholeBarsOf(bars), ob = oddBarBeats(ets, bars);
-  if(!ob) return `${w} bars`;
-  if(!w)  return `${ob} beat${ob!==1?'s':''}`;
-  return `${w} bars + ${ob} beat${ob!==1?'s':''}`;
+// where a short bar slotted at `at` begins: the start of whole bar `at`, after any already there
+function slotStart16(layout, at){
+  for(const b of layout) if(!b.isOdd && b.slot >= at) return b.start16;
+  return layout.reduce((a, b) => a + b.len16, 0);
+}
+// "8 bars" / "4 bars + 2/4"
+function barsLabel(song, sec){
+  const ets = effTS(song, sec), w = Number(sec.bars) || 0;
+  const head = `${w} bar${w === 1 ? '' : 's'}`;
+  const ex = secExtras(sec);
+  return ex.length ? head + ' + ' + ex.map(e => `${e.beats}/${ets.d}`).join(' + ') : head;
 }
 // the same spot in the fewest characters — "1.3" is bar 1 beat 3, "PU.3" a pickup
 function barBeatShort(bb){ return (bb.bar == null ? 'PU' : bb.bar) + '.' + bb.beat; }
@@ -2542,7 +2562,7 @@ function msPer16(song){ return (60000 / song.bpm) / 4; }       // a 16th note is
 // where (bar, beat) a fill's start16 lands, for labels
 function fillBarBeat(ets, start16, layout){
   const spb = sixteenthsPerBar(ets), s16b = sixteenthsPerBeat(ets);
-  // with an odd bar in play the bars aren't uniform, so walk the real layout
+  // with short bars in play the bars aren't uniform, so walk the real layout
   if(layout && layout.length){
     for(let k = 0; k < layout.length; k++){
       const b = layout[k];
@@ -2601,7 +2621,7 @@ window.addSection = function(typeId){ window.addSectionAt(typeId, null); }
 // insert a new section at a given index (null = append) and let just that one animate in
 window.addSectionAt = function(typeId, index){
   const song = currentSong(); if(!song) return;
-  const sec = {id:idCounter++, typeId, bars:8, notes:'', repeats:1, mod:null, fills:[], time:null, num:null, ts:null, tsd:null, color:null, oddAt:null, oddSkip:false};
+  const sec = {id:idCounter++, typeId, bars:8, notes:'', repeats:1, mod:null, fills:[], time:null, num:null, ts:null, tsd:null, color:null, extras:[]};
   const at = Math.max(0, Math.min(index == null ? song.sections.length : index, song.sections.length));
   song.sections.splice(at, 0, sec);
   window.save(); window.renderChart();
@@ -2735,8 +2755,8 @@ window.renderChart = function(){
     el.style.setProperty('--on-sec', onColor(ec));
     el.innerHTML = `
       <div class="lg-block">
-        <input class="lg-bars" type="number" inputmode="decimal" step="0.25" min="0.25" value="${fmtBars(sec.bars)}" aria-label="Bars" title="Bars in this section — decimals allowed (4.25)" onchange="updateBars(${i},this.value)">
-        <span class="lg-unit">${sec.bars == 1 ? 'Bar' : 'Bars'}</span>
+        <input class="lg-bars" type="number" inputmode="decimal" step="1" min="0" value="${sec.bars}" aria-label="Bars" title="Whole bars in this section — add short bars from the fills editor or the ⋯ menu" onchange="updateBars(${i},this.value)">
+        <span class="lg-unit">${sec.bars == 1 ? 'Bar' : 'Bars'}${secExtras(sec).length ? `<em class="lg-extra" title="${esc(barsLabel(song, sec))}">+${secExtras(sec).length === 1 ? secExtras(sec)[0].beats + '/' + ets.d : secExtras(sec).length + ' short'}</em>` : ''}</span>
         <span class="lg-ts${custom ? ' custom' : ''}" title="${custom ? 'This section has its own time signature' : 'Follows the song'}"><input type="number" inputmode="numeric" min="1" max="15" value="${ets.n}" style="width:${String(ets.n).length}ch" aria-label="Beats per bar" onchange="updateSecTS(${i},'n',this.value)"><span class="lg-slash">/</span><select aria-label="Note value" onchange="updateSecTS(${i},'d',this.value)"><option value="4"${ets.d==4?' selected':''}>4</option><option value="8"${ets.d==8?' selected':''}>8</option></select></span>
       </div>
       <div class="lg-body">
@@ -2792,7 +2812,7 @@ window.renderChart = function(){
     list.appendChild(el);
   });
 
-  const totalBars = song.sections.reduce((a,s)=>a+(s.bars*s.repeats),0);
+  const totalBars = song.sections.reduce((a,s)=>a+(secBarsShown(s)*s.repeats),0);
   const fillCount = song.sections.reduce((a,s)=>a+(s.fills?s.fills.length:0),0);
   document.getElementById('chart-stats').textContent =
     `${song.sections.length} section${song.sections.length===1?'':'s'} · ${fmtBars(totalBars)} bars` + (fillCount?` · ${fillCount} fill${fillCount>1?'s':''}`:'');
@@ -2861,7 +2881,7 @@ window.fitFillZoom = function(){ applyFillZoom(fmZoomMin, 0, 0); };
 window.addFillNext = function(){
   const song = currentSong(), sec = song && song.sections[fillsIdx]; if(!sec) return;
   const ets = effTS(song, sec);
-  const total = Math.max(1, Math.round(sec.bars * sixteenthsPerBar(ets)));
+  const total = secTotal16(song, sec);
   const unit = fillUnit(ets), len = Math.min(total, Math.max(unit, sixteenthsPerBeat(ets)));
   const hits = s => sec.fills.some(f => s < f.start16 + f.len16 && s + len > f.start16);
   let start = null;
@@ -2871,23 +2891,70 @@ window.addFillNext = function(){
   fmReveal16 = start;
   window.save(); window.renderChart();
 };
-// A fractional section ends on (or contains) a short bar. Counting it makes the next bar 2;
-// leaving it out makes that next bar 1, which is how a pickup or lead-in is actually counted.
-window.toggleOddSkip = function(i){
+// ── short bars ──
+// Added with the + Short bar button (or by right-clicking where one should go), as many per section
+// as the music has. Each one can be moved, resized, left out of the count, or removed.
+window.addShortBar = function(i, at, beats){
   const song = currentSong(), sec = song && song.sections[i]; if(!sec) return;
-  if(!hasOddBar(song, sec)){ showToast('This section has no short bar to leave out', 'error'); return; }
-  sec.oddSkip = !sec.oddSkip;
-  const beats = oddBarBeats(effTS(song, sec), sec.bars);
-  const msg = sec.oddSkip
-    ? `${beats === 1 ? 'That beat' : beats + ' beats'} won't be counted — the next bar is bar 1`
-    : 'The short bar is counted again';
-  window.save().then(() => showToast(msg));        // after save's own "Synced", so it isn't overwritten
+  const ets = effTS(song, sec);
+  const slot = at == null ? (Number(sec.bars) || 0) : Math.max(0, Math.min(Math.round(at), Number(sec.bars) || 0));
+  const b = Math.max(1, Math.min(32, Math.round(beats || Math.max(1, Math.floor(ets.n / 2)))));
+  const e = { at:slot, beats:b, skip:false };
+  restructure(song, sec, () => { sec.extras = secExtras(sec); sec.extras.push(e); });
+  const bar = secLayout(song, sec).find(x => x.isOdd && secExtras(sec)[x.xi] === e);
+  if(bar) fmReveal16 = bar.start16;
   window.renderChart();
+  window.save().then(() => showToast(`${b}/${ets.d} bar added — drag its tag to move it`));
 };
-// how a section's short bar reads in a menu — "1 beat", "2 beats"
-function oddBarWords(song, sec){
-  const b = oddBarBeats(effTS(song, sec), sec.bars);
-  return b === 1 ? '1 beat' : b + ' beats';
+window.removeShortBar = function(i, xi){
+  const song = currentSong(), sec = song && song.sections[i], e = secExtras(sec)[xi]; if(!e) return;
+  const lost = restructure(song, sec, () => {
+    sec.extras = secExtras(sec).filter(x => x !== e);
+    if(!sec.bars && !sec.extras.length) sec.bars = 1;
+  });
+  window.renderChart();
+  window.save().then(() => showToast('Short bar removed' + (lost ? ', with ' + plural(lost, 'fill') + ' in it' : '')));
+};
+window.setShortBarBeats = function(i, xi, beats){
+  const song = currentSong(), sec = song && song.sections[i], e = secExtras(sec)[xi]; if(!e) return;
+  const b = Math.max(1, Math.min(32, Math.round(beats)));
+  if(b === e.beats) return;
+  const lost = restructure(song, sec, () => { e.beats = b; });
+  window.renderChart();
+  window.save().then(() => showToast(`Now a ${b}/${effTS(song, sec).d} bar` + (lost ? ' — ' + plural(lost, 'fill') + ' no longer fit and went' : '')));
+};
+// Counting it makes the bar after it one higher; leaving it out makes it a pickup — the bar after
+// it keeps its number, which is how a lead-in or a beat of air is actually counted.
+window.toggleShortBarCount = function(i, xi){
+  const song = currentSong(), sec = song && song.sections[i], e = secExtras(sec)[xi]; if(!e) return;
+  e.skip = !e.skip;
+  const what = e.beats === 1 ? 'That beat' : `That ${e.beats}-beat bar`;
+  window.renderChart();
+  window.save().then(() => showToast(e.skip ? `${what} isn't counted — a pickup` : `${what} is counted again`));
+};
+// moving keeps the fills inside it with it, and leaves everyone else's in their own bars
+window.moveShortBar = function(i, xi, at){
+  const song = currentSong(), sec = song && song.sections[i], e = secExtras(sec)[xi]; if(!e) return;
+  const slot = Math.max(0, Math.min(Math.round(at), Number(sec.bars) || 0));
+  if(slot === e.at) return false;
+  restructure(song, sec, () => { e.at = slot; });
+  window.renderChart();
+  window.save();
+  return true;
+};
+// how a short bar reads in a menu — "a 2-beat bar", "a 1-beat bar"
+function shortBarWords(e){ return `the ${e.beats}-beat bar`; }
+// everything you can do to one short bar, for its tag, its right-click and the section menu
+function shortBarItems(i, xi){
+  const song = currentSong(), sec = song.sections[i], e = secExtras(sec)[xi]; if(!e) return [];
+  const ets = effTS(song, sec);
+  return [
+    { id:'sblen', icon:'metronome', label:'Length', submenu:
+      Array.from({ length: Math.max(ets.n + 2, e.beats) }, (_, k) => k + 1).map(b =>
+        ({ id:'sb' + b, label: `${b}/${ets.d}` + (b === 1 ? ' — one beat' : ''), disabled: b === e.beats, run:()=>window.setShortBarBeats(i, xi, b) })) },
+    { id:'sbcount', icon:'half', label: e.skip ? 'Count it as a bar again' : "Don't count it — make it a pickup", run:()=>window.toggleShortBarCount(i, xi) },
+    { id:'sbdel', icon:'trash', label:'Remove ' + shortBarWords(e), danger:true, run:()=>window.removeShortBar(i, xi) },
+  ];
 }
 window.clearFills = function(){
   const sec = currentSong()?.sections[fillsIdx]; if(!sec || !sec.fills.length) return;
@@ -2903,7 +2970,7 @@ function renderFillsModal(){
   const i = fillsIdx, sec = song.sections[i], n = song.sections.length;
   const ec = effColor(sec), ets = effTS(song, sec), custom = sectionHasTSOverride(sec);
   const spb = sixteenthsPerBar(ets), s16b = sixteenthsPerBeat(ets), unit = fillUnit(ets);
-  const total16 = Math.max(1, Math.round(sec.bars * spb));
+  const total16 = secTotal16(song, sec);
   const layout = secLayout(song, sec);
   const oldWrap = box.querySelector('.fm-wrap');
   const sameSection = !!oldWrap && fmRenderedIdx === i;
@@ -2926,9 +2993,9 @@ function renderFillsModal(){
       ? Array.from({length: bar.beats}, (_, k) => `<span class="ftl-beat-n" style="left:${k*s16b*PX}px">${k+1}</span>`).join('')
       : '';
     const badge = bar.isOdd
-      ? `<span class="ftl-odd-ts${bar.num == null ? ' nocount' : ''}" data-odd-handle="${i}" title="${bar.num == null ? 'Pickup — left out of the bar count. Right-click to count it' : 'Drag to move this short bar · right-click to leave it out of the count'}">${bar.beats}/${ets.d}</span>`
+      ? `<span class="ftl-odd-ts${bar.num == null ? ' nocount' : ''}" data-odd-handle="${i}" data-xi="${bar.xi}" title="${bar.num == null ? 'A pickup — not counted. ' : ''}Tap for its length, count or remove · drag to move it">${bar.beats}/${ets.d}</span>`
       : '';
-    return `<div class="ftl-measure${bar.isOdd ? ' ftl-odd' : ''}${bar.num == null ? ' ftl-nocount' : ''}" data-bar="${b}"${bar.isOdd ? ' data-odd="1"' : ''} style="left:${bar.start16*PX}px;width:${bar.len16*PX}px">${badge}${beatNums}</div>`;
+    return `<div class="ftl-measure${bar.isOdd ? ' ftl-odd' : ''}${bar.num == null ? ' ftl-nocount' : ''}" data-bar="${b}"${bar.isOdd ? ` data-odd="1" data-xi="${bar.xi}"` : ''} style="left:${bar.start16*PX}px;width:${bar.len16*PX}px">${badge}${beatNums}</div>`;
   }).join('');
   const blocks = sec.fills.map((f, fi) => {
     const bb = fillBarBeat(ets, f.start16, layout);
@@ -2962,7 +3029,8 @@ function renderFillsModal(){
     </div>
     <div class="fm-tools">
       <button type="button" class="rect solid" onclick="addFillNext()">${ico('plus')}Add fill</button>
-      <label class="fm-field"><span class="ed-lbl">Bars</span><input class="fm-num" type="number" inputmode="decimal" step="0.25" min="0.25" value="${fmtBars(sec.bars)}" onchange="updateBars(${i},this.value)"></label>
+      <label class="fm-field"><span class="ed-lbl">Bars</span><input class="fm-num" type="number" inputmode="decimal" step="1" min="0" value="${sec.bars}" onchange="updateBars(${i},this.value)"></label>
+      <button type="button" class="rect quiet fm-short" onclick="addShortBar(${i})" title="Add a short bar — a 2/4 to turn a phrase, a beat of air. Drag its tag to put it where it goes.">${ico('plus')}Short bar</button>
       <div class="fm-field"><span class="ed-lbl">Time</span><span class="fm-ts${custom ? ' custom' : ''}"><input type="number" inputmode="numeric" min="1" max="15" value="${ets.n}" aria-label="Beats per bar" onchange="updateSecTS(${i},'n',this.value)"><span>/</span><select aria-label="Note value" onchange="updateSecTS(${i},'d',this.value)"><option value="4"${ets.d==4?' selected':''}>4</option><option value="8"${ets.d==8?' selected':''}>8</option></select></span></div>
       <span class="fm-spacer"></span>
       <div class="fm-seg" role="group" aria-label="Snap to"><span class="ed-lbl">Snap</span>${snapBtn(1, '1/16')}${snapBtn(2, '1/8')}${snapBtn('beat', 'Beat')}</div>
@@ -3212,7 +3280,7 @@ function sectionTrackTime(song, i){
   for(let j=i-1; j>=0; j--){
     if(song.sections[j].time != null){
       let t = song.sections[j].time;
-      for(let k=j; k<i; k++){ const s=song.sections[k]; t += (barMsFor(song,s) * s.bars * s.repeats) / 1000; }
+      for(let k=j; k<i; k++){ const s=song.sections[k]; t += (secMs(song,s) * s.repeats) / 1000; }
       return t;
     }
   }
@@ -3260,13 +3328,13 @@ function updateEdPlayhead(){
   const tl = document.querySelector('#fills-box .fill-timeline'), ph = tl && tl.querySelector('.ftl-playhead');
   if(!tl || !ph) return;
   const ets = effTS(song, cur.s);
-  const total16 = Math.round(cur.s.bars * sixteenthsPerBar(ets));
+  const total16 = secTotal16(song, cur.s);
   let pos16;
   if(playheadMode() === 'cue'){
     // Stretch the crossing so it lands exactly on the next cue. Recordings drift off the
     // click, so pacing by BPM would run ahead or lag; the cues are the real anchors.
     const nxt = cued.find(o => o.s.time > cur.s.time);
-    const bpmEnd = cur.s.time + (barMsFor(song, cur.s) * cur.s.bars * cur.s.repeats) / 1000;
+    const bpmEnd = cur.s.time + (secMs(song, cur.s) * cur.s.repeats) / 1000;
     const endT = nxt ? nxt.s.time : (songEndAfter(song, cur.s.time) || bpmEnd);   // no next cue -> the end cue, else tempo
     const span = Math.max(0.05, endT - cur.s.time);
     pos16 = Math.max(0, Math.min(total16, ((t - cur.s.time) / span) * total16));
@@ -3577,7 +3645,7 @@ function updatePerformBtn(){
 // bars stretch to land exactly on the next section's start; in "tempo" mode they run at BPM.
 function buildPerfTimeline(song){
   const n = song.sections.length;
-  const dur = song.sections.map(s => barMsFor(song, s) * s.bars * s.repeats / 1000);
+  const dur = song.sections.map(s => secMs(song, s) * s.repeats / 1000);
   const start = song.sections.map(s => s.time != null ? s.time : null);
   for(let i = 1; i < n; i++) if(start[i] == null && start[i-1] != null) start[i] = start[i-1] + dur[i-1];
   for(let i = n - 2; i >= 0; i--) if(start[i] == null && start[i+1] != null) start[i] = Math.max(0, start[i+1] - dur[i]);
@@ -3622,7 +3690,7 @@ function renderPerfRows(song){
     const fills = (sec.fills || []).map((f, fi) => ({ f, fi, bb:fillBarBeat(ets, f.start16, lay) })).sort((a, b) => a.f.start16 - b.f.start16);
     const name = esc(sectionDisplay(song, i));
     return `<div class="tp-row" data-i="${i}" role="button" title="Jump here" aria-label="Jump to ${name}" style="--sec:${ec};--on-sec:${onColor(ec)}" onclick="perfRowTap(${i},event)">
-      <div class="tp-blk"><b class="tp-num">${fmtBars(sec.bars)}</b><span class="tp-unit">${sec.bars == 1 ? 'Bar' : 'Bars'}</span><span class="tp-beats"></span></div>
+      <div class="tp-blk"><b class="tp-num">${secBarsShown(sec)}</b><span class="tp-unit">${secBarsShown(sec) == 1 ? 'Bar' : 'Bars'}</span><span class="tp-beats"></span></div>
       <div class="tp-body">
         <div class="tp-name">${name}${sec.repeats > 1 ? `<span class="tp-rep">×${sec.repeats}</span>` : ''}</div>
         <div class="tp-meta"><span class="tp-when"></span><span class="tp-mn">${esc(sec.notes || '')}</span></div>
@@ -3636,8 +3704,8 @@ function renderPerfRows(song){
 // a row shows its bar count at rest; while playing or counting in it borrows the number
 function perfRestRow(row, sec){
   if(!row.dataset.live) return;
-  row.querySelector('.tp-num').textContent = fmtBars(sec.bars);
-  row.querySelector('.tp-unit').textContent = sec.bars == 1 ? 'Bar' : 'Bars';
+  row.querySelector('.tp-num').textContent = secBarsShown(sec);
+  row.querySelector('.tp-unit').textContent = secBarsShown(sec) == 1 ? 'Bar' : 'Bars';
   delete row.dataset.live;
 }
 function perfSetCurrent(rows, ci){
@@ -3993,16 +4061,52 @@ window.openPerfMenu = function(ev){
 };
 
 // ─── HELPERS ───
+// Change a section's bars while keeping each fill in the bar it belongs to. Every fill is held by
+// (its bar, how far into it), the change is made, and it's put back the same way — so a bar added in
+// front pushes what follows along, and a bar taken away takes its fills with it. Returns how many
+// fills had nowhere to go.
+function restructure(song, sec, change){
+  const ex = secExtras(sec), before = secLayout(song, sec);
+  const held = (sec.fills || []).map(f => {
+    const b = before[barIndexAt16(before, f.start16)];
+    return { f, whole: b.isOdd ? null : b.slot, extra: b.isOdd ? ex[b.xi] : null, off: f.start16 - b.start16 };
+  });
+  change();
+  const after = secLayout(song, sec), ex2 = secExtras(sec);
+  const total16 = after.reduce((a, b) => a + b.len16, 0);
+  let lost = 0;
+  sec.fills = held.filter(h => {
+    const b = h.extra ? after.find(x => x.isOdd && ex2[x.xi] === h.extra) : after.find(x => !x.isOdd && x.slot === h.whole);
+    if(!b || h.off >= b.len16 - 1e-9){ lost++; return false; }
+    h.f.start16 = b.start16 + h.off;
+    h.f.len16 = Math.max(1, Math.min(h.f.len16, total16 - h.f.start16));
+    return true;
+  }).map(h => h.f);
+  return lost;
+}
+// Whole bars. A decimal still does what it always did — 4.5 is 4 bars with a 2-beat bar on the end —
+// it just becomes a short bar of its own, which can then be moved, resized or added to.
 window.updateBars = (i,v) => {
   const song = currentSong(); const sec = song.sections[i];
-  // bars can be fractional (e.g. 4.25) — snap to the nearest 16th of a bar, min a quarter bar
-  const raw = parseFloat(v);
-  sec.bars = isNaN(raw) ? 1 : Math.max(0.25, Math.round(raw*16)/16);
-  // drop fills that now start past the end of the section (fills are 16th-based: start16/len16)
-  const total16 = Math.round(sec.bars * sixteenthsPerBar(effTS(song, sec)));
-  sec.fills = (sec.fills||[]).filter(f => f.start16 < total16);
-  sec.fills.forEach(f => { f.len16 = Math.max(1, Math.min(f.len16, total16 - f.start16)); });
-  window.save(); window.renderChart();
+  const ets = effTS(song, sec), raw = parseFloat(v);
+  const whole = isNaN(raw) ? 1 : Math.max(0, Math.min(999, Math.floor(raw + 1e-9)));
+  const frac = isNaN(raw) ? 0 : raw - Math.floor(raw + 1e-9);
+  const old = Number(sec.bars) || 0;
+  let note = '';
+  const lost = restructure(song, sec, () => {
+    sec.extras = secExtras(sec);
+    sec.extras.forEach(e => { e.at = e.at >= old ? whole : Math.min(e.at, whole); });   // one at the end stays at the end
+    sec.bars = whole;
+    if(frac > 1e-9){
+      const beats = Math.max(1, Math.round(frac * ets.n));
+      sec.extras.push({ at:whole, beats, skip:false });
+      note = `${whole} bar${whole === 1 ? '' : 's'} and a ${beats}/${ets.d} bar`;
+    }
+    if(!sec.bars && !sec.extras.length) sec.bars = 1;
+  });
+  if(lost) note = (note ? note + ' · ' : '') + plural(lost, 'fill') + ' removed with those bars';
+  window.renderChart();
+  window.save().then(() => { if(note) showToast(note); });
 }
 window.updateNotes = (i,v) => { currentSong().sections[i].notes = v; window.save(); }
 // Turn a section into another type in place — bars, time signature, notes, fills, repeats and
@@ -4099,7 +4203,7 @@ window.copyBarFills = (i, barIdx) => {
 window.pasteFillsInto = (i, barIdx) => {
   const song = currentSong(), sec = song.sections[i]; if(!sec || !fillClipboard) return;
   const layout = secLayout(song, sec), bar = layout[barIdx]; if(!bar) return;
-  const total16 = Math.max(1, Math.round(sec.bars * sixteenthsPerBar(effTS(song, sec))));
+  const total16 = secTotal16(song, sec);
   let added = 0;
   fillClipboard.items.forEach(it => {
     const start = bar.start16 + it.off16;
@@ -4116,7 +4220,7 @@ window.pasteFillsInto = (i, barIdx) => {
 window.removeFill = (i, fi) => { currentSong().sections[i].fills.splice(fi, 1); window.save(); window.renderChart(); }
 window.duplicateFill = (i, fi) => {
   const sec = currentSong().sections[i]; const f = sec.fills[fi];
-  const total = Math.round(sec.bars * sixteenthsPerBar(effTS(currentSong(), sec)));
+  const total = secTotal16(currentSong(), sec);
   const start = Math.min(total - 1, f.start16 + f.len16);
   sec.fills.push({ start16: start, len16: Math.min(f.len16, total - start), notes: f.notes });
   window.save(); window.renderChart();
@@ -4136,11 +4240,11 @@ function fillLaneSeek(i, pos16){
   const song = currentSong(), sec = song && song.sections[i];
   if(!sec) return;
   if(!edAvailable()){ showToast(song.audio ? 'Re-load the audio file first' : 'Add a track to move through it', 'error'); return; }
-  const total16 = Math.max(1, Math.round(sec.bars * sixteenthsPerBar(effTS(song, sec))));
+  const total16 = secTotal16(song, sec);
   let t;
   if(sec.time != null && playheadMode() === 'cue'){
     const next = song.sections.filter(s => s.time != null && s.time > sec.time).sort((a, b) => a.time - b.time)[0];
-    const end = next ? next.time : (songEndAfter(song, sec.time) || sec.time + barMsFor(song, sec) * sec.bars * sec.repeats / 1000);
+    const end = next ? next.time : (songEndAfter(song, sec.time) || sec.time + secMs(song, sec) * sec.repeats / 1000);
     t = sec.time + (pos16 / total16) * (end - sec.time);
   } else {
     const start = sectionTrackTime(song, i);
@@ -4165,43 +4269,51 @@ function attachFillTimeline(tl, blockEl){
     return Math.max(0, Math.min(total, (clientX - rect.left) / PX));
   };
   const snap = clientX => Math.max(0, Math.min(total, Math.round(raw(clientX) / unit) * unit));
-  // ── drag the odd bar to a different slot in the section ──
-  const handle = tl.querySelector('[data-odd-handle]');
-  if(handle){
+  // ── a short bar's tag: drag it to another slot, or tap it for its menu ──
+  tl.querySelectorAll('[data-odd-handle]').forEach(handle => {
+    handle.addEventListener('click', ev => ev.stopPropagation());   // or it would close the menu a tap just opened
     handle.addEventListener('pointerdown', e => {
       if(e.button) return;
-      e.stopPropagation();                      // never start a fill drag from the handle
+      e.stopPropagation();                      // never start a fill drag from the tag
+      e.preventDefault();
       setDrag(false);
-      const song = currentSong(), sec = song.sections[i];
-      const ets = effTS(song, sec);
-      const slots = secLayout(song, sec).length;
+      const song = currentSong(), sec = song.sections[i], xi = +handle.dataset.xi;
+      const ex = secExtras(sec)[xi]; if(!ex){ setDrag(true); return; }
+      const layout = secLayout(song, sec);
       const rect = tl.getBoundingClientRect();
-      const spbPX = sixteenthsPerBar(ets) * PX;
+      // the slot a pointer means: how many whole bars lie mostly to the left of it
+      const slotAt = clientX => {
+        const p16 = (clientX - rect.left) / PX;
+        return layout.filter(b => !b.isOdd && b.start16 + b.len16 / 2 < p16).length;
+      };
+      const marker = document.createElement('div');
+      marker.className = 'ftl-insert'; marker.hidden = true; tl.appendChild(marker);
       try { handle.setPointerCapture(e.pointerId); } catch(_){}
       handle.classList.add('dragging');
-      let target = sec.oddAt == null ? slots - 1 : sec.oddAt;
+      let moved = false, target = ex.at;
       const move = ev => {
-        // which bar slot is the pointer over?
-        const k = Math.max(0, Math.min(slots - 1, Math.floor((ev.clientX - rect.left) / spbPX)));
-        if(k !== target){
-          target = k;
-          tl.querySelectorAll('.ftl-measure').forEach(m =>
-            m.classList.toggle('ftl-odd-target', +m.dataset.bar === k));
-        }
+        if(Math.abs(ev.clientX - e.clientX) > 4) moved = true;
+        if(!moved) return;
+        target = slotAt(ev.clientX);
+        marker.hidden = false;
+        marker.style.left = (slotStart16(layout, target) * PX) + 'px';     // the bar line it will land on
       };
       const up = () => {
         handle.removeEventListener('pointermove', move);
         handle.removeEventListener('pointerup', up);
+        handle.removeEventListener('pointercancel', up);
         handle.classList.remove('dragging');
+        marker.remove();
         setDrag(true);
-        const wasLast = slots - 1;
-        sec.oddAt = (target === wasLast) ? null : target;   // null keeps "last bar" behaviour
-        window.save(); window.renderChart();
+        if(moved){ window.moveShortBar(i, xi, target); return; }
+        const r = handle.getBoundingClientRect();         // a tap: what can be done to this bar
+        showCtx(r.left, r.bottom + 6, shortBarItems(i, xi));
       };
       handle.addEventListener('pointermove', move);
       handle.addEventListener('pointerup', up);
+      handle.addEventListener('pointercancel', up);
     });
-  }
+  });
   tl.addEventListener('pointerdown', e => {
     if(e.button) return;
     if(e.target.hasAttribute('data-odd-handle')) return;   // handled above
@@ -4454,7 +4566,7 @@ function sectionMenuItems(i){
     {id:'fills', icon:'fills', label:'Edit fills', run:()=>window.openFills(i)},
     {id:'x2', icon:'repeat', label:'Repeat ×' + ((sec?.repeats || 1) % 8 + 1), run:()=>window.cycleRepeats(i)},
     {id:'mod', icon:'half', label: sec?.mod ? 'Clear pre / post' : 'Mark as pre-', run:()=>window.setMod(i, sec?.mod ? sec.mod : 'pre')},
-    ...(sec && hasOddBar(song, sec) ? [oddSkipItem(i, sec)] : []),
+    {id:'shortbar', icon:'plus', label:'Add a short bar at the end', run:()=>window.addShortBar(i)},
     ...(edAvailable() ? [{id:'cue', icon:'cue', label: sec?.time != null ? 'Clear cue' : 'Cue at play time',
           run:()=> sec?.time != null ? window.clearCue(i) : window.setCueHere(i)}] : []),
     ...(edAvailable() && i === n - 1 ? [{id:'endcue', icon:'bottom', label: song.endTime != null ? 'Clear the song\u2019s end cue' : 'End the song at play time',
@@ -4500,14 +4612,6 @@ function insertIndexFromPoint(clientY){
   }
   return song.sections.length;
 }
-// leave a section's short bar out of the count, or put it back
-function oddSkipItem(i, sec){
-  const song = currentSong();
-  return { id:'pickup', icon:'half',
-           label: sec.oddSkip ? 'Count the ' + oddBarWords(song, sec) + ' again (they become bar 1)'
-                              : "Don't count the " + oddBarWords(song, sec) + ' — make them a pickup',
-           run:()=>window.toggleOddSkip(i) };
-}
 // the "Set this section to ▸" submenu — the type it already is sits disabled
 function setTypeMenu(i, sec){
   return { id:'settype', icon:'edit', label:'Set this section to', submenu:
@@ -4541,7 +4645,15 @@ document.addEventListener('contextmenu', e => {
     if(fi != null) items.push({id:'fcopy', icon:'copy', label:'Copy this fill', run:()=>window.copyFill(i, fi)});
     if(inBar.length) items.push({id:'bcopy', icon:'copy', label:'Copy ' + plural(inBar.length, 'fill') + ' in ' + barName(bar), run:()=>window.copyBarFills(i, barIdx)});
     if(copiedCount()) items.push({id:'bpaste', icon:'paste', label:'Paste ' + plural(copiedCount(), 'fill') + ' into ' + barName(bar), run:()=>window.pasteFillsInto(i, barIdx)});
-    if(bar && bar.isOdd){ if(items.length) items.push('---'); items.push(oddSkipItem(i, sec)); }
+    if(bar && bar.isOdd){ if(items.length) items.push('---'); items.push(...shortBarItems(i, bar.xi)); }
+    if(laneEl && fi == null){
+      // a new short bar goes on the bar line nearest the pointer
+      const tl = laneEl.closest('.fill-timeline'), PX = +tl.dataset.px;
+      const p16 = (e.clientX - tl.getBoundingClientRect().left) / PX;
+      const slot = layout.filter(b => !b.isOdd && b.start16 + b.len16 / 2 < p16).length;
+      if(items.length) items.push('---');
+      items.push({id:'sbadd', icon:'plus', label:'Add a short bar here', run:()=>window.addShortBar(i, slot)});
+    }
     if(fi != null){
       if(items.length) items.push('---');
       items.push({id:'fd', icon:'dup', label:'Duplicate fill', run:()=>window.duplicateFill(i, fi)},
