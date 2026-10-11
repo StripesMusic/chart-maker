@@ -2811,7 +2811,7 @@ window.renderChart = function(){
         <button type="button" class="lg-fills${nf ? ' has' : ''}" onclick="openFills(${i})">${ico('fills')}<span>${nf ? nf + ' fill' + (nf > 1 ? 's' : '') : 'Add fills'}</span>${nf ? `<span class="lg-dots">${'<i></i>'.repeat(Math.min(nf, 8))}</span>` : ''}</button>
       </div>
       <div class="lg-rail">
-        <button type="button" class="circ lg-dup" onclick="duplicateSection(${i})" title="Duplicate" aria-label="Duplicate section">${ico('dup')}</button>
+        <button type="button" class="circ lg-dup" onclick="duplicateSection(${i})" title="Duplicate to bottom" aria-label="Duplicate section to the bottom">${ico('dup')}</button>
         <button type="button" class="circ" onclick="openSectionMenu(event,${i})" title="More" aria-label="More actions">${ico('more')}</button>
         <button type="button" class="circ danger" onclick="removeSection(${i})" title="Delete" aria-label="Delete section">${ico('x')}</button>
       </div>`;
@@ -4198,10 +4198,19 @@ window.cycleRepeats = (i, dir = 1) => {
 let sectionClipboard = null;
 let selectedSectionIdx = null;
 function cloneSection(sec){ const c = JSON.parse(JSON.stringify(sec)); c.id = idCounter++; c.time = null; return c; }
+// the copy goes to the bottom of the stack and becomes the selection, so ⌘D again copies it again
 window.duplicateSection = (i) => {
-  const secs = currentSong().sections;
-  secs.splice(i+1, 0, cloneSection(secs[i]));
+  const secs = currentSong().sections; if(!secs[i]) return;
+  secs.push(cloneSection(secs[i]));
+  const at = secs.length - 1;
   window.save(); window.renderChart();
+  const el = document.querySelector(`#chart-area .section-block[data-idx="${at}"]`);
+  if(el){
+    el.classList.add('anim-in');
+    el.addEventListener('animationend', () => el.classList.remove('anim-in'), {once:true});
+    el.scrollIntoView({block:'nearest'});
+  }
+  setSelectedSection(at);
 }
 window.copySection = (i) => { sectionClipboard = JSON.parse(JSON.stringify(currentSong().sections[i])); showToast('Section copied'); }
 window.cutSection  = (i) => { sectionClipboard = JSON.parse(JSON.stringify(currentSong().sections[i])); currentSong().sections.splice(i,1); window.save(); window.renderChart(); showToast('Section cut'); }
@@ -4624,7 +4633,7 @@ function sectionMenuItems(i){
     addSectionMenu(i + 1),
     setTypeMenu(i, sec),
     '---',
-    {id:'dup', icon:'dup', label:'Duplicate', key:KEYS.dup, run:()=>window.duplicateSection(i)},
+    {id:'dup', icon:'dup', label:'Duplicate to bottom', key:KEYS.dup, run:()=>window.duplicateSection(i)},
     {id:'copy', icon:'copy', label:'Copy', key:KEYS.copy, run:()=>window.copySection(i)},
     {id:'cut', icon:'cut', label:'Cut', key:KEYS.cut, run:()=>window.cutSection(i)},
     {id:'paste', icon:'paste', label:'Paste below', key:KEYS.paste, disabled:!sectionClipboard, run:()=>window.pasteSection(i)},
@@ -4870,7 +4879,7 @@ function renderShortcuts(){
   const editing = group('Editing',
     row('Undo', K(M, 'Z')) +
     row('Redo', IS_MAC ? K('⇧', '⌘', 'Z') : K('Ctrl', 'Y')) +
-    row('Duplicate the selected section', K(M, 'D')) +
+    row('Duplicate the selected section to the bottom', K(M, 'D')) +
     row('Copy it', K(M, 'C')) +
     row('Cut it', K(M, 'X')) +
     row('Paste below it', K(M, 'V')) +
