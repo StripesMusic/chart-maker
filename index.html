@@ -892,6 +892,12 @@ kbd{font-family:var(--mono)}
 #view-editor #audio-url-input::placeholder{color:var(--muted2)}
 #view-editor #audio-bar-player iframe{border-radius:0}
 #view-editor .ed-noplay{border-radius:0;font-family:var(--mono);font-size:11px;letter-spacing:.06em}
+/* track volume: a mute button and a slider, in the editor's transport row and while performing */
+.vol{display:inline-flex;align-items:center;gap:6px;flex-shrink:0}
+.vol .circ{width:32px;height:32px;color:var(--text)}
+.vol.muted .circ{color:var(--accent);border-color:var(--accent)}
+.vol-range{width:84px;height:24px;margin:0;accent-color:var(--text);cursor:pointer}
+.vol.muted .vol-range{opacity:.4}
 /* one transport row beside the video: play, clock, tap-to-cue, and a menu for the rest */
 #view-editor #audio-bar:not(.empty) #audio-panel{align-items:center;gap:18px}
 #view-editor #audio-bar-player,#view-editor #audio-bar-player iframe{width:216px;height:122px}
@@ -1234,6 +1240,7 @@ kbd{font-family:var(--mono)}
   #view-editor #song-name-input{font-size:22px}
   #view-editor .sync-tap{width:auto;flex:1 1 0}
   #view-editor .sync-time{min-width:0}
+  #view-editor .vol-range{display:none}
   #view-editor .section-block{--blk:70px;min-height:0}
   #view-editor .lg-bars{font-size:32px;height:28px;line-height:28px}
   #view-editor .lg-body{gap:6px;padding:10px 8px 10px 12px}
@@ -1343,6 +1350,7 @@ kbd{font-family:var(--mono)}
 .tp-transport{display:flex;align-items:center;gap:8px;order:1}
 .tp-nav{width:40px;height:40px;color:var(--text)}
 .tp-nav .i{width:15px;height:15px}
+#tp-vol{order:3}
 #tp-video{flex-shrink:0;width:192px;height:108px;background:#000;overflow:hidden}
 #tp-video iframe{display:block;width:192px;height:108px;border:0}
 #tp-video.audio-only{display:none}
@@ -1394,6 +1402,7 @@ kbd{font-family:var(--mono)}
            background:linear-gradient(0deg,rgba(12,11,9,.96) 0%,rgba(12,11,9,.8) 62%,rgba(12,11,9,0) 100%);transition:opacity .25s ease,transform .25s ease}
   #tp-countin{display:none}
   #tp-foot{flex-wrap:wrap;row-gap:6px}
+  #tp-vol{display:none}
   #tp-video,#tp-video iframe{width:52px;height:29px}
   #tp-video{order:1}
   .tp-seekrow{order:2;flex:1 1 auto;gap:8px}
@@ -1571,6 +1580,8 @@ kbd{font-family:var(--mono)}
   <symbol id="i-metronome" viewBox="0 0 16 16"><path d="M6 2.5h4l2.5 11h-9z"/><path d="M8 10.5l3.2-5.5"/></symbol>
   <symbol id="i-exit" viewBox="0 0 16 16"><path d="M9.5 2.5h-7v11h7"/><path d="M6.5 8h7M11 5.5 13.5 8 11 10.5"/></symbol>
   <symbol id="i-music" viewBox="0 0 16 16"><path d="M6 12V3.5l7-1.5v8.5"/><circle cx="4.3" cy="12" r="1.7"/><circle cx="11.3" cy="10.5" r="1.7"/></symbol>
+  <symbol id="i-vol" viewBox="0 0 16 16"><path d="M2.5 6h2.5l3.5-3v10l-3.5-3h-2.5z"/><path d="M11 5.8a3 3 0 0 1 0 4.4M12.8 3.8a6 6 0 0 1 0 8.4"/></symbol>
+  <symbol id="i-mute" viewBox="0 0 16 16"><path d="M2.5 6h2.5l3.5-3v10l-3.5-3h-2.5z"/><path d="M11 6.2l3.5 3.6M14.5 6.2 11 9.8"/></symbol>
   <symbol id="i-tap" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><circle cx="8" cy="8" r="1.7" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-check" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7"/></symbol>
   <symbol id="i-grip" viewBox="0 0 16 16"><g fill="currentColor" stroke="none"><circle cx="6" cy="4" r="1.1"/><circle cx="10" cy="4" r="1.1"/><circle cx="6" cy="8" r="1.1"/><circle cx="10" cy="8" r="1.1"/><circle cx="6" cy="12" r="1.1"/><circle cx="10" cy="12" r="1.1"/></g></symbol>
@@ -1717,6 +1728,7 @@ kbd{font-family:var(--mono)}
       <button class="circ" id="tp-play" onclick="toggleAudioPlay()" title="Play / pause (Space)" aria-label="Play or pause"><svg class="i" aria-hidden="true"><use href="#i-play"/></svg></button>
       <button class="circ tp-nav" onclick="perfNext()" title="Next section (↓)" aria-label="Next section"><svg class="i" aria-hidden="true"><use href="#i-down"/></svg></button>
     </div>
+    <div id="tp-vol"></div>
   </div>
 </div>
 
@@ -3221,12 +3233,13 @@ function setupEditorAudio(){
       edYtPlayer = new YT.Player(mount, {
         width:'216', height:'122', videoId: song.audio.videoId,
         playerVars:{ controls:1, rel:0, modestbranding:1 },
-        events:{ onReady:()=>{ edYtReady = true; startEdClock(); startEdPlayhead(); }, onStateChange:()=>updateEdPlayBtn() }
+        events:{ onReady:()=>{ edYtReady = true; ytSetVolume(edYtPlayer, trackLevel()); startEdClock(); startEdPlayhead(); }, onStateChange:()=>updateEdPlayBtn() }
       });
     });
   } else if(song.audio.type === 'file' && localAudioURL){
     holder.innerHTML = `<audio id="ed-audio-el" controls src="${localAudioURL}"></audio>`;
     edAudioEl = document.getElementById('ed-audio-el');
+    edAudioEl.volume = trackLevel() / 100;
     edAudioEl.addEventListener('play', updateEdPlayBtn);
     edAudioEl.addEventListener('pause', updateEdPlayBtn);
     startEdClock(); startEdPlayhead();
@@ -3416,6 +3429,7 @@ function renderSyncPanel(){
       <button class="sync-tap" onclick="editTapCue()"${done || !total ? ' disabled' : ''} title="${done ? 'Every section is cued' : 'Tap on the downbeat of ' + esc(nextName) + ' (T)'}">
         <span class="tap-fill" style="width:${pct}%"></span>${ico('tap')}<span class="sync-tap-next">${done ? 'All cued' : 'Tap · ' + esc(nextName)}</span>${done ? '' : '<kbd class="tap-key">T</kbd>'}<span class="tap-count">${cued}/${total}</span>
       </button>
+      ${volControlHTML()}
       ${more}
     </div>`;
 }
@@ -3490,14 +3504,68 @@ function seekAudioTo(t){
   }
   else if(htmlAudio) htmlAudio.currentTime = t;
 }
-function audioVolume(){
-  if(ytPlayer && ytReady && ytPlayer.getVolume) return ytPlayer.getVolume();
-  if(htmlAudio) return htmlAudio.volume * 100;
-  return 100;
+function ytSetVolume(p, v){
+  if(!p || !p.setVolume) return;
+  p.setVolume(v);
+  if(v > 0 && p.isMuted && p.isMuted()) p.unMute();   // muted from YouTube's own controls
 }
 function setAudioVolume(v){
-  if(ytPlayer && ytReady && ytPlayer.setVolume) ytPlayer.setVolume(v);
+  if(ytPlayer && ytReady) ytSetVolume(ytPlayer, v);
   else if(htmlAudio) htmlAudio.volume = Math.max(0, Math.min(1, v / 100));
+}
+
+// ── track volume ──
+// One level for every player — the editor's and performing, YouTube or a file — kept between visits.
+// [ / ] step it and Shift+M mutes. Phones mostly ignore it and use their own volume buttons.
+let trackVol = 100, trackMuted = false;
+try{
+  const v = parseFloat(localStorage.getItem('drumcharts_volume'));
+  if(isFinite(v)) trackVol = Math.max(0, Math.min(100, Math.round(v)));
+  trackMuted = localStorage.getItem('drumcharts_muted') === '1';
+}catch(_){}
+function trackLevel(){ return trackMuted ? 0 : trackVol; }
+function applyTrackVolume(){
+  const v = trackLevel();
+  if(!countIn || countIn.up) setAudioVolume(v);      // a count-in holds the track down until its downbeat
+  if(edYtPlayer && edYtReady) ytSetVolume(edYtPlayer, v);
+  else if(edAudioEl) edAudioEl.volume = v / 100;
+  try{ localStorage.setItem('drumcharts_volume', String(trackVol)); localStorage.setItem('drumcharts_muted', trackMuted ? '1' : '0'); }catch(_){}
+  document.querySelectorAll('.vol').forEach(syncVolControl);
+}
+function volControlHTML(){
+  const muted = trackLevel() === 0;
+  return `<div class="vol${muted ? ' muted' : ''}">
+    <button class="circ" onclick="toggleMute()" title="${trackMuted ? 'Unmute' : 'Mute'} (\u21e7M)" aria-label="${trackMuted ? 'Unmute' : 'Mute'} the track" aria-pressed="${trackMuted}">${ico(muted ? 'mute' : 'vol')}</button>
+    <input type="range" class="vol-range" min="0" max="100" step="1" value="${trackLevel()}" title="Volume ${trackLevel()}% ([ / ])" aria-label="Volume" oninput="setTrackVolume(this.value)" onchange="this.blur()">
+  </div>`;
+}
+// refresh every control in place, so a slider being dragged isn't rebuilt under the pointer
+function syncVolControl(el){
+  const btn = el.querySelector('button'), range = el.querySelector('input');
+  const muted = trackLevel() === 0;
+  el.classList.toggle('muted', muted);
+  const icon = ico(muted ? 'mute' : 'vol');
+  if(btn.innerHTML !== icon) btn.innerHTML = icon;
+  btn.title = (trackMuted ? 'Unmute' : 'Mute') + ' (\u21e7M)';
+  btn.setAttribute('aria-label', (trackMuted ? 'Unmute' : 'Mute') + ' the track');
+  btn.setAttribute('aria-pressed', String(trackMuted));
+  if(document.activeElement !== range) range.value = trackLevel();
+  range.title = 'Volume ' + trackLevel() + '% ([ / ])';
+}
+window.setTrackVolume = function(v){
+  trackVol = Math.max(0, Math.min(100, Math.round(+v || 0)));
+  trackMuted = false;
+  applyTrackVolume();
+};
+window.toggleMute = function(){
+  if(trackMuted || trackVol === 0){ trackMuted = false; if(trackVol === 0) trackVol = 50; }
+  else trackMuted = true;
+  applyTrackVolume();
+  showToast(trackMuted ? 'Track muted' : 'Volume ' + trackVol + '%');
+};
+function stepTrackVolume(d){
+  window.setTrackVolume((trackMuted ? 0 : trackVol) + d);
+  showToast(trackVol ? 'Volume ' + trackVol + '%' : 'Track muted');
 }
 
 // ── counting the band in ──────────────────────────────
@@ -3558,7 +3626,7 @@ function cancelCountIn(){
   c.oscs.forEach(o => { try{ o.stop(); }catch(_){} });
   cancelAnimationFrame(c.raf);
   if(c.started) pauseAudio();
-  setAudioVolume(c.vol);
+  setAudioVolume(trackLevel());
   seekAudioTo(c.from);                   // back to where play was pressed
   countInEnd();
 }
@@ -3576,13 +3644,13 @@ function startCountIn(){
   // set in the same breath — the iframe applies the two in the order they were sent.
   const yt = !!(ytPlayer && ytReady);
   const lead = yt ? 0 : Math.min(0.14, Math.max(0, target));
-  const vol = audioVolume(), from = getAudioTime();
+  const from = getAudioTime();
   setAudioVolume(0);                                 // down first, so a seek that starts the track is still silent
   pauseAudio();
   seekAudioTo(Math.max(0, target - lead));           // buffer at the downbeat while the count runs
   const oscs = [];
   for(let k = 0; k < n; k++) oscs.push(metroClick(ctx, t0 + k * beatSec, k % beats === 0));
-  countIn = { oscs, raf:0, started:false, up:false, vol, from, endAt };
+  countIn = { oscs, raf:0, started:false, up:false, from, endAt };
   const tick = () => {
     if(!countIn) return;
     const now = ctx.currentTime;
@@ -3590,16 +3658,16 @@ function startCountIn(){
       if(isAudioPlaying()) pauseAudio();             // the player started itself — sit back down
       if(now >= endAt - lead){
         countIn.started = true;
-        if(!lead){ countIn.up = true; setAudioVolume(vol); }   // sent before play, so it lands first
+        if(!lead){ countIn.up = true; setAudioVolume(trackLevel()); }   // sent before play, so it lands first
         playAudio();
       }
     }
     if(!countIn.up && now >= endAt){                 // a file rolls in silently and comes up on the beat
       countIn.up = true;
-      setAudioVolume(vol);
+      setAudioVolume(trackLevel());
     }
     if(now >= endAt){
-      setAudioVolume(vol);
+      setAudioVolume(trackLevel());
       countIn = null; countInEnd();
       return;
     }
@@ -4034,12 +4102,13 @@ function setupPerfAudio(song){
       ytPlayer = new YT.Player(mount, {
         width:'192', height:'108', videoId: song.audio.videoId,
         playerVars:{ controls:0, modestbranding:1, rel:0, playsinline:1 },   // playsinline: iPhones would go full-screen
-        events:{ onReady:()=>{ ytReady = true; } }
+        events:{ onReady:()=>{ ytReady = true; if(!countIn) setAudioVolume(trackLevel()); } }
       });
     });
   } else {
     holder.classList.add('audio-only');
     htmlAudio = new Audio(localAudioURL);
+    htmlAudio.volume = trackLevel() / 100;
   }
 }
 
@@ -4072,6 +4141,7 @@ window.startPerf = function(){
   document.getElementById('tp-seek-marks').innerHTML = '';
   document.getElementById('tp-now').textContent = '0:00';
   document.getElementById('tp-dur').textContent = '0:00';
+  document.getElementById('tp-vol').innerHTML = volControlHTML();
   let savedView = null; try{ savedView = localStorage.getItem('drumcharts_perfview'); }catch(_){}
   applyPerfView(savedView === 'list');
   renderPerfRows(song);
@@ -4111,6 +4181,7 @@ function perfMenuItems(rowIdx){
     {id:'top', icon:'top', label:'Back to the first section', run:()=>window.perfToTop()},
     '---',
     ...(matchMedia(PERF_STAGE_Q).matches ? [{id:'view', icon:perfListView() ? 'focus' : 'list', label:perfListView() ? 'Stage view' : 'List view', run:()=>window.togglePerfView()}] : []),
+    {id:'mute', icon:trackMuted ? 'vol' : 'mute', label:trackMuted ? 'Unmute the track' : 'Mute the track', key:'⇧M', run:()=>window.toggleMute()},
     {id:'fs', icon:'focus', label: fullscreenOn() ? 'Leave full screen' : 'Full screen', key:'F', run:()=>window.toggleFullscreen()},
     {id:'lead', icon:'metronome', label:'Click the band in: ' + leadInLabel(), run:()=>window.cycleLeadIn()},
     {id:'ci', icon:'tap', label:'On-screen count-in: ' + countInMode(), run:()=>window.cycleCountIn()},
@@ -4871,12 +4942,16 @@ function renderShortcuts(){
     row('Back or forward 5 seconds', K('←', '→')) +
     row('Back or forward 1 second', K('⇧', '+', '←', '→')) +
     row('Previous or next section', K('↑', '↓')) +
+    row('Turn the track down or up', K('[', ']')) +
+    row('Mute or unmute it', K('⇧', '+', 'M')) +
     row('Full screen', K('F')) +
     row('Play — counts the band in first', K('Space')) +
     row('Jump to a section or a fill', '<span class="k-click">click a row or a fill</span>') +
     row('Leave performance', K('Esc')));
   const track = group('Track and cues',
     row('Play or pause the track', K('Space')) +
+    row('Turn it down or up', K('[', ']')) +
+    row('Mute or unmute it', K('⇧', '+', 'M')) +
     row('Tap the next cue', K('T')) +
     row('Nudge the selected cue 10 ms', K(',', '.')) +
     row('Nudge it 100 ms', K('⇧', '+', ',', '.')) +
@@ -4939,6 +5014,25 @@ window.closeShortcuts = function(){
     spaceHandled = true;
     if(e.repeat) return;                                         // holding it mustn't flicker play / pause
     if(performing) window.toggleAudioPlay(); else window.edPlayPause();
+  }, true);
+  // [ / ] turn the track down / up and Shift+M mutes it, from the same places Space works. By key code
+  // as well, so a layout that types something else on those keys still has them.
+  window.addEventListener('keydown', e => {
+    if(e.ctrlKey || e.metaKey || e.altKey) return;
+    const down = e.code === 'BracketLeft' || e.key === '[', up = e.code === 'BracketRight' || e.key === ']';
+    const mute = e.shiftKey && (e.code === 'KeyM' || e.key === 'M');
+    if(!down && !up && !mute) return;
+    if(e.target instanceof Element && e.target.closest('input:not(.vol-range), textarea, select, [contenteditable]')) return;
+    const performing = document.getElementById('perf-overlay').classList.contains('active');
+    const editing = document.getElementById('view-editor').classList.contains('active');
+    if(!performing && !editing) return;
+    if(!(performing ? audioAvailable() : edAvailable())){
+      if(mute) e.preventDefault(), e.stopImmediatePropagation();   // Shift+M is never a section key
+      return;
+    }
+    e.preventDefault(); e.stopImmediatePropagation();
+    if(mute){ if(!e.repeat) window.toggleMute(); }
+    else stepTrackVolume(up ? 10 : -10);
   }, true);
   // a focused button would otherwise also "click" when Space comes back up
   window.addEventListener('keyup', e => {
