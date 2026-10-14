@@ -1,0 +1,130 @@
+rules_version = '2';
+
+// Drum Chart Pro — Firestore security rules.
+// Paste this whole file into Firebase console → Firestore Database → Rules, then Publish.
+//
+//   users/{uid}            your own chart library (only you)
+//   contacts/{uid}         people you've shared with, for the Share box's autofill (only you)
+//   emailIndex/{email}     name + photo for an exact email, so typing a full address fills the person in.
+//                          Readable one address at a time; nobody can list the whole directory.
+//   sharedCharts/{code}    "anyone with the link can view" copies of charts (public read)
+//   charts/{code}          charts shared with specific people, with a role each:
+//                            viewer    reads the chart and performs it
+//                            commenter reads, performs, and leaves comments
+//                            editor    reads, performs, comments and edits the chart
+//                          Only the owner changes who has access. Access is by email, and only
+//                          counts once that email is verified (Google sign-in always is).
+//   charts/{code}/comments/{id}
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+    function myEmail() { return request.auth.token.email.lower(); }
+    function hasVerifiedEmail() {
+      return signedIn() && request.auth.token.email != null && request.auth.token.email_verified == true;
+    }
+    // the caller's role on a chart document: 'owner', 'editor', 'commenter', 'viewer' or ''
+    function roleIn(data) {
+      return !signedIn() ? ''
+           : data.owner == uid() ? 'owner'
+           : hasVerifiedEmail() ? data.access.get(myEmail(), '')
+           : '';
+    }
+    function canView(data)    { return roleIn(data) in ['owner', 'editor', 'commenter', 'viewer']; }
+    function canComment(data) { return roleIn(data) in ['owner', 'editor', 'commenter']; }
+    function canEdit(data)    { return roleIn(data) in ['owner', 'editor']; }
+
+    match /users/{userId} {
+      allow read, write: if signedIn() && uid() == userId;
+    }
+
+    match /contacts/{userId} {
+      allow read, write: if signedIn() && uid() == userId;
+    }
+
+    match /emailIndex/{email} {
+      allow get: if signedIn();
+      allow list: if false;
+      allow create, update: if signedIn()
+        && request.auth.token.email != null
+        && email == myEmail()
+        && request.resource.data.uid == uid();
+      allow delete: if signedIn() && resource.data.uid == uid();
+    }
+
+    match /sharedCharts/{code} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if signedIn() && request.resource.data.owner == uid();
+      // the owner, or an editor of the matching people-shared chart, keeps the link copy current
+      allow update: if signedIn()
+        && request.resource.data.owner == resource.data.owner
+        && (resource.data.owner == uid()
+            || (exists(/databases/$(database)/documents/charts/$(code))
+                && roleIn(get(/databases/$(database)/documents/charts/$(code)).data) == 'editor'));
+      allow delete: if signedIn() && resource.data.owner == uid();
+    }
+
+    match /charts/{code} {
+      function validChart(d) {
+        return d.owner is string
+          && d.access is map
+          && d.members is list
+          && d.members.size() <= 100
+          && d.access.values().hasOnly(['viewer', 'commenter', 'editor'])
+          && d.members.hasOnly(d.access.keys())
+          && d.access.keys().hasOnly(d.members)
+          && d.chart is map;
+      }
+
+      allow get: if canView(resource.data);
+      // "shared with me" (members array-contains my email) and "my shared charts" (owner == me)
+      allow list: if signedIn()
+        && (resource.data.owner == uid() || (hasVerifiedEmail() && myEmail() in resource.data.members));
+
+      allow create: if signedIn()
+        && request.resource.data.owner == uid()
+        && validChart(request.resource.data);
+
+      allow update: if
+        (roleIn(resource.data) == 'owner'
+          && request.resource.data.owner == resource.data.owner
+          && validChart(request.resource.data))
+        || (roleIn(resource.data) == 'editor'
+          && request.resource.data.diff(resource.data).affectedKeys()
+               .hasOnly(['chart', 'updated', 'updatedBy', 'updatedByName'])
+          && request.resource.data.chart is map
+          && request.resource.data.updatedBy == uid());
+
+      allow delete: if roleIn(resource.data) == 'owner';
+
+      match /comments/{commentId} {
+        function chartData() { return get(/databases/$(database)/documents/charts/$(code)).data; }
+
+        allow read: if signedIn() && canComment(chartData());
+        allow create: if signedIn()
+          && canComment(chartData())
+          && request.resource.data.uid == uid()
+          && request.resource.data.text is string
+          && request.resource.data.text.size() > 0
+          && request.resource.data.text.size() <= 2000
+          && request.resource.data.resolved == false
+          && request.resource.data.keys().hasOnly(
+               ['uid', 'email', 'name', 'photo', 'text', 'sectionId', 'sectionLabel', 'created', 'resolved', 'resolvedBy']);
+        // resolve / reopen: the owner, an editor, or whoever wrote it; only the author changes the words
+        allow update: if signedIn() && canComment(chartData())
+          && ((resource.data.uid == uid()
+                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['text', 'edited', 'resolved', 'resolvedBy'])
+                && request.resource.data.text is string
+                && request.resource.data.text.size() > 0
+                && request.resource.data.text.size() <= 2000)
+              || (canEdit(chartData())
+                && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['resolved', 'resolvedBy'])));
+        allow delete: if signedIn()
+          && (resource.data.uid == uid() || roleIn(chartData()) == 'owner');
+      }
+    }
+  }
+}
