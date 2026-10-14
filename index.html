@@ -1548,6 +1548,132 @@ kbd{font-family:var(--mono)}
   .k-pal{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media (prefers-reduced-motion: reduce){ #keys-overlay.open,#keys-box{animation:none} }
+/* ═══════════════════════════════
+   SHARING — the Share dialog, comments, "shared with you"
+═══════════════════════════════ */
+#view-editor #share-btn{gap:7px}
+.cm-count{font-family:var(--mono);font-size:9.5px;min-width:15px;height:15px;padding:0 4px;border-radius:8px;background:var(--accent);color:#160f06;display:none;place-items:center;position:absolute;top:-5px;right:-6px;line-height:15px}
+.cm-count.on{display:grid}
+#comments-btn{position:relative}
+#comments-btn[hidden],#shared-comments-btn[hidden],#shared-share-btn[hidden],#delete-song-btn[hidden],
+#share-box [hidden],#comments-panel [hidden]{display:none !important}
+
+#share-overlay{
+  position:fixed; inset:0; z-index:1250; display:none;
+  background:rgba(4,3,2,.7); align-items:flex-start; justify-content:center; padding:9vh 16px 16px;
+}
+#share-overlay.open{display:flex}
+#share-box{
+  width:100%; max-width:520px; max-height:82vh; overflow:auto;
+  background:var(--bg2); border:1px solid var(--border2); border-radius:8px;
+  box-shadow:0 24px 60px rgba(0,0,0,.6); animation:popIn .13s ease; padding:0 18px 16px;
+}
+.sh-head{display:flex;align-items:center;gap:10px;padding:16px 0 12px}
+.sh-title{flex:1;min-width:0;font-family:var(--display);font-weight:800;font-stretch:80%;font-size:22px;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sh-add{display:flex;gap:8px;align-items:flex-start}
+.sh-field{
+  position:relative;flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:5px;align-items:center;
+  min-height:40px;padding:5px 8px;background:var(--bg4);border:1px solid var(--border2);border-radius:4px;cursor:text;
+}
+.sh-field:focus-within{border-color:var(--accent)}
+.sh-field input{flex:1;min-width:140px;background:transparent;border:0;outline:none;color:var(--text);font-size:14px;padding:4px 2px;font-family:var(--font)}
+.sh-chip{display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:3px 4px 3px 3px;border-radius:14px;background:var(--bg5);font-size:12.5px;color:var(--text)}
+.sh-chip span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sh-chip button{border:0;background:transparent;color:var(--muted2);cursor:pointer;width:18px;height:18px;display:grid;place-items:center;border-radius:50%}
+.sh-chip button:hover{color:var(--text);background:var(--border2)}
+.sh-chip button .i{width:10px;height:10px}
+.sh-role{min-width:0 !important;height:40px}
+.sh-sugg{
+  position:absolute;left:-1px;right:-1px;top:calc(100% + 4px);z-index:5;display:none;
+  background:var(--bg3);border:1px solid var(--border2);border-radius:4px;box-shadow:0 14px 34px rgba(0,0,0,.5);max-height:260px;overflow:auto;
+}
+.sh-sugg.open{display:block}
+.sh-opt{display:flex;align-items:center;gap:10px;padding:8px 10px;cursor:pointer}
+.sh-opt.hi,.sh-opt:hover{background:var(--bg5)}
+.sh-opt b{display:block;font-weight:600;font-size:13.5px;color:var(--text)}
+.sh-opt i{display:block;font-style:normal;font-size:12px;color:var(--muted2)}
+.sh-opt mark{background:transparent;color:var(--accent)}
+.sh-av{
+  width:30px;height:30px;border-radius:50%;flex-shrink:0;display:grid;place-items:center;
+  font-family:var(--mono);font-size:12px;font-weight:700;color:#160f06;background:var(--accent);background-size:cover;background-position:center;
+}
+.sh-av.sm{width:20px;height:20px;font-size:10px}
+.sh-label{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted2);margin:18px 0 6px}
+.sh-person{display:flex;align-items:center;gap:10px;padding:7px 0}
+.sh-who{flex:1;min-width:0}
+.sh-who b{display:block;font-weight:600;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sh-who i{display:block;font-style:normal;font-size:12px;color:var(--muted2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sh-fixed{font-family:var(--mono);font-size:11px;color:var(--muted2);letter-spacing:.06em;padding-right:4px}
+.sh-person .set-select{min-width:124px}
+.sh-general{display:flex;align-items:center;gap:10px;padding:4px 0}
+.sh-general .sh-av{background:var(--bg5);color:var(--muted)}
+.sh-general .sh-av .i{width:14px;height:14px}
+.sh-note{font-size:12px;color:var(--muted2);line-height:1.45;margin-top:10px}
+.sh-foot{display:flex;justify-content:space-between;gap:10px;margin-top:18px}
+.sh-err{color:var(--red);font-size:12.5px;margin-top:8px;min-height:0}
+.sh-verify{border:1px solid var(--border2);border-left:3px solid var(--accent);padding:12px 14px;margin:18px 22px 0;font-size:13px;color:var(--muted);display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.sh-verify span{flex:1 1 260px}
+
+/* comments drawer */
+#comments-panel{
+  position:fixed;top:0;right:0;bottom:0;z-index:1150;width:min(380px,100vw);
+  background:var(--bg2);border-left:1px solid var(--border2);box-shadow:-20px 0 50px rgba(0,0,0,.45);
+  display:flex;flex-direction:column;transform:translateX(102%);transition:transform .2s ease;
+}
+#comments-panel.open{transform:none}
+.cm-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.cm-head .set-title{flex:1}
+.cm-list{flex:1;overflow:auto;padding:8px 16px}
+.cm-empty{color:var(--muted2);font-size:13px;padding:30px 0;text-align:center;line-height:1.5}
+.cm-item{padding:12px 0;border-bottom:1px solid var(--border)}
+.cm-item.resolved{opacity:.5}
+.cm-top{display:flex;align-items:center;gap:8px}
+.cm-top b{font-size:13px;font-weight:600;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cm-top time{font-family:var(--mono);font-size:10px;color:var(--muted2)}
+.cm-sec{display:inline-block;margin-top:7px;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-left:3px solid var(--sec,#888);background:var(--bg3);color:var(--muted)}
+.cm-text{margin-top:6px;font-size:13.5px;line-height:1.45;white-space:pre-wrap;word-wrap:break-word}
+.cm-acts{display:flex;gap:6px;margin-top:8px}
+.cm-acts .chip{height:22px}
+.cm-compose{border-top:1px solid var(--border);padding:12px 16px calc(12px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px}
+.cm-compose textarea{width:100%;min-height:64px;resize:vertical;background:var(--bg4);border:1px solid var(--border2);border-radius:4px;color:var(--text);font:14px/1.4 var(--font);padding:8px 10px;outline:none}
+.cm-compose textarea:focus{border-color:var(--accent)}
+.cm-compose-row{display:flex;gap:8px;align-items:center}
+.cm-compose-row .set-select{flex:1;min-width:0}
+.cm-readonly{padding:12px 16px;border-top:1px solid var(--border);font-size:12px;color:var(--muted2)}
+
+/* library: who a tile belongs to, and the shared-with-you wall */
+.tile-badge{
+  position:absolute;left:10px;top:9px;z-index:3;display:flex;align-items:center;gap:5px;
+  font-family:var(--mono);font-size:9px;letter-spacing:.12em;text-transform:uppercase;
+  padding:2px 6px;background:rgba(12,11,9,.78);color:var(--muted);border:1px solid var(--border2);pointer-events:none;
+}
+.tile-badge .i{width:10px;height:10px}
+.tile.has-badge .tile-top{top:36px}
+@container (max-width:190px){ .tile.has-badge .tile-top{top:32px} }
+.tile-owner{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;color:var(--muted);margin-top:6px}
+#shared-lib{display:none}
+#shared-lib.on{display:block}
+.lib-sub{
+  display:flex;align-items:baseline;gap:12px;padding:26px 30px 12px;
+  font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted2);
+}
+.lib-sub b{color:var(--accent);font-weight:500}
+#shared-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:2px;padding:0 0 2px}
+@media (max-width: 820px){
+  .lib-sub{padding:20px 18px 10px}
+  #shared-list{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
+  .sh-verify{margin:14px 18px 0}
+}
+@media (max-width: 560px){
+  #shared-list{grid-template-columns:repeat(auto-fill,minmax(144px,1fr))}
+  #view-editor #share-btn{order:4}
+  #view-editor #share-btn .sh-word{display:none}
+  .sh-add{flex-wrap:wrap}
+  .sh-add .sh-field{flex:1 1 100%}
+  .sh-add .sh-role{flex:1}
+  .sh-person .set-select{min-width:104px}
+  #share-overlay{padding-top:4vh}
+}
 </style>
 </head>
 <body>
@@ -1596,6 +1722,10 @@ kbd{font-family:var(--mono)}
   <symbol id="i-tap" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><circle cx="8" cy="8" r="1.7" fill="currentColor" stroke="none"/></symbol>
   <symbol id="i-check" viewBox="0 0 16 16"><path d="M3 8.5l3 3 7-7"/></symbol>
   <symbol id="i-grip" viewBox="0 0 16 16"><g fill="currentColor" stroke="none"><circle cx="6" cy="4" r="1.1"/><circle cx="10" cy="4" r="1.1"/><circle cx="6" cy="8" r="1.1"/><circle cx="10" cy="8" r="1.1"/><circle cx="6" cy="12" r="1.1"/><circle cx="10" cy="12" r="1.1"/></g></symbol>
+  <symbol id="i-users" viewBox="0 0 16 16"><circle cx="6" cy="5.5" r="2.3"/><path d="M1.8 13.2a4.3 4.3 0 0 1 8.4 0"/><path d="M10.4 3.4a2.3 2.3 0 0 1 0 4.3M12 9.3a4.3 4.3 0 0 1 2.2 3.9"/></symbol>
+  <symbol id="i-comment" viewBox="0 0 16 16"><path d="M2.5 3h11v8h-6l-3.5 2.5V11h-1.5z"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.6"/><path d="M2.4 8h11.2M8 2.4c1.6 1.7 2.3 3.5 2.3 5.6S9.6 11.9 8 13.6M8 2.4C6.4 4.1 5.7 5.9 5.7 8s.7 3.9 2.3 5.6"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 16 16"><path d="M3.5 7.5h9v6h-9z"/><path d="M5.5 7.5V5.2a2.5 2.5 0 0 1 5 0v2.3"/></symbol>
   <symbol id="i-keyboard" viewBox="0 0 16 16"><path d="M1.5 4h13v8.5h-13z"/><path d="M4 6.8h.01M6.5 6.8h.01M9.5 6.8h.01M12 6.8h.01M4.5 9.7h7"/></symbol>
 </svg>
 
@@ -1639,6 +1769,11 @@ kbd{font-family:var(--mono)}
       <i>Start with your first song</i>
     </div>
     <div id="song-list"></div>
+    <div id="verify-banner" class="sh-verify" style="display:none"></div>
+    <div id="shared-lib">
+      <div class="lib-sub"><span>Shared with you</span><b id="shared-lib-count"></b></div>
+      <div id="shared-list"></div>
+    </div>
   </div>
   <input type="file" id="import-input" accept=".json" style="display:none" onchange="importLibrary(event)">
   <input type="file" id="art-input" accept="image/*" style="display:none" onchange="setCoverArt(event)">
@@ -1661,7 +1796,8 @@ kbd{font-family:var(--mono)}
         </span>
       </div>
       <button class="circ" onclick="openSettings()" title="Project settings" aria-label="Project settings"><svg class="i" aria-hidden="true"><use href="#i-sliders"/></svg></button>
-      <button class="circ" onclick="shareSong()" title="Copy a read-only share link" aria-label="Copy share link"><svg class="i" aria-hidden="true"><use href="#i-link"/></svg></button>
+      <button class="circ" id="comments-btn" onclick="openComments()" title="Comments" aria-label="Comments" hidden><svg class="i" aria-hidden="true"><use href="#i-comment"/></svg><span class="cm-count" id="comments-count"></span></button>
+      <button class="rect" id="share-btn" onclick="openShare()" title="Share with people, or copy a link" aria-label="Share"><svg class="i" aria-hidden="true"><use href="#i-users"/></svg><span class="sh-word">Share</span></button>
       <button class="rect go" id="perform-btn" onclick="startPerf()"><svg class="i" aria-hidden="true"><use href="#i-play"/></svg>Perform</button>
     </div>
   </div>
@@ -1700,7 +1836,7 @@ kbd{font-family:var(--mono)}
     <div id="chart-stats"></div>
     <div class="ed-foot-acts">
       <button class="rect quiet" onclick="clearChart()">Clear chart</button>
-      <button class="rect quiet danger" onclick="deleteSong()">Delete song</button>
+      <button class="rect quiet danger" id="delete-song-btn" onclick="deleteSong()">Delete song</button>
     </div>
   </div>
 </div>
@@ -1712,12 +1848,14 @@ kbd{font-family:var(--mono)}
     <div class="shared-meta" id="shared-meta"></div>
     <div class="shared-actions">
       <button class="btn perform" onclick="startPerf()">▶ PERFORM</button>
+      <button class="btn" id="shared-comments-btn" onclick="openComments()" hidden>Comments <span id="shared-comments-count"></span></button>
+      <button class="btn" id="shared-share-btn" onclick="openShare()" hidden>Who has access</button>
       <button class="btn accent" onclick="copySharedToLibrary()">＋ Save to my charts</button>
       <button class="btn" onclick="exitShared()">Open the app</button>
     </div>
   </div>
   <div id="shared-body"><div id="shared-chart"></div></div>
-  <div id="shared-foot">Read-only shared chart · anyone with the link can view this</div>
+  <div id="shared-foot">Read-only shared chart</div>
 </div>
 
 <div id="perf-overlay" role="dialog" aria-label="Performance">
@@ -1794,6 +1932,10 @@ kbd{font-family:var(--mono)}
     </label>
   </div>
 </div>
+<div id="share-overlay" onmousedown="if(event.target===this)closeShare()">
+  <div id="share-box" role="dialog" aria-modal="true" aria-labelledby="sh-title"></div>
+</div>
+<aside id="comments-panel" aria-label="Comments" aria-hidden="true"></aside>
 <div id="fills-overlay" aria-hidden="true">
   <div id="fills-box" role="dialog" aria-modal="true" aria-labelledby="fm-title" tabindex="-1"></div>
 </div>
@@ -1804,8 +1946,8 @@ kbd{font-family:var(--mono)}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, sendEmailVerification } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc, addDoc, getDocs, collection, query, where, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCdhJhDOeqYlR2xrVVUKXAs7Cms6tiTRJ8",
@@ -1993,13 +2135,15 @@ onAuthStateChanged(auth, async (user) => {
             showToast('Offline — using local charts', 'error', 3500);
         }
         library.forEach(migrateSong);
-        // opened via a short link: if it's the user's own chart, open it editable; otherwise read-only
+        startCloud(user);
+        // opened via a short link: your own chart opens editable; one shared with you opens with your role;
+        // anything else falls back to the public link copy
         if (pendingShareCode) {
             const owned = library.find(s => s.shareCode === pendingShareCode);
             const code = pendingShareCode; pendingShareCode = null; pendingShareHash = false;
             vAuth.classList.remove('active');
             if (owned) window.openSong(owned.id);
-            else loadSharedByCode(code);
+            else openByCode(code);
             return;
         }
         // a shared chart was waiting to be saved until login
@@ -2020,8 +2164,9 @@ onAuthStateChanged(auth, async (user) => {
         renderLibrary();
     } else {
         currentUser = null;
-        // logged-out visitor opening a short link → read-only view
-        if (pendingShareCode){ const code = pendingShareCode; pendingShareCode = null; loadSharedByCode(code); return; }
+        stopCloud();
+        // logged-out visitor opening a short link → read-only view (or a login prompt, if it isn't public)
+        if (pendingShareCode){ const code = pendingShareCode; pendingShareCode = null; loadSharedByCode(code, true); return; }
         if (sharedSong || pendingShareHash) return;   // keep showing the shared view for logged-out visitors
         vLib.classList.remove('active');
         vAuth.classList.add('active');
@@ -2047,24 +2192,29 @@ function showToast(msg, type='saved', duration=1800){
 }
 
 window.save = async function(){
-  const json = JSON.stringify(library);
+  const json = histJSON();
   // record an undo snapshot of the state *before* this change (skip while restoring)
   if(!restoringHistory){
     if(histPrev != null && histPrev !== json){ undoStack.push(histPrev); if(undoStack.length > 50) undoStack.shift(); redoStack.length = 0; }
     histPrev = json;
   }
+  // someone else's chart I can edit: it lives only in its shared copy
+  if(isGuestSong(currentSong())){ scheduleCloudSync(); return; }
   try {
-    localStorage.setItem('drumcharts_lib', json);
+    localStorage.setItem('drumcharts_lib', JSON.stringify(library));
     if(currentUser) {
         await setDoc(doc(db, "users", currentUser.uid), { library });
     }
     showToast('Synced');
   } catch(e) { showToast('Save failed', 'error'); }
+  if(currentUser && Object.keys(cloudKind).length) scheduleCloudSync();   // my charts shared with people
 }
 
 // ─── undo / redo (whole-library snapshots) + per-section fills-collapse state ───
 let undoStack = [], redoStack = [], histPrev = null, restoringHistory = false;
-function histReset(){ undoStack = []; redoStack = []; histPrev = JSON.stringify(library); }
+// a guest edit of someone else's chart undoes within that chart; otherwise the whole library
+function histJSON(){ const s = currentSong(); return isGuestSong(s) ? JSON.stringify(s) : JSON.stringify(library); }
+function histReset(){ undoStack = []; redoStack = []; histPrev = histJSON(); }
 function refreshEditorFromState(){
   const song = currentSong();
   if(song && document.getElementById('view-editor').classList.contains('active')){
@@ -2084,8 +2234,15 @@ function refreshEditorFromState(){
 async function applyHistory(json){
   restoringHistory = true;
   try {
-    library = JSON.parse(json);
-    library.forEach(migrateSong);
+    const guest = currentSong();
+    if(isGuestSong(guest)){
+      const restored = migrateSong(JSON.parse(json));
+      Object.keys(guest).forEach(k => delete guest[k]);
+      Object.assign(guest, restored);
+    } else {
+      library = JSON.parse(json);
+      library.forEach(migrateSong);
+    }
     histPrev = json;
     selectedSectionIdx = null;
     await window.save();
@@ -2094,13 +2251,13 @@ async function applyHistory(json){
 }
 window.undoEdit = function(){
   if(!undoStack.length){ showToast('Nothing to undo'); return; }
-  redoStack.push(JSON.stringify(library));
+  redoStack.push(histJSON());
   applyHistory(undoStack.pop());
   showToast('Undone');
 };
 window.redoEdit = function(){
   if(!redoStack.length){ showToast('Nothing to redo'); return; }
-  undoStack.push(JSON.stringify(library));
+  undoStack.push(histJSON());
   applyHistory(redoStack.pop());
   showToast('Redone');
 };
@@ -2159,7 +2316,7 @@ window.importLibrary = function(e){
 
 // ─── APP LOGIC ───────────────────────────────────────
 function makeSong(){ return { id: idCounter++, name: '', artist: '', art: null, bpm: 120, ts: 4, tsd: 4, notes: '', sections: [], created: Date.now(), autoNumber:true, audio:null, shareCode:null, countIn:'all' }; }
-function currentSong(){ if(sharedSong) return sharedSong; return library.find(s => s.id === currentSongId) || null; }
+function currentSong(){ if(sharedSong) return sharedSong; return library.find(s => s.id === currentSongId) || sharedLib.find(s => s.id === currentSongId) || null; }
 
 // Ensure older saved songs/sections have the newer fields
 function migrateSong(song){
@@ -2248,14 +2405,18 @@ function b64urlDecode(b64){
 function genShareCode(){ return Math.random().toString(36).slice(2,9); } // 7-char base36
 function shareableChart(song){
   const payload = JSON.parse(JSON.stringify(song));
-  delete payload.id; delete payload.created; delete payload.shareCode;
+  delete payload.id; delete payload.created; delete payload.shareCode; delete payload.linkAccess;
   if(payload.audio && payload.audio.type === 'file') payload.audio = null; // a local file can't travel in a link
   return payload;
 }
 
 // Publish (or refresh) a chart to the public `sharedCharts` collection → returns its short code, or null on failure.
 async function ensureSharePublished(song){
-  if(!currentUser || sharedSong || !song) return null;     // only publish your own charts
+  if(!currentUser || sharedSong || !song || isGuestSong(song)) return null;     // only publish your own charts
+  if(song.linkAccess === 'off'){                            // link sharing turned off: a code, but no public copy
+    if(!song.shareCode){ song.shareCode = genShareCode(); window.save(); }
+    return song.shareCode;
+  }
   try {
     const code = song.shareCode || genShareCode();
     await setDoc(doc(db, 'sharedCharts', code), { chart: shareableChart(song), updated: Date.now(), owner: currentUser.uid });
@@ -2268,7 +2429,7 @@ window.shareSong = async function(){
   const song = currentSong(); if(!song) return;
   window.saveSongMeta();
   let link;
-  const code = await ensureSharePublished(song);
+  const code = isGuestSong(song) ? songCode(song) : await ensureSharePublished(song);
   if(code){
     link = location.origin + location.pathname + '#c/' + code;
     history.replaceState(null, '', '#c/' + code);
@@ -2301,21 +2462,32 @@ function checkSharedLink(){
   return false;
 }
 
-async function loadSharedByCode(code){
-  try {
-    const snap = await getDoc(doc(db, 'sharedCharts', code));
-    if(snap.exists()){
-      openSharedChart(migrateSong(snap.data().chart || snap.data()), 'shared-' + code);
-    } else {
-      showToast('That shared chart no longer exists', 'error'); fallthroughToApp();
-    }
-  } catch(e){ console.warn('Could not load shared chart (Firestore rules?)', e); showToast('Could not load shared chart', 'error'); fallthroughToApp(); }
+async function loadSharedByCode(code, loggedOut){
+  let snap = null;
+  try { snap = await getDoc(doc(db, 'sharedCharts', code)); }
+  catch(e){ console.warn('Could not load shared chart (Firestore rules?)', e); }
+  if(snap && snap.exists()){
+    openSharedChart(migrateSong(snap.data().chart || snap.data()), 'shared-' + code);
+    return;
+  }
+  // not public: it may still be shared with this person by email
+  if(loggedOut){
+    pendingShareCode = code;   // opened again right after they log in
+    showToast('Log in to open this chart', 'saved', 3500);
+  } else if(currentUser && currentUser.email && !currentUser.emailVerified){
+    showToast('Verify your email to open charts shared with you', 'error', 4000);
+  } else if(currentUser){
+    showToast(`You don't have access to that chart. Ask the owner to share it with ${currentUser.email || 'you'}`, 'error', 4500);
+  } else showToast('Could not load shared chart', 'error');
+  fallthroughToApp();
 }
 
-function openSharedChart(song, id){
+function openSharedChart(song, id, cloudCode){
   song.id = id;
   if(song.audio && song.audio.type === 'file') song.audio = null; // a shared local file can't play
   sharedSong = song;
+  const code = cloudCode || (String(id).startsWith('shared-') && cloudMeta[String(id).slice(7)] ? String(id).slice(7) : null);
+  if(code !== openCloudCode){ openCloudCode = code; if(code) watchComments(code); else stopComments(); }
   renderSharedView();
 }
 
@@ -2346,6 +2518,12 @@ function renderSharedView(){
       </div>`;
   }).join('');
 
+  const role = openCloudCode ? myRoleFor(cloudMeta[openCloudCode]) : '';
+  document.getElementById('shared-foot').textContent = role
+    ? `Shared with you by ${(cloudMeta[openCloudCode] && (cloudMeta[openCloudCode].ownerName || cloudMeta[openCloudCode].ownerEmail)) || 'the owner'} · ${ROLE_CAN[role] || ''}`.replace(/ · $/, '')
+    : 'Read-only shared chart · anyone with the link can view this';
+  updateShareUI();
+
   pendingShareHash = false;
   document.getElementById('view-auth').classList.remove('active');
   window.showView('shared');
@@ -2359,6 +2537,7 @@ window.copySharedToLibrary = function(){
     // stash it and send them to log in; it gets imported right after auth
     pendingSharedImport = copy;
     sharedSong = null;
+    openCloudCode = null; stopComments();
     history.replaceState(null, '', location.pathname);  // drop the #s= hash
     document.getElementById('view-shared').classList.remove('active');
     document.getElementById('view-auth').classList.add('active');
@@ -2366,8 +2545,9 @@ window.copySharedToLibrary = function(){
     return;
   }
   library.push(copy);
-  window.save();
   sharedSong = null;
+  openCloudCode = null; stopComments();
+  window.save();
   history.replaceState(null, '', location.pathname);
   window.openSong(copy.id);
   showToast('Saved to your charts');
@@ -2375,12 +2555,753 @@ window.copySharedToLibrary = function(){
 
 window.exitShared = function(){
   sharedSong = null;
+  openCloudCode = null; stopComments();
   history.replaceState(null, '', location.pathname);
   document.getElementById('view-shared').classList.remove('active');
   // hand off to the normal auth/library flow
   if(currentUser){ window.showView('library'); window.renderLibrary(); }
   else document.getElementById('view-auth').classList.add('active');
 }
+
+// ─── SHARING WITH PEOPLE (like a shared doc) ─────────
+// A chart shared with people lives in `charts/<code>` (the same code as its link) with a role per
+// email: viewer, commenter or editor. The owner's library keeps its own copy and the two stay in
+// step both ways; people it's shared with see it under "Shared with you". Firestore rules enforce
+// the roles (firestore.rules) — the UI here only mirrors them.
+const ROLE_NAMES = { owner:'Owner', editor:'Editor', commenter:'Commenter', viewer:'Viewer' };
+const ROLE_CAN = {
+  editor:'Can edit, comment and perform',
+  commenter:'Can view, perform and comment',
+  viewer:'Can view and perform',
+};
+const EMAIL_RE = /^[^\s@,;<>()]+@[^\s@,;<>()]+\.[^\s@,;<>()]{2,}$/;
+let sharedLib = [];      // charts other people shared with me, as songs with id 'c_<code>'
+let cloudMeta = {};      // code → its charts/<code> document (mine and shared with me)
+let cloudKind = {};      // code → 'own' | 'guest'
+let lastPushed = {};     // code → the chart JSON last seen in the cloud, so a save only writes real changes
+let contacts = {};       // email → {name, photo}: people I've shared with
+let cloudUnsubs = [];
+let cloudSyncTimer = null;
+let openCloudCode = null;  // the people-shared chart on screen, if any
+let commentsCode = null, commentsUnsub = null, comments = [], showResolved = false;
+let shareState = null;
+let sharedShownJSON = null; // the cloud chart the read-only view last drew
+
+function myEmail(){ return ((currentUser && currentUser.email) || '').toLowerCase(); }
+function myName(){ return (currentUser && (currentUser.displayName || (currentUser.email || '').split('@')[0])) || 'Someone'; }
+// shared access is by email, so it only counts once the address is proven (Google sign-in always is)
+function canSeeShared(){ return !!(currentUser && currentUser.email && currentUser.emailVerified); }
+function isGuestSong(song){ return !!song && typeof song.id === 'string' && song.id.startsWith('c_'); }
+function songCode(song){ return song ? (isGuestSong(song) ? song.id.slice(2) : song.shareCode) : null; }
+function myRoleFor(data){
+  if(!data || !currentUser) return '';
+  if(data.owner === currentUser.uid) return 'owner';
+  return canSeeShared() ? ((data.access || {})[myEmail()] || '') : '';
+}
+function currentRole(){
+  if(sharedSong) return openCloudCode ? myRoleFor(cloudMeta[openCloudCode]) : '';
+  const s = currentSong(); if(!s) return '';
+  return isGuestSong(s) ? myRoleFor(cloudMeta[songCode(s)]) : 'owner';
+}
+const canCommentRole = r => r === 'owner' || r === 'editor' || r === 'commenter';
+function peopleCount(code){ const d = cloudMeta[code]; return d ? (d.members || []).length : 0; }
+function shareLinkFor(code){ return location.origin + location.pathname + '#c/' + code; }
+
+function avatarHtml(p, cls){
+  const label = (p.name || p.email || '?').trim();
+  let h = 0; for(let k = 0; k < label.length; k++) h = (h * 31 + label.charCodeAt(k)) | 0;
+  const photo = /^https:\/\/[^'"()\s\\]+$/.test(p.photo || '') ? p.photo : null;
+  const bg = photo ? `background-image:url('${photo}')` : `background:hsl(${Math.abs(h) % 360},55%,64%)`;
+  return `<span class="sh-av${cls ? ' ' + cls : ''}" style="${bg}" aria-hidden="true">${photo ? '' : esc(label[0].toUpperCase())}</span>`;
+}
+
+// ── keeping in step with the cloud ──
+function startCloud(user){
+  stopCloud();
+  if(user.email){
+    // so someone typing this exact address into their Share box sees who it is
+    setDoc(doc(db, 'emailIndex', user.email.toLowerCase()), { uid:user.uid, name:user.displayName || '', photo:user.photoURL || null, updated:Date.now() })
+      .catch(e => console.warn('Could not register for sharing (Firestore rules?)', e));
+  }
+  getDoc(doc(db, 'contacts', user.uid)).then(s => { if(s.exists()) contacts = s.data().people || {}; }).catch(() => {});
+  cloudUnsubs.push(onSnapshot(query(collection(db, 'charts'), where('owner', '==', user.uid)),
+    snap => onCloudDocs(snap, 'own'), e => console.warn('Shared charts unavailable — publish firestore.rules', e)));
+  if(canSeeShared()){
+    cloudUnsubs.push(onSnapshot(query(collection(db, 'charts'), where('members', 'array-contains', myEmail())),
+      snap => onCloudDocs(snap, 'guest'), e => console.warn('Charts shared with you unavailable — publish firestore.rules', e)));
+  }
+}
+function stopCloud(){
+  cloudUnsubs.forEach(u => u()); cloudUnsubs = [];
+  clearTimeout(cloudSyncTimer); cloudSyncTimer = null;
+  sharedLib = []; cloudMeta = {}; cloudKind = {}; lastPushed = {}; contacts = {};
+  stopComments();
+}
+
+// a guest copy of someone else's chart, created once and then kept in step
+function upsertGuestSong(code, data){
+  let song = sharedLib.find(s => s.id === 'c_' + code);
+  if(!song){
+    song = migrateSong(Object.assign(JSON.parse(JSON.stringify(data.chart || {})), { id:'c_' + code, shareCode:code }));
+    sharedLib.push(song);
+    lastPushed[code] = JSON.stringify(data.chart || {});
+  }
+  return song;
+}
+
+// replace a song's content with the cloud's, keeping what's local to this copy
+function applyRemoteChart(song, chart){
+  const keep = { id:song.id, created:song.created, shareCode:song.shareCode, linkAccess:song.linkAccess };
+  if(song.audio && song.audio.type === 'file' && !(chart && chart.audio)) keep.audio = song.audio; // my local file stays
+  Object.keys(song).forEach(k => delete song[k]);
+  Object.assign(song, JSON.parse(JSON.stringify(chart || {})), keep);
+  if(song.linkAccess === undefined) delete song.linkAccess;
+  migrateSong(song);
+}
+
+function onCloudDocs(snap, kind){
+  if(!currentUser) return;
+  const seen = new Set();
+  let ownChanged = false, openChanged = false;
+  const open = currentSong();
+  snap.docs.forEach(d => {
+    const code = d.id, data = d.data();
+    seen.add(code);
+    cloudMeta[code] = data; cloudKind[code] = kind;
+    const remote = JSON.stringify(data.chart || {});
+    let song;
+    if(kind === 'guest'){
+      if(!sharedLib.some(s => s.id === 'c_' + code)){ upsertGuestSong(code, data); return; }
+      song = sharedLib.find(s => s.id === 'c_' + code);
+    } else song = library.find(s => s.shareCode === code);
+    if(sharedSong && openCloudCode === code && !document.getElementById('perf-overlay').classList.contains('active')){
+      // read-only view of it is on screen: show the latest
+      if(sharedShownJSON !== remote){
+        sharedShownJSON = remote;
+        openSharedChart(migrateSong(JSON.parse(remote)), 'shared-' + code);
+      }
+    }
+    if(!song) return;
+    if(lastPushed[code] === remote) return;
+    if(cloudSyncTimer) return;                                   // my newer edit is about to go up
+    if(JSON.stringify(shareableChart(song)) === remote){ lastPushed[code] = remote; return; }
+    if(data.updatedBy === currentUser.uid){ lastPushed[code] = remote; scheduleCloudSync(); return; } // mine is newer
+    applyRemoteChart(song, data.chart);
+    lastPushed[code] = remote;
+    if(kind === 'own') ownChanged = true;
+    if(song === open) openChanged = true;
+  });
+  // gone: unshared, deleted, or my access was taken away
+  Object.keys(cloudKind).forEach(code => {
+    if(cloudKind[code] !== kind || seen.has(code)) return;
+    delete cloudMeta[code]; delete cloudKind[code]; delete lastPushed[code];
+    if(kind !== 'guest') return;
+    const wasOpen = (open && open.id === 'c_' + code) || openCloudCode === code;
+    sharedLib = sharedLib.filter(s => s.id !== 'c_' + code);
+    if(wasOpen && !document.getElementById('perf-overlay').classList.contains('active')){
+      showToast("You don't have access to that chart anymore", 'error', 3500);
+      if(sharedSong) window.exitShared(); else { currentSongId = null; window.goLibrary(); }
+    }
+  });
+  if(ownChanged){
+    try { localStorage.setItem('drumcharts_lib', JSON.stringify(library)); } catch(_){}
+    setDoc(doc(db, 'users', currentUser.uid), { library }).catch(e => console.warn('Library sync failed', e));
+  }
+  // someone else changed the chart on screen: undo can't step back past their edit
+  if(openChanged){ histReset(); refreshEditorFromState(); }
+  const code = songCode(currentSong());
+  // (not off my own unsent write: the rules can't see the chart until it lands)
+  if(!sharedSong && code && cloudMeta[code] && commentsCode !== code && !snap.metadata.hasPendingWrites) watchComments(code);
+  updateShareUI();
+  if(document.getElementById('view-library').classList.contains('active')) window.renderLibrary();
+  if(shareState && document.getElementById('share-overlay').classList.contains('open')) renderSharePeople();
+}
+
+function scheduleCloudSync(){ clearTimeout(cloudSyncTimer); cloudSyncTimer = setTimeout(cloudSync, 700); }
+async function cloudSync(){
+  cloudSyncTimer = null;
+  if(!currentUser) return;
+  const todo = [];
+  library.forEach(s => { if(s.shareCode && cloudKind[s.shareCode] === 'own') todo.push([s, s.shareCode]); });
+  sharedLib.forEach(s => { const c = songCode(s); if(myRoleFor(cloudMeta[c]) === 'editor') todo.push([s, c]); });
+  for(const [song, code] of todo){
+    const chart = shareableChart(song), json = JSON.stringify(chart);
+    if(json === lastPushed[code]) continue;
+    const before = lastPushed[code];
+    lastPushed[code] = json;
+    const meta = cloudMeta[code], now = Date.now();
+    try {
+      await updateDoc(doc(db, 'charts', code), { chart, updated:now, updatedBy:currentUser.uid, updatedByName:myName() });
+      if(meta && meta.linkShared !== false){
+        setDoc(doc(db, 'sharedCharts', code), { chart, updated:now, owner:meta.owner }).catch(e => console.warn('Link copy not refreshed', e));
+      }
+      if(isGuestSong(song)) showToast('Synced');
+    } catch(e){
+      lastPushed[code] = before;
+      console.warn('Shared chart sync failed', e);
+      showToast(isGuestSong(song) ? "Couldn't save — you may not have edit access" : "Couldn't update the shared copy", 'error', 3000);
+    }
+  }
+}
+
+// ── opening charts shared with me ──
+window.openCloudChart = function(code){
+  const data = cloudMeta[code]; if(!data) return;
+  const role = myRoleFor(data);
+  if(role === 'editor'){ upsertGuestSong(code, data); window.openSong('c_' + code); return; }
+  sharedShownJSON = JSON.stringify(data.chart || {});
+  openSharedChart(migrateSong(JSON.parse(sharedShownJSON)), 'shared-' + code, code);
+  history.replaceState(null, '', '#c/' + code);
+};
+// a #c/<code> link that isn't mine: shared with me by email, else the public link copy
+async function openByCode(code){
+  if(canSeeShared()){
+    try {
+      const snap = await getDoc(doc(db, 'charts', code));
+      if(snap.exists() && myRoleFor(snap.data())){
+        cloudMeta[code] = snap.data(); cloudKind[code] = 'guest';
+        window.openCloudChart(code);
+        return;
+      }
+    } catch(e){ /* not shared with me — try the link copy */ }
+  }
+  loadSharedByCode(code);
+}
+
+// ── header buttons, per role ──
+function updateShareUI(){
+  const role = currentRole(), code = sharedSong ? openCloudCode : songCode(currentSong());
+  const hasCloud = !!(code && cloudMeta[code]);
+  const g = id => document.getElementById(id);
+  const open = comments.filter(c => !c.resolved).length;
+  const showCm = hasCloud && canCommentRole(role) && commentsCode === code;
+  g('comments-btn').hidden = sharedSong ? true : !showCm;
+  g('comments-count').textContent = open || '';
+  g('comments-count').classList.toggle('on', open > 0);
+  g('shared-comments-btn').hidden = !(sharedSong && showCm);
+  g('shared-comments-count').textContent = open ? '· ' + open : '';
+  g('shared-share-btn').hidden = !(sharedSong && hasCloud && role);
+  const shareBtn = g('share-btn');
+  const n = !sharedSong && code && cloudKind[code] === 'own' ? peopleCount(code) : 0;
+  shareBtn.querySelector('.sh-word').textContent = role === 'owner' || !role ? (n ? 'Shared · ' + n : 'Share') : ROLE_NAMES[role];
+  shareBtn.title = role === 'owner' ? 'Share with people, or copy a link' : 'See who has access';
+  const del = g('delete-song-btn'); if(del) del.hidden = !sharedSong && role !== 'owner';
+}
+
+// ── the Share dialog ──
+window.openShare = async function(){
+  const song = currentSong(); if(!song) return;
+  if(!currentUser){ showToast('Log in to share', 'error'); return; }
+  if(!sharedSong) window.saveSongMeta();
+  const role = currentRole();
+  let code = sharedSong ? openCloudCode : songCode(song);
+  if(role === 'owner'){
+    if(!song.shareCode){ song.shareCode = genShareCode(); window.save(); }
+    code = song.shareCode;
+    ensureSharePublished(song).then(c => { if(c && currentSong() === song) history.replaceState(null, '', '#c/' + c); });
+  }
+  if(!code) return;
+  shareState = { song, code, role, chips:[], sugg:[], hi:0, newRole:'editor', lookups:{} };
+  renderShare();
+  document.getElementById('share-overlay').classList.add('open');
+  const inp = document.getElementById('sh-input');
+  (inp || document.querySelector('#share-box .sh-done')).focus();
+};
+window.closeShare = function(){
+  document.getElementById('share-overlay').classList.remove('open');
+  shareState = null;
+};
+
+function renderShare(){
+  const st = shareState, owner = st.role === 'owner';
+  const box = document.getElementById('share-box');
+  box.innerHTML = `
+    <div class="sh-head">
+      <div class="sh-title" id="sh-title">Share “${esc(st.song.name || 'Untitled')}”</div>
+      <button class="circ sm" onclick="closeShare()" title="Close" aria-label="Close"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
+    </div>
+    ${owner ? `
+    <div class="sh-add">
+      <div class="sh-field" id="sh-field" onclick="if(event.target===this)document.getElementById('sh-input').focus()">
+        <input id="sh-input" type="text" inputmode="email" autocomplete="off" spellcheck="false"
+          placeholder="Add people by name or email" aria-label="Add people by name or email"
+          role="combobox" aria-autocomplete="list" aria-controls="sh-sugg" aria-expanded="false">
+        <div class="sh-sugg" id="sh-sugg" role="listbox"></div>
+      </div>
+      <select class="set-select sh-role" id="sh-newrole" aria-label="Role for the people you add">
+        ${['viewer','commenter','editor'].map(r => `<option value="${r}"${r === st.newRole ? ' selected' : ''}>${ROLE_NAMES[r]}</option>`).join('')}
+      </select>
+    </div>
+    <div class="sh-err" id="sh-err"></div>` : ''}
+    <div id="sh-people"></div>
+    <div class="sh-foot">
+      <button class="rect" onclick="copyShareLink()"><svg class="i" aria-hidden="true"><use href="#i-link"/></svg>Copy link</button>
+      <span style="display:flex;gap:8px">
+        ${owner ? `<button class="rect solid" id="sh-send" onclick="shareSend()" hidden>Share</button>` : ''}
+        <button class="rect sh-done" onclick="closeShare()">Done</button>
+      </span>
+    </div>`;
+  if(owner){
+    const inp = document.getElementById('sh-input');
+    inp.addEventListener('input', onShareInput);
+    inp.addEventListener('keydown', onShareKey);
+    inp.addEventListener('blur', () => setTimeout(() => { if(document.activeElement !== inp) hideSugg(); }, 150));
+    document.getElementById('sh-newrole').onchange = e => { st.newRole = e.target.value; };
+  }
+  renderShareChips();
+  renderSharePeople();
+}
+
+function renderShareChips(){
+  const st = shareState; if(!st || st.role !== 'owner') return;
+  const field = document.getElementById('sh-field'), inp = document.getElementById('sh-input');
+  field.querySelectorAll('.sh-chip').forEach(c => c.remove());
+  st.chips.forEach((p, k) => {
+    const chip = document.createElement('span');
+    chip.className = 'sh-chip';
+    chip.innerHTML = `${avatarHtml(p, 'sm')}<span title="${esc(p.email)}">${esc(p.name || p.email)}</span><button type="button" aria-label="Remove ${esc(p.email)}"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>`;
+    chip.querySelector('button').onclick = () => { st.chips.splice(k, 1); renderShareChips(); inp.focus(); };
+    field.insertBefore(chip, inp);
+  });
+  inp.placeholder = st.chips.length ? '' : 'Add people by name or email';
+  document.getElementById('sh-send').hidden = !st.chips.length;
+}
+
+function renderSharePeople(){
+  const st = shareState; if(!st) return;
+  const owner = st.role === 'owner';
+  const data = cloudMeta[st.code] || null;
+  const access = (data && data.access) || {}, people = (data && data.people) || {};
+  const me = myEmail();
+  const ownerP = owner
+    ? { email:me, name:myName() + ' (you)', photo:currentUser.photoURL || null }
+    : { email:(data && data.ownerEmail) || '', name:(data && data.ownerName) || '', photo:(data && data.ownerPhoto) || null };
+  const row = (p, right) => `
+    <div class="sh-person">${avatarHtml(p)}
+      <div class="sh-who"><b>${esc(p.name || p.email)}</b>${p.name ? `<i>${esc(p.email)}</i>` : ''}</div>${right}
+    </div>`;
+  let html = `<div class="sh-label">People with access</div>` + row(ownerP, `<span class="sh-fixed">Owner</span>`);
+  Object.keys(access).forEach(email => {
+    const p = { email, name:(people[email] && people[email].name) || '', photo:(people[email] && people[email].photo) || null };
+    if(email === me) p.name = (p.name || myName()) + ' (you)';
+    const role = access[email];
+    const right = owner
+      ? `<select class="set-select" data-email="${esc(email)}" aria-label="Access for ${esc(email)}">
+           ${['viewer','commenter','editor'].map(r => `<option value="${r}"${r === role ? ' selected' : ''}>${ROLE_NAMES[r]}</option>`).join('')}
+           <option disabled>──────</option><option value="remove">Remove access</option>
+         </select>`
+      : `<span class="sh-fixed">${ROLE_NAMES[role] || ''}</span>`;
+    html += row(p, right);
+  });
+  if(!Object.keys(access).length && owner) html += `<div class="sh-note">Only you can open this chart in the app so far. Add people above: <b>Viewers</b> can open and perform it, <b>Commenters</b> can also leave comments, and <b>Editors</b> can change it too.</div>`;
+  const linkOn = owner ? st.song.linkAccess !== 'off' : !!(data && data.linkShared !== false);
+  html += `<div class="sh-label">General access</div>
+    <div class="sh-general">
+      <span class="sh-av"><svg class="i" aria-hidden="true"><use href="#i-${linkOn ? 'globe' : 'lock'}"/></svg></span>
+      <div class="sh-who">${owner
+        ? `<select class="set-select" id="sh-link" aria-label="General access">
+             <option value="off"${linkOn ? '' : ' selected'}>Restricted</option>
+             <option value="on"${linkOn ? ' selected' : ''}>Anyone with the link</option>
+           </select>`
+        : `<b>${linkOn ? 'Anyone with the link' : 'Restricted'}</b>`}
+        <i style="margin-top:4px">${linkOn ? 'Anyone with the link can view, no login needed' : 'Only people added above can open it'}</i>
+      </div>
+    </div>`;
+  if(owner && Object.keys(access).length) html += `<div class="sh-note">People see it under “Shared with you” when they log in with that email, or you can send them the link.</div>`;
+  const host = document.getElementById('sh-people');
+  host.innerHTML = html;
+  host.querySelectorAll('select[data-email]').forEach(sel => sel.onchange = () => setPersonRole(sel.dataset.email, sel.value));
+  const link = document.getElementById('sh-link');
+  if(link) link.onchange = () => setLinkAccess(link.value);
+}
+
+function shareErr(msg){ const el = document.getElementById('sh-err'); if(el) el.textContent = msg || ''; }
+
+// write who-has-access for my chart, creating its shared copy the first time
+async function writeAccess(access, people){
+  const st = shareState, song = st.song, code = st.code;
+  const ref = doc(db, 'charts', code), existing = cloudMeta[code];
+  const members = Object.keys(access);
+  if(existing){
+    await updateDoc(ref, { access, members, people });
+    cloudMeta[code] = Object.assign({}, existing, { access, members, people });
+  } else {
+    const chart = shareableChart(song), now = Date.now();
+    const data = {
+      owner:currentUser.uid, ownerEmail:myEmail(), ownerName:myName(), ownerPhoto:currentUser.photoURL || null,
+      chart, access, members, people, linkShared:song.linkAccess !== 'off',
+      created:now, updated:now, updatedBy:currentUser.uid, updatedByName:myName(),
+    };
+    await setDoc(ref, data);
+    cloudMeta[code] = data; cloudKind[code] = 'own'; lastPushed[code] = JSON.stringify(chart);
+  }
+  if(currentSong() === song && commentsCode !== code) watchComments(code);
+  updateShareUI();
+}
+function permissionHint(e){
+  return e && e.code === 'permission-denied'
+    ? "Firestore said no. Publish the sharing rules (firestore.rules) in the Firebase console."
+    : "Couldn't save. Check your connection and try again.";
+}
+
+window.shareSend = async function(){
+  const st = shareState; if(!st) return;
+  const inp = document.getElementById('sh-input');
+  const typed = inp.value.trim().toLowerCase();
+  if(typed){
+    if(EMAIL_RE.test(typed)) pickPerson({ email:typed });
+    else { shareErr(`“${inp.value.trim()}” isn't an email address. Pick someone from the list or type their full email.`); return; }
+  }
+  if(!st.chips.length) return;
+  const data = cloudMeta[st.code];
+  const access = Object.assign({}, data && data.access), people = Object.assign({}, data && data.people);
+  const role = document.getElementById('sh-newrole').value;
+  st.chips.forEach(p => { access[p.email] = role; people[p.email] = { name:p.name || '', photo:p.photo || null }; });
+  const btn = document.getElementById('sh-send'); btn.disabled = true;
+  try {
+    await writeAccess(access, people);
+    const added = st.chips.slice();
+    const book = {}; added.forEach(p => { book[p.email] = { name:p.name || '', photo:p.photo || null }; contacts[p.email] = book[p.email]; });
+    setDoc(doc(db, 'contacts', currentUser.uid), { people:book }, { merge:true }).catch(() => {});
+    st.chips = []; shareErr('');
+    renderShareChips(); renderSharePeople();
+    showToast(added.length === 1 ? `Shared with ${added[0].name || added[0].email}` : `Shared with ${added.length} people`);
+  } catch(e){ console.warn('Share failed', e); shareErr(permissionHint(e)); }
+  finally { btn.disabled = false; }
+};
+
+async function setPersonRole(email, role){
+  const st = shareState, data = cloudMeta[st.code]; if(!data) return;
+  const access = Object.assign({}, data.access), people = Object.assign({}, data.people);
+  if(role === 'remove'){ delete access[email]; delete people[email]; }
+  else access[email] = role;
+  try {
+    await writeAccess(access, people);
+    showToast(role === 'remove' ? 'Access removed' : `${people[email] && people[email].name || email} is now ${ROLE_NAMES[role].toLowerCase()}`);
+  } catch(e){ console.warn('Role change failed', e); shareErr(permissionHint(e)); }
+  renderSharePeople();
+}
+
+async function setLinkAccess(v){
+  const st = shareState, song = st.song, code = st.code;
+  if(v === 'off') song.linkAccess = 'off'; else delete song.linkAccess;
+  window.save();
+  try {
+    if(v === 'off') await deleteDoc(doc(db, 'sharedCharts', code));
+    else await ensureSharePublished(song);
+    if(cloudMeta[code]){ await updateDoc(doc(db, 'charts', code), { linkShared:v !== 'off' }); cloudMeta[code].linkShared = v !== 'off'; }
+    showToast(v === 'off' ? 'Link turned off' : 'Anyone with the link can view');
+  } catch(e){ console.warn('Link access change failed', e); shareErr(permissionHint(e)); }
+  renderSharePeople();
+}
+
+window.copyShareLink = function(){
+  const st = shareState; if(!st) return;
+  const link = shareLinkFor(st.code);
+  const done = () => showToast('Link copied');
+  if(navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(link).then(done, () => window.prompt('Copy this link:', link));
+  else window.prompt('Copy this link:', link);
+};
+
+// ── autofill: people I've shared with, people on charts I'm part of, and an exact email's account ──
+function shareCandidates(){
+  const map = {}, me = myEmail();
+  const add = (email, name, photo) => {
+    email = (email || '').toLowerCase(); if(!email || email === me) return;
+    const c = map[email] || (map[email] = { email, name:'', photo:null });
+    if(name && !c.name) c.name = name;
+    if(photo && !c.photo) c.photo = photo;
+  };
+  Object.keys(contacts).forEach(e => add(e, contacts[e].name, contacts[e].photo));
+  Object.values(cloudMeta).forEach(d => {
+    add(d.ownerEmail, d.ownerName, d.ownerPhoto);
+    Object.keys(d.access || {}).forEach(e => add(e, d.people && d.people[e] && d.people[e].name, d.people && d.people[e] && d.people[e].photo));
+  });
+  return Object.values(map);
+}
+function matchScore(p, q){
+  const name = (p.name || '').toLowerCase();
+  if(p.email.startsWith(q)) return 4;
+  if(name.startsWith(q)) return 3;
+  if(name && name.split(/\s+/).some(w => w.startsWith(q))) return 2;
+  if(p.email.includes(q) || name.includes(q)) return 1;
+  return 0;
+}
+function hl(text, q){
+  const t = String(text || ''), i = t.toLowerCase().indexOf(q);
+  if(!q || i < 0) return esc(t);
+  return esc(t.slice(0, i)) + '<mark>' + esc(t.slice(i, i + q.length)) + '</mark>' + esc(t.slice(i + q.length));
+}
+function onShareInput(){
+  const st = shareState; if(!st) return;
+  shareErr('');
+  const raw = document.getElementById('sh-input').value;
+  // pasting "a@x.com, b@y.com" (or typing a separator after an address) adds each one
+  const toks = raw.split(/[,;\s]+/).filter(Boolean);
+  if(toks.length && /[,;\s]/.test(raw) && toks.every(t => EMAIL_RE.test(t.toLowerCase()))){
+    toks.forEach(t => pickPerson(st.lookups[t.toLowerCase()] || { email:t.toLowerCase() }, true));
+    document.getElementById('sh-input').value = ''; hideSugg(); renderShareChips();
+    return;
+  }
+  const q = raw.trim().toLowerCase();
+  if(!q){ hideSugg(); return; }
+  const taken = new Set([...Object.keys((cloudMeta[st.code] || {}).access || {}), ...st.chips.map(c => c.email)]);
+  let list = shareCandidates().filter(p => !taken.has(p.email))
+    .map(p => [p, matchScore(p, q)]).filter(x => x[1] > 0)
+    .sort((a, b) => b[1] - a[1] || (a[0].name || a[0].email).localeCompare(b[0].name || b[0].email))
+    .slice(0, 6).map(x => x[0]);
+  if(EMAIL_RE.test(q) && !taken.has(q) && !list.some(p => p.email === q)){
+    const known = st.lookups[q];
+    list.unshift(known || { email:q, name:'', photo:null, looking:true });
+    if(!known) lookupEmail(q);
+  }
+  st.sugg = list; st.hi = 0;
+  renderSugg(q);
+}
+// "when I type it right": an exact address that belongs to an account fills in their name and photo
+async function lookupEmail(email){
+  const st = shareState; if(!st || st.lookups[email]) return st && st.lookups[email];
+  try {
+    const s = await getDoc(doc(db, 'emailIndex', email));
+    st.lookups[email] = s.exists()
+      ? { email, name:s.data().name || '', photo:s.data().photo || null, known:true }
+      : { email, name:'', photo:null, unknown:true };
+  } catch(e){ st.lookups[email] = { email, name:'', photo:null }; }
+  if(shareState !== st) return st.lookups[email];
+  const inp = document.getElementById('sh-input');
+  if(inp && inp.value.trim().toLowerCase() === email){
+    st.sugg = st.sugg.map(p => p.email === email ? st.lookups[email] : p);
+    renderSugg(email);
+  }
+  st.chips.forEach(c => { if(c.email === email && !c.name && st.lookups[email].name){ c.name = st.lookups[email].name; c.photo = st.lookups[email].photo; renderShareChips(); } });
+  return st.lookups[email];
+}
+function renderSugg(q){
+  const st = shareState, box = document.getElementById('sh-sugg'), inp = document.getElementById('sh-input');
+  if(!box) return;
+  if(!st.sugg.length){
+    box.innerHTML = EMAIL_RE.test(q) ? '' : `<div class="sh-opt" style="cursor:default"><span><i>Keep typing their full email address</i></span></div>`;
+    box.classList.toggle('open', !!box.innerHTML); inp.setAttribute('aria-expanded', String(!!box.innerHTML));
+    return;
+  }
+  box.innerHTML = st.sugg.map((p, k) => `
+    <div class="sh-opt${k === st.hi ? ' hi' : ''}" role="option" id="sh-opt-${k}" aria-selected="${k === st.hi}" data-k="${k}">
+      ${avatarHtml(p)}
+      <span style="min-width:0">
+        <b>${p.name ? hl(p.name, q) : hl(p.email, q)}</b>
+        <i>${p.name ? hl(p.email, q) : p.looking ? 'Looking them up…' : p.unknown ? "No account yet: they'll see it once they sign up with this email" : ''}</i>
+      </span>
+    </div>`).join('');
+  box.classList.add('open'); inp.setAttribute('aria-expanded', 'true');
+  inp.setAttribute('aria-activedescendant', 'sh-opt-' + st.hi);
+  box.querySelectorAll('.sh-opt[data-k]').forEach(el => el.onmousedown = e => { e.preventDefault(); pickPerson(st.sugg[+el.dataset.k]); });
+}
+function hideSugg(){
+  const box = document.getElementById('sh-sugg'); if(!box) return;
+  box.classList.remove('open'); box.innerHTML = '';
+  const inp = document.getElementById('sh-input'); if(inp){ inp.setAttribute('aria-expanded', 'false'); inp.removeAttribute('aria-activedescendant'); }
+  if(shareState) shareState.sugg = [];
+}
+function pickPerson(p, quiet){
+  const st = shareState; if(!st || !p) return;
+  const email = p.email.toLowerCase();
+  if(email === myEmail()){ shareErr("That's you. You already own this chart."); return; }
+  if(((cloudMeta[st.code] || {}).access || {})[email]){ shareErr(`${p.name || email} already has access. Change their role below.`); return; }
+  if(!st.chips.some(c => c.email === email)) st.chips.push({ email, name:p.name || '', photo:p.photo || null });
+  if(!p.name) lookupEmail(email);
+  if(quiet) return;
+  const inp = document.getElementById('sh-input');
+  inp.value = ''; hideSugg(); renderShareChips(); inp.focus();
+}
+function onShareKey(e){
+  const st = shareState; if(!st) return;
+  const inp = e.target, open = st.sugg.length > 0;
+  if(e.key === 'ArrowDown' || e.key === 'ArrowUp'){
+    if(!open) return;
+    e.preventDefault();
+    st.hi = (st.hi + (e.key === 'ArrowDown' ? 1 : -1) + st.sugg.length) % st.sugg.length;
+    renderSugg(inp.value.trim().toLowerCase());
+  } else if(e.key === 'Enter' || e.key === 'Tab' || e.key === ',' || e.key === ';'){
+    const q = inp.value.trim().toLowerCase();
+    if(open && (e.key === 'Enter' || e.key === 'Tab')){ e.preventDefault(); pickPerson(st.sugg[st.hi]); }
+    else if(q && EMAIL_RE.test(q)){ e.preventDefault(); pickPerson(st.lookups[q] || { email:q }); }
+    else if(e.key === 'Enter' && !q && st.chips.length){ e.preventDefault(); window.shareSend(); }
+    else if(e.key === 'Enter' && q){ e.preventDefault(); shareErr(`No match for “${inp.value.trim()}”. Type their full email address.`); }
+  } else if(e.key === 'Backspace' && !inp.value && st.chips.length){
+    st.chips.pop(); renderShareChips();
+  }
+}
+
+// ── comments ──
+function watchComments(code, retried){
+  stopComments();
+  const data = cloudMeta[code];
+  if(!code || !data || !canCommentRole(myRoleFor(data))){ updateShareUI(); return; }
+  commentsCode = code;
+  commentsUnsub = onSnapshot(query(collection(db, 'charts', code, 'comments'), orderBy('created')), snap => {
+    comments = snap.docs.map(d => Object.assign({ id:d.id }, d.data()));
+    updateShareUI();
+    if(document.getElementById('comments-panel').classList.contains('open')) renderCommentList();
+  }, e => {
+    console.warn('Comments unavailable — publish firestore.rules', e);
+    if(commentsCode !== code) return;
+    commentsUnsub = null; commentsCode = null; comments = []; updateShareUI();
+    // a chart shared a moment ago can take a beat to be readable — try once more
+    if(!retried) setTimeout(() => { if(!commentsCode && cloudMeta[code] && (songCode(currentSong()) === code || openCloudCode === code)) watchComments(code, true); }, 1500);
+  });
+  updateShareUI();
+}
+function stopComments(){
+  if(commentsUnsub) commentsUnsub();
+  commentsUnsub = null; commentsCode = null; comments = [];
+  const p = document.getElementById('comments-panel');
+  if(p){ p.classList.remove('open'); p.setAttribute('aria-hidden', 'true'); }
+}
+window.openComments = function(){
+  if(!commentsCode) return;
+  const song = currentSong(), role = currentRole();
+  const p = document.getElementById('comments-panel');
+  const secs = (song && song.sections) || [];
+  const sel = selectedSectionIdx != null && !sharedSong && secs[selectedSectionIdx] ? secs[selectedSectionIdx].id : '';
+  p.innerHTML = `
+    <div class="cm-head">
+      <span class="set-title">Comments</span>
+      <button class="chip" id="cm-resolved" onclick="toggleResolved()"></button>
+      <button class="circ sm" onclick="closeComments()" title="Close (Esc)" aria-label="Close comments"><svg class="i" aria-hidden="true"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="cm-list" id="cm-list"></div>
+    ${canCommentRole(role) ? `
+    <div class="cm-compose">
+      <textarea id="cm-text" maxlength="2000" placeholder="Leave a note for the band…" aria-label="Comment"></textarea>
+      <div class="cm-compose-row">
+        <select class="set-select" id="cm-sec" aria-label="Which section">
+          <option value="">Whole chart</option>
+          ${secs.map((s, i) => `<option value="${s.id}"${s.id === sel ? ' selected' : ''}>${esc(sectionDisplay(song, i))}</option>`).join('')}
+        </select>
+        <button class="rect solid" onclick="postComment()">Comment</button>
+      </div>
+    </div>` : `<div class="cm-readonly">Viewers can't comment.</div>`}`;
+  p.classList.add('open'); p.setAttribute('aria-hidden', 'false');
+  renderCommentList();
+  const t = document.getElementById('cm-text');
+  if(t){
+    t.focus();
+    t.addEventListener('keydown', e => { if(e.key === 'Enter' && (e.metaKey || e.ctrlKey)){ e.preventDefault(); window.postComment(); } });
+  }
+};
+window.closeComments = function(){
+  const p = document.getElementById('comments-panel');
+  p.classList.remove('open'); p.setAttribute('aria-hidden', 'true');
+};
+window.toggleResolved = function(){ showResolved = !showResolved; renderCommentList(); };
+function timeAgo(t){
+  const s = Math.round((Date.now() - t) / 1000);
+  if(s < 60) return 'now';
+  if(s < 3600) return Math.floor(s / 60) + 'm';
+  if(s < 86400) return Math.floor(s / 3600) + 'h';
+  if(s < 604800) return Math.floor(s / 86400) + 'd';
+  return new Date(t).toLocaleDateString(undefined, { month:'short', day:'numeric' });
+}
+function renderCommentList(){
+  const list = document.getElementById('cm-list'); if(!list) return;
+  const song = currentSong(), role = currentRole(), uid = currentUser && currentUser.uid;
+  const resolvedN = comments.filter(c => c.resolved).length;
+  const tog = document.getElementById('cm-resolved');
+  tog.textContent = showResolved ? 'Hide resolved' : 'Resolved · ' + resolvedN;
+  tog.hidden = !resolvedN;
+  const shown = comments.filter(c => showResolved || !c.resolved);
+  if(!shown.length){
+    list.innerHTML = `<div class="cm-empty">No comments yet.<br>Notes left here are seen by the owner, editors and commenters.</div>`;
+    return;
+  }
+  list.innerHTML = shown.map(c => {
+    const secs = (song && song.sections) || [];
+    const i = c.sectionId == null ? -1 : secs.findIndex(s => s.id === c.sectionId);
+    const tag = c.sectionId == null ? ''
+      : `<span class="cm-sec" style="--sec:${i >= 0 ? effColor(secs[i]) : '#888'}">${esc(i >= 0 ? sectionDisplay(song, i) : (c.sectionLabel || 'Removed section'))}</span>`;
+    const mine = c.uid === uid;
+    const canResolve = mine || role === 'owner' || role === 'editor';
+    const canDelete = mine || role === 'owner';
+    return `
+      <div class="cm-item${c.resolved ? ' resolved' : ''}">
+        <div class="cm-top">${avatarHtml({ name:c.name, email:c.email, photo:c.photo }, 'sm')}<b>${esc(mine ? 'You' : (c.name || c.email))}</b><time>${timeAgo(c.created)}</time></div>
+        ${tag}
+        <div class="cm-text">${esc(c.text)}</div>
+        <div class="cm-acts">
+          ${canResolve ? `<button class="chip" onclick="resolveComment('${c.id}', ${!c.resolved})">${c.resolved ? 'Reopen' : 'Resolve'}</button>` : ''}
+          ${canDelete ? `<button class="chip" onclick="deleteComment('${c.id}')">Delete</button>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+  list.scrollTop = list.scrollHeight;
+}
+window.postComment = async function(){
+  const t = document.getElementById('cm-text'), text = t.value.trim();
+  if(!text || !commentsCode) return;
+  const song = currentSong(), secId = document.getElementById('cm-sec').value;
+  const secs = (song && song.sections) || [];
+  const i = secId === '' ? -1 : secs.findIndex(s => String(s.id) === secId);
+  try {
+    await addDoc(collection(db, 'charts', commentsCode, 'comments'), {
+      uid:currentUser.uid, email:myEmail(), name:currentUser.displayName || '', photo:currentUser.photoURL || null,
+      text, sectionId:i >= 0 ? secs[i].id : null, sectionLabel:i >= 0 ? sectionDisplay(song, i) : '',
+      created:Date.now(), resolved:false,
+    });
+    t.value = '';
+  } catch(e){ console.warn('Comment failed', e); showToast(e && e.code === 'permission-denied' ? "You can't comment on this chart" : "Couldn't post that", 'error'); }
+};
+window.resolveComment = function(id, resolved){
+  updateDoc(doc(db, 'charts', commentsCode, 'comments', id), { resolved, resolvedBy:resolved ? currentUser.uid : null })
+    .catch(e => { console.warn(e); showToast("Couldn't update that comment", 'error'); });
+};
+window.deleteComment = function(id){
+  if(!confirm('Delete this comment?')) return;
+  deleteDoc(doc(db, 'charts', commentsCode, 'comments', id)).catch(e => { console.warn(e); showToast("Couldn't delete that comment", 'error'); });
+};
+
+// ── email verification, for email/password accounts ──
+function renderVerifyBanner(){
+  const el = document.getElementById('verify-banner');
+  const need = !!(currentUser && currentUser.email && !currentUser.emailVerified);
+  el.style.display = need ? 'flex' : 'none';
+  if(!need) return;
+  el.innerHTML = `<span>Verify <b>${esc(currentUser.email)}</b> to see charts people share with you.</span>
+    <button class="rect" onclick="sendVerify()">Send verification email</button>
+    <button class="rect quiet" onclick="recheckVerify()">I've verified</button>`;
+}
+window.sendVerify = async function(){
+  try { await sendEmailVerification(currentUser); showToast('Check your inbox', 'saved', 2500); }
+  catch(e){ showToast(e && e.code === 'auth/too-many-requests' ? 'Already sent. Check your inbox' : "Couldn't send it", 'error'); }
+};
+window.recheckVerify = async function(){
+  try {
+    await currentUser.reload();
+    if(!auth.currentUser.emailVerified){ showToast('Not verified yet', 'error'); return; }
+    await auth.currentUser.getIdToken(true);   // the rules read email_verified from the token
+    currentUser = auth.currentUser;
+    startCloud(currentUser);
+    window.renderLibrary();
+    showToast('Verified');
+  } catch(e){ showToast("Couldn't check. Try again", 'error'); }
+};
+
+// the Share dialog is modal, and the comments drawer keeps its typing to itself
+window.addEventListener('keydown', e => {
+  if(document.getElementById('share-overlay').classList.contains('open')){
+    if(e.key === 'Escape'){
+      e.preventDefault(); e.stopImmediatePropagation();
+      if(shareState && shareState.sugg.length) hideSugg(); else window.closeShare();
+      return;
+    }
+    if(!(e.target instanceof Element && e.target.closest('#share-box'))) e.stopImmediatePropagation();
+    return;
+  }
+  if(document.getElementById('comments-panel').classList.contains('open') && e.key === 'Escape'
+     && !document.getElementById('perf-overlay').classList.contains('active')){
+    e.preventDefault(); e.stopImmediatePropagation(); window.closeComments();
+  }
+}, true);
+['share-box', 'comments-panel'].forEach(id => document.getElementById(id).addEventListener('keydown', e => e.stopPropagation()));
 
 // ── LIBRARY GRID ──────────────────────────────────────
 // A song with no uploaded art gets a cover built from its own chart:
@@ -2471,6 +3392,8 @@ window.renderLibrary = function(){
   const list = document.getElementById('song-list');
   const empty = document.getElementById('lib-empty');
   list.innerHTML = '';
+  renderVerifyBanner();
+  renderSharedLib();
   if(!library.length){ empty.style.display='block'; return; }
   empty.style.display = 'none';
   [...library].reverse().forEach((song, i) => {
@@ -2478,13 +3401,14 @@ window.renderLibrary = function(){
     const totalBars = secs.reduce((a,s)=>a+(secBarsShown(s)*s.repeats),0);
     const name = song.name || 'Untitled';
     const card = document.createElement('article');
-    card.className = 'tile';
+    card.className = 'tile' + (peopleCount(song.shareCode) ? ' has-badge' : '');
     card.tabIndex = 0;
     card.dataset.id = song.id;
     card.style.animationDelay = Math.min(i*0.03, 0.36) + 's';
     card.innerHTML = `
       <div class="tile-art"></div>
       <div class="tile-scrim"></div>
+      ${peopleCount(song.shareCode) ? `<div class="tile-badge">${ico('users')}Shared · ${peopleCount(song.shareCode)}</div>` : ''}
       <div class="tile-acts">
         <button class="tile-act danger" title="Delete" aria-label="Delete ${esc(name)}" onclick="event.stopPropagation();deleteSongById(${song.id})">${ico('x')}</button>
       </div>
@@ -2501,6 +3425,46 @@ window.renderLibrary = function(){
     card.onkeydown = e => {
       if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); window.openSong(song.id); }
     };
+    list.appendChild(card);
+  });
+}
+
+window.copyCloudChart = function(code){
+  const data = cloudMeta[code]; if(!data) return;
+  const copy = migrateSong(JSON.parse(JSON.stringify(data.chart || {})));
+  copy.id = idCounter++; copy.created = Date.now(); copy.shareCode = null;
+  library.push(copy); window.save(); window.renderLibrary(); showToast('Saved a copy to your charts');
+};
+function renderSharedLib(){
+  const wrap = document.getElementById('shared-lib'), list = document.getElementById('shared-list');
+  const items = sharedLib.map(s => [s, cloudMeta[songCode(s)]]).filter(x => x[1])
+    .sort((a, b) => (b[1].updated || 0) - (a[1].updated || 0));
+  wrap.classList.toggle('on', items.length > 0);
+  document.getElementById('shared-lib-count').textContent = items.length || '';
+  list.innerHTML = '';
+  items.forEach(([song, data], i) => {
+    const code = songCode(song), name = song.name || 'Untitled', role = myRoleFor(data);
+    const secs = song.sections || [];
+    const totalBars = secs.reduce((a,s)=>a+(secBarsShown(s)*s.repeats),0);
+    const card = document.createElement('article');
+    card.className = 'tile has-badge'; card.tabIndex = 0; card.dataset.code = code;
+    card.style.animationDelay = Math.min(i*0.03, 0.36) + 's';
+    card.innerHTML = `
+      <div class="tile-art"></div>
+      <div class="tile-scrim"></div>
+      <div class="tile-badge">${ico(role === 'editor' ? 'edit' : role === 'commenter' ? 'comment' : 'focus')}${esc(ROLE_NAMES[role] || '')}</div>
+      <div class="tile-top">
+        <h3 class="tile-title"><span class="tt-stroke" aria-hidden="true">${esc(name)}</span><span class="tt-fill">${esc(name)}</span></h3>
+        ${song.artist ? `<div class="tile-artist">${esc(song.artist)}</div>` : ''}
+        <div class="tile-owner">From ${esc(data.ownerName || data.ownerEmail || 'someone')}</div>
+      </div>
+      <div class="tile-bot">
+        <div class="tile-meta">${song.bpm} BPM · ${Math.round(totalBars)} bars<br>${data.updated ? 'Edited ' + libDate(data.updated) : ''}</div>
+        <div class="tile-dots">${coverDots(secs)}</div>
+      </div>`;
+    applyCover(card.querySelector('.tile-art'), song);
+    card.onclick = () => window.openCloudChart(code);
+    card.onkeydown = e => { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); window.openCloudChart(code); } };
     list.appendChild(card);
   });
 }
@@ -2559,8 +3523,11 @@ window.openSong = function(id){
   histReset();                      // start a clean undo history for this song
   renderAudioBar();
   window.renderChart();
+  const code = songCode(song);
+  if(code && cloudMeta[code]) watchComments(code); else stopComments();
+  updateShareUI();
   // reflect this chart's shareable link in the address bar (request: "show the link in the URL bar")
-  if(song.shareCode) history.replaceState(null, '', '#c/' + song.shareCode);
+  if(code) history.replaceState(null, '', '#c/' + code);
   else history.replaceState(null, '', location.pathname);
   // publish (or create a code) in the background so the URL becomes a live, copy-able link
   ensureSharePublished(song).then(code => {
@@ -2687,6 +3654,8 @@ function fmtFillLen(ets, len16){
 window.openAndPerform = function(id){ window.openSong(id); setTimeout(window.startPerf, 80); }
 window.goLibrary = function(){
   window.saveSongMeta();
+  stopComments(); window.closeShare();
+  if(cloudSyncTimer){ clearTimeout(cloudSyncTimer); cloudSync(); }   // don't sit on an unsent edit
   const s = currentSong();
   if(s && s.shareCode) ensureSharePublished(s);   // push the latest version to the shared link
   history.replaceState(null, '', location.pathname);
@@ -2707,8 +3676,35 @@ window.saveSongMeta = function(){
   window.renderChart();
 }
 
-window.deleteSong = function(){ if(confirm('Delete?')){ library = library.filter(s => s.id !== currentSongId); window.save(); window.goLibrary(); } }
-window.deleteSongById = function(id){ if(confirm('Delete?')){ library = library.filter(s => s.id !== id); window.save(); window.renderLibrary(); } }
+function confirmDelete(song){
+  const n = song ? peopleCount(song.shareCode) : 0;
+  return confirm(n ? `Delete “${song.name || 'Untitled'}”? The ${n === 1 ? 'person' : n + ' people'} you shared it with will lose it too.` : 'Delete?');
+}
+// a deleted chart's shared copy, comments and public link go with it
+async function dropCloudCopies(song){
+  const code = song && song.shareCode;
+  if(!code || !currentUser || library.some(s => s !== song && s.shareCode === code)) return;
+  if(cloudKind[code] === 'own'){
+    try {
+      const cs = await getDocs(collection(db, 'charts', code, 'comments'));
+      await Promise.all(cs.docs.map(d => deleteDoc(d.ref)));
+      await deleteDoc(doc(db, 'charts', code));
+    } catch(e){ console.warn('Could not remove the shared copy', e); }
+  }
+  deleteDoc(doc(db, 'sharedCharts', code)).catch(() => {});
+}
+window.deleteSong = function(){
+  const song = currentSong();
+  if(!song || isGuestSong(song) || !confirmDelete(song)) return;
+  dropCloudCopies(song);
+  library = library.filter(s => s.id !== currentSongId); window.save(); window.goLibrary();
+}
+window.deleteSongById = function(id){
+  const song = library.find(s => s.id === id);
+  if(!song || !confirmDelete(song)) return;
+  dropCloudCopies(song);
+  library = library.filter(s => s.id !== id); window.save(); window.renderLibrary();
+}
 window.duplicateSongById = function(id){
   const s = library.find(x => x.id === id); if(!s) return;
   const c = JSON.parse(JSON.stringify(s));
@@ -4169,6 +5165,7 @@ function setupPerfAudio(song){
 }
 
 window.startPerf = function(){
+  window.closeComments(); window.closeShare();
   const song = currentSong();
   const b = performBlocker(song);
   if(b){
@@ -4879,7 +5876,16 @@ document.addEventListener('contextmenu', e => {
     return;
   }
   const block = e.target.closest('#chart-list .section-block');
-  const card = e.target.closest('.tile');
+  const card = e.target.closest('#song-list .tile');
+  const sharedCard = e.target.closest('#shared-list .tile');
+  if(sharedCard){
+    e.preventDefault();
+    const code = sharedCard.dataset.code;
+    showCtx(e.clientX, e.clientY, [
+      {id:'open', icon:'next', label:'Open', run:()=>window.openCloudChart(code)},
+      {id:'copy', icon:'dup', label:'Save a copy to my charts', run:()=>window.copyCloudChart(code)},
+    ]); return;
+  }
   if(block){
     e.preventDefault(); const i = +block.dataset.idx; setSelectedSection(i);
     showCtx(e.clientX, e.clientY, sectionMenuItems(i));
@@ -4895,6 +5901,7 @@ document.addEventListener('contextmenu', e => {
       {id:'dup', icon:'dup', label:'Duplicate', run:()=>window.duplicateSongById(id)},
       {id:'rename', icon:'edit', label:'Rename…', run:()=>window.renameSongById(id)},
       {id:'art', icon:'image', label:'Set cover art…', run:()=>window.pickCoverArt(id)},
+      {id:'sharep', icon:'users', label:'Share…', run:()=>{ window.openSong(id); setTimeout(window.openShare, 120); }},
       {id:'share', icon:'link', label:'Copy share link', run:()=>{ window.openSong(id); setTimeout(window.shareSong, 200); }},
       {id:'export', icon:'download', label:'Export this chart', run:()=>window.exportSongById(id)},
       '---',
@@ -4914,6 +5921,7 @@ document.addEventListener('contextmenu', e => {
       addSectionMenu(insertIndexFromPoint(e.clientY)),
       {id:'pasteEnd', icon:'paste', label:'Paste section', key:KEYS.paste, disabled:!sectionClipboard, run:()=>window.pasteSection(nSec-1)},
       '---',
+      {id:'sharep', icon:'users', label:'Share…', run:()=>window.openShare()},
       {id:'share', icon:'link', label:'Copy share link', run:()=>window.shareSong()},
       {id:'perform', icon:'play', label:'Perform', disabled:!nSec, run:()=>window.startPerf()},
       '---',
