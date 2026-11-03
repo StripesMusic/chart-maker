@@ -1165,6 +1165,17 @@ kbd{font-family:var(--mono)}
 }
 #ctx-menu .ctx-arrow{margin-left:auto;display:grid;place-items:center;color:var(--muted2)}
 #ctx-menu .ctx-arrow .i{width:12px;height:12px}
+#ctx-menu .ctx-custom{cursor:default}
+#ctx-menu .ctx-custom:hover{background:none}
+#ctx-menu .ctx-ts{height:26px;margin-left:auto}
+#ctx-menu .ctx-ts :is(input,select){height:24px;padding:0;background:transparent;border:0;font-family:var(--mono);font-size:12.5px;color:var(--text);text-align:center;outline:none}
+#ctx-menu .ctx-ts input{width:34px;-moz-appearance:textfield;appearance:textfield}
+#ctx-menu .ctx-ts input::-webkit-inner-spin-button,#ctx-menu .ctx-ts input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+#ctx-menu .ctx-ts input::selection{background:var(--accent);color:#000}
+#ctx-menu .ctx-ts select{width:30px;cursor:pointer;text-align-last:center;-webkit-appearance:none;appearance:none;color-scheme:dark}
+#ctx-menu .ctx-ts > span{padding:0 1px}
+#ctx-menu.sheet .ctx-ts{height:34px}
+#ctx-menu.sheet .ctx-ts :is(input,select){height:32px;font-size:16px}
 #ctx-menu .ctx-sep{height:1px;margin:4px 6px;background:var(--border2);opacity:.55}
 #ctx-menu .ctx-heading{max-width:280px;padding:9px 10px 7px;font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #ctx-menu .ctx-dot{width:9px;height:9px}
@@ -3579,6 +3590,10 @@ function sixteenthsPerBeat(ets){ return 16 / ets.d; }
 // bars come before it (0 = the very front, sec.bars = the end), `beats` its length, and `skip`
 // leaves it out of the bar count, so a pickup doesn't push bar 1 along.
 function secExtras(sec){ return sec && Array.isArray(sec.extras) ? sec.extras : []; }
+// A short bar can count in quarters or eighths of its own (`d`, 4 or 8) — a 7/8 bar in a 4/4 song.
+// Without one it follows the section.
+function shortBarD(ets, e){ return e && (e.d === 4 || e.d === 8) ? e.d : ets.d; }
+function shortBarTS(ets, e){ return `${Math.max(1, Math.round(e.beats || 1))}/${shortBarD(ets, e)}`; }
 // The bars of a section, in order, as {start16,len16,beats,isOdd,num, slot|xi}. Whole bars carry
 // their `slot` (0-based among whole bars), short bars `xi`, their index in sec.extras.
 function barLayout(ets, bars, extras){
@@ -3587,16 +3602,16 @@ function barLayout(ets, bars, extras){
   const list = (extras || []).map((e, xi) => ({ e, xi })).sort((a, b) => (a.e.at - b.e.at) || (a.xi - b.xi));
   const out = []; let pos = 0, num = 1, li = 0;
   const pushExtra = ({ e, xi }) => {
-    const beats = Math.max(1, Math.round(e.beats || 1));
-    out.push({ start16:pos, len16:beats * s16b, beats, isOdd:true, xi, num: e.skip ? null : num++ });
-    pos += beats * s16b;
+    const beats = Math.max(1, Math.round(e.beats || 1)), d = shortBarD(ets, e), sb = 16 / d;
+    out.push({ start16:pos, len16:beats * sb, beats, d, s16b:sb, isOdd:true, xi, num: e.skip ? null : num++ });
+    pos += beats * sb;
   };
   for(let k = 0; k <= whole; k++){
     while(li < list.length && list[li].e.at <= k) pushExtra(list[li++]);
-    if(k < whole){ out.push({ start16:pos, len16:spb, beats:ets.n, isOdd:false, slot:k, num:num++ }); pos += spb; }
+    if(k < whole){ out.push({ start16:pos, len16:spb, beats:ets.n, d:ets.d, s16b, isOdd:false, slot:k, num:num++ }); pos += spb; }
   }
   while(li < list.length) pushExtra(list[li++]);
-  if(!out.length) out.push({ start16:0, len16:spb, beats:ets.n, isOdd:false, slot:0, num:1 });
+  if(!out.length) out.push({ start16:0, len16:spb, beats:ets.n, d:ets.d, s16b, isOdd:false, slot:0, num:1 });
   return out;
 }
 function secLayout(song, sec){ return barLayout(effTS(song, sec), sec.bars, secExtras(sec)); }
@@ -3617,7 +3632,7 @@ function barsLabel(song, sec){
   const ets = effTS(song, sec), w = Number(sec.bars) || 0;
   const head = `${w} bar${w === 1 ? '' : 's'}`;
   const ex = secExtras(sec);
-  return ex.length ? head + ' + ' + ex.map(e => `${e.beats}/${ets.d}`).join(' + ') : head;
+  return ex.length ? head + ' + ' + ex.map(e => shortBarTS(ets, e)).join(' + ') : head;
 }
 // the same spot in the fewest characters — "1.3" is bar 1 beat 3, "PU.3" a pickup
 function barBeatShort(bb){ return (bb.bar == null ? 'PU' : bb.bar) + '.' + bb.beat; }
@@ -3636,7 +3651,8 @@ function fillBarBeat(ets, start16, layout){
       const b = layout[k];
       if(start16 < b.start16 + b.len16 - 1e-9 || k === layout.length - 1){
         const off = Math.max(0, start16 - b.start16);
-        return { bar:b.num === undefined ? k+1 : b.num, beat: Math.floor(off/s16b)+1, sub: Math.round((off % s16b)/(s16b/4)) };
+        const bs = b.s16b || s16b;
+        return { bar:b.num === undefined ? k+1 : b.num, beat: Math.floor(off/bs)+1, sub: Math.round((off % bs)/(bs/4)) };
       }
     }
   }
@@ -3853,7 +3869,7 @@ window.renderChart = function(){
     el.innerHTML = `
       <div class="lg-block">
         <input class="lg-bars" type="number" inputmode="decimal" step="1" min="0" value="${sec.bars}" aria-label="Bars" title="Whole bars in this section — add short bars from the fills editor or the ⋯ menu" onchange="updateBars(${i},this.value)">
-        <span class="lg-unit">${sec.bars == 1 ? 'Bar' : 'Bars'}${secExtras(sec).length ? `<em class="lg-extra" title="${esc(barsLabel(song, sec))}">+${secExtras(sec).length === 1 ? secExtras(sec)[0].beats + '/' + ets.d : secExtras(sec).length + ' short'}</em>` : ''}</span>
+        <span class="lg-unit">${sec.bars == 1 ? 'Bar' : 'Bars'}${secExtras(sec).length ? `<em class="lg-extra" title="${esc(barsLabel(song, sec))}">+${secExtras(sec).length === 1 ? shortBarTS(ets, secExtras(sec)[0]) : secExtras(sec).length + ' short'}</em>` : ''}</span>
         <span class="lg-ts${custom ? ' custom' : ''}" title="${custom ? 'This section has its own time signature' : 'Follows the song'}"><input type="number" inputmode="numeric" min="1" max="15" value="${ets.n}" style="width:${String(ets.n).length}ch" aria-label="Beats per bar" onchange="updateSecTS(${i},'n',this.value)"><span class="lg-slash">/</span><select aria-label="Note value" onchange="updateSecTS(${i},'d',this.value)"><option value="4"${ets.d==4?' selected':''}>4</option><option value="8"${ets.d==8?' selected':''}>8</option></select></span>
       </div>
       <div class="lg-body">
@@ -3991,17 +4007,18 @@ window.addFillNext = function(){
 // ── short bars ──
 // Added with the + Short bar button (or by right-clicking where one should go), as many per section
 // as the music has. Each one can be moved, resized, left out of the count, or removed.
-window.addShortBar = function(i, at, beats){
+window.addShortBar = function(i, at, beats, d){
   const song = currentSong(), sec = song && song.sections[i]; if(!sec) return;
   const ets = effTS(song, sec);
   const slot = at == null ? (Number(sec.bars) || 0) : Math.max(0, Math.min(Math.round(at), Number(sec.bars) || 0));
   const b = Math.max(1, Math.min(32, Math.round(beats || Math.max(1, Math.floor(ets.n / 2)))));
   const e = { at:slot, beats:b, skip:false };
+  if(d === 4 || d === 8) e.d = d;
   restructure(song, sec, () => { sec.extras = secExtras(sec); sec.extras.push(e); });
   const bar = secLayout(song, sec).find(x => x.isOdd && secExtras(sec)[x.xi] === e);
   if(bar) fmReveal16 = bar.start16;
   window.renderChart();
-  window.save().then(() => showToast(`${b}/${ets.d} bar added — drag its tag to move it`));
+  window.save().then(() => showToast(`${shortBarTS(ets, e)} bar added — drag its tag to move it`));
 };
 window.removeShortBar = function(i, xi){
   const song = currentSong(), sec = song && song.sections[i], e = secExtras(sec)[xi]; if(!e) return;
@@ -4012,14 +4029,20 @@ window.removeShortBar = function(i, xi){
   window.renderChart();
   window.save().then(() => showToast('Short bar removed' + (lost ? ', with ' + plural(lost, 'fill') + ' in it' : '')));
 };
-window.setShortBarBeats = function(i, xi, beats){
-  const song = currentSong(), sec = song && song.sections[i], e = secExtras(sec)[xi]; if(!e) return;
-  const b = Math.max(1, Math.min(32, Math.round(beats)));
-  if(b === e.beats) return;
-  const lost = restructure(song, sec, () => { e.beats = b; });
+// any number of beats on top, quarters or eighths underneath
+window.setShortBarTS = function(i, xi, beats, d){
+  const song = currentSong(), sec = song && song.sections[i], e = secExtras(sec)[xi]; if(!e) return false;
+  const ets = effTS(song, sec);
+  const n = parseInt(beats, 10);
+  const b = isNaN(n) ? e.beats : Math.max(1, Math.min(32, n));
+  const dd = d == null ? shortBarD(ets, e) : (+d === 8 ? 8 : 4);
+  if(b === e.beats && dd === shortBarD(ets, e)) return false;
+  const lost = restructure(song, sec, () => { e.beats = b; if(dd === ets.d) delete e.d; else e.d = dd; });
   window.renderChart();
-  window.save().then(() => showToast(`Now a ${b}/${effTS(song, sec).d} bar` + (lost ? ' — ' + plural(lost, 'fill') + ' no longer fit and went' : '')));
+  window.save().then(() => showToast(`Now a ${shortBarTS(ets, e)} bar` + (lost ? ' — ' + plural(lost, 'fill') + ' no longer fit and went' : '')));
+  return true;
 };
+window.setShortBarBeats = (i, xi, beats) => window.setShortBarTS(i, xi, beats, null);
 // Counting it makes the bar after it one higher; leaving it out makes it a pickup — the bar after
 // it keeps its number, which is how a lead-in or a beat of air is actually counted.
 window.toggleShortBarCount = function(i, xi){
@@ -4040,15 +4063,31 @@ window.moveShortBar = function(i, xi, at){
   return true;
 };
 // how a short bar reads in a menu — "a 2-beat bar", "a 1-beat bar"
-function shortBarWords(e){ return `the ${e.beats}-beat bar`; }
+function shortBarWords(e){ return 'this short bar'; }
+// its time signature, typed in: beats on top, 4 or 8 underneath. A change lands as soon as it's
+// made (Enter or leaving the box); Enter also closes the menu.
+function shortBarTSEditor(ets, e){
+  const d = shortBarD(ets, e);
+  return `<span class="ctx-ico">${ico('metronome')}</span><span class="ctx-label">Time</span>
+    <span class="fm-ts ctx-ts"><input type="number" inputmode="numeric" min="1" max="32" step="1" value="${e.beats}" aria-label="Beats in this bar"><span>/</span><select aria-label="Note value"><option value="4"${d == 4 ? ' selected' : ''}>4</option><option value="8"${d == 8 ? ' selected' : ''}>8</option></select></span>`;
+}
+function mountShortBarTS(el, i, xi){
+  const inp = el.querySelector('input'), sel = el.querySelector('select');
+  const apply = () => window.setShortBarTS(i, xi, inp.value, sel.value);
+  inp.addEventListener('change', apply);
+  sel.addEventListener('change', apply);
+  inp.addEventListener('keydown', ev => {
+    if(ev.key === 'Enter'){ ev.preventDefault(); apply(); hideCtx(); }
+    else if(ev.key === 'Escape'){ ev.stopPropagation(); hideCtx(); }
+  });
+  if(!matchMedia('(pointer:coarse)').matches) setTimeout(() => { inp.focus(); inp.select(); }, 0);
+}
 // everything you can do to one short bar, for its tag, its right-click and the section menu
 function shortBarItems(i, xi){
   const song = currentSong(), sec = song.sections[i], e = secExtras(sec)[xi]; if(!e) return [];
   const ets = effTS(song, sec);
   return [
-    { id:'sblen', icon:'metronome', label:'Length', submenu:
-      Array.from({ length: Math.max(ets.n + 2, e.beats) }, (_, k) => k + 1).map(b =>
-        ({ id:'sb' + b, label: `${b}/${ets.d}` + (b === 1 ? ' — one beat' : ''), disabled: b === e.beats, run:()=>window.setShortBarBeats(i, xi, b) })) },
+    { id:'sbts', html: shortBarTSEditor(ets, e), mount: el => mountShortBarTS(el, i, xi) },
     { id:'sbcount', icon:'half', label: e.skip ? 'Count it as a bar again' : "Don't count it — make it a pickup", run:()=>window.toggleShortBarCount(i, xi) },
     { id:'sbdel', icon:'trash', label:'Remove ' + shortBarWords(e), danger:true, run:()=>window.removeShortBar(i, xi) },
   ];
@@ -4087,12 +4126,13 @@ function renderFillsModal(){
     `<span class="${bar.isOdd ? 'odd' : ''}${bar.num == null ? ' nocount' : ''}" style="left:${bar.start16*PX}px;width:${bar.len16*PX}px"${bar.num == null ? ' title="Pickup — left out of the bar count"' : ''}>${bar.num == null ? '&middot;' : bar.num}</span>`).join('');
   const measures = layout.map((bar, b) => {
     const beatNums = bar.isOdd
-      ? Array.from({length: bar.beats}, (_, k) => `<span class="ftl-beat-n" style="left:${k*s16b*PX}px">${k+1}</span>`).join('')
+      ? Array.from({length: bar.beats}, (_, k) => `<span class="ftl-beat-n" style="left:${k*bar.s16b*PX}px">${k+1}</span>`).join('')
       : '';
     const badge = bar.isOdd
-      ? `<span class="ftl-odd-ts${bar.num == null ? ' nocount' : ''}" data-odd-handle="${i}" data-xi="${bar.xi}" title="${bar.num == null ? 'A pickup — not counted. ' : ''}Tap for its length, count or remove · drag to move it">${bar.beats}/${ets.d}</span>`
+      ? `<span class="ftl-odd-ts${bar.num == null ? ' nocount' : ''}" data-odd-handle="${i}" data-xi="${bar.xi}" title="${bar.num == null ? 'A pickup — not counted. ' : ''}Tap for its time, count or remove · drag to move it">${bar.beats}/${bar.d}</span>`
       : '';
-    return `<div class="ftl-measure${bar.isOdd ? ' ftl-odd' : ''}${bar.num == null ? ' ftl-nocount' : ''}" data-bar="${b}"${bar.isOdd ? ` data-odd="1" data-xi="${bar.xi}"` : ''} style="left:${bar.start16*PX}px;width:${bar.len16*PX}px">${badge}${beatNums}</div>`;
+    const ownGrid = bar.s16b !== s16b ? `;background-image:repeating-linear-gradient(90deg,rgba(255,255,255,.14) 0 1px,transparent 1px ${bar.s16b*PX}px)` : '';   // a bar in eighths among quarters keeps its own beat lines
+    return `<div class="ftl-measure${bar.isOdd ? ' ftl-odd' : ''}${bar.num == null ? ' ftl-nocount' : ''}" data-bar="${b}"${bar.isOdd ? ` data-odd="1" data-xi="${bar.xi}"` : ''} style="left:${bar.start16*PX}px;width:${bar.len16*PX}px${ownGrid}">${badge}${beatNums}</div>`;
   }).join('');
   const blocks = sec.fills.map((f, fi) => {
     const bb = fillBarBeat(ets, f.start16, layout);
@@ -4832,9 +4872,10 @@ function perfPosition(tl, t){
   let k = x.layout.length - 1;
   for(let j = 0; j < x.layout.length; j++) if(within16 < x.layout[j].start16 + x.layout[j].len16 - 1e-9){ k = j; break; }
   const b = x.layout[k];
-  const beatsInBar = Math.max(1, Math.round(b.len16 / x.beat16));
-  return { ci, bar:b.num == null ? 0 : rep * x.counted + b.num, bars:x.bars, beatsInBar, within16,
-           beat:Math.min(beatsInBar, Math.floor((within16 - b.start16) / x.beat16) + 1), prog:pos16 / x.total16 };
+  const bb16 = b.s16b || x.beat16;
+  const beatsInBar = Math.max(1, Math.round(b.len16 / bb16));
+  return { ci, bar:b.num == null ? 0 : rep * x.counted + b.num, bars:x.bars, beatsInBar, within16, beat16:bb16,
+           beat:Math.min(beatsInBar, Math.floor((within16 - b.start16) / bb16) + 1), prog:pos16 / x.total16 };
 }
 
 function renderPerfRows(song){
@@ -4951,8 +4992,9 @@ function perfFollow(){
       if(!e) return 0;
       const own = tl.secs[e.si];
       const lead = e.type === 'section' && e.si > 0 ? tl.secs[e.si - 1] : own;   // a section's count-in is the bar before it
-      const beats = lead === own ? own.ets.n : Math.max(1, Math.round(lead.layout[lead.layout.length - 1].len16 / lead.beat16));
-      const beatSec = lead.per16 * lead.beat16, left = e.t - t;
+      const lb = lead === own ? null : lead.layout[lead.layout.length - 1], lb16 = lb ? (lb.s16b || lead.beat16) : lead.beat16;
+      const beats = lb ? Math.max(1, Math.round(lb.len16 / lb16)) : own.ets.n;
+      const beatSec = lead.per16 * lb16, left = e.t - t;
       return left <= beats * beatSec ? Math.max(1, beats - Math.ceil(left / beatSec) + 1) : 0;
     };
     const nextSec = mode === 'off' ? null : tl.events.find(e => e.type === 'section' && e.si > p.ci && e.t > t + 1e-4);
@@ -5718,6 +5760,7 @@ function showCtx(x, y, items, opts = {}){
   const renderList = list => list.map(it => {
     if(it === '---') return '<div class="ctx-sep" role="separator"></div>';
     if(it.heading) return `<div class="ctx-heading">${it.label}</div>`;
+    if(it.html){ flat.set(it.id, it); return `<div class="ctx-item ctx-custom" data-custom="${it.id}">${it.html}</div>`; }
     flat.set(it.id, it);
     const lead = it.dot ? `<i class="ctx-dot" style="background:${it.dot}"></i>` : (it.icon ? ico(it.icon) : '');
     const tail = it.submenu ? `<span class="ctx-arrow">${ico('chev-r')}</span>`
@@ -5743,7 +5786,11 @@ function showCtx(x, y, items, opts = {}){
       if(parseFloat(ctxEl.style.left) + mw + 210 > innerWidth) el.classList.add('flip');
     });
   }
-  ctxEl.querySelectorAll('.ctx-item:not(.disabled)').forEach(el => {
+  ctxEl.querySelectorAll('[data-custom]').forEach(el => {
+    el.addEventListener('click', ev => ev.stopPropagation());
+    const it = flat.get(el.dataset.custom); if(it && it.mount) it.mount(el);
+  });
+  ctxEl.querySelectorAll('.ctx-item:not(.disabled):not(.ctx-custom)').forEach(el => {
     el.onclick = ev => {
       ev.stopPropagation();                       // don't let a sub-item fire its parent too
       const act = flat.get(el.dataset.act);
