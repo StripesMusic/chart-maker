@@ -1308,7 +1308,8 @@ kbd{font-family:var(--mono)}
 .tp-list{display:flex;flex-direction:column;gap:6px;max-width:1180px;margin:0 auto}
 
 .tp-row{--blk:84px;position:relative;display:flex;align-items:stretch;min-height:66px;background:var(--bg2);cursor:pointer;transition:opacity .3s,background .2s}
-.tp-row:hover{background:#171513}
+@media (hover:hover) and (pointer:fine){ .tp-row:hover{background:#171513} }
+#perf-overlay{-webkit-tap-highlight-color:transparent}
 .tp-blk{width:auto;min-width:var(--blk);flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8px 4px;background:var(--sec);color:var(--on-sec)}
 .tp-num{font-family:var(--display);font-weight:900;font-stretch:64%;font-size:30px;line-height:.82;letter-spacing:-.5px;font-variant-numeric:lining-nums tabular-nums}
 .tp-unit{margin-top:5px;padding-left:.2em;font-family:var(--mono);font-size:8.5px;font-weight:700;line-height:1;letter-spacing:.2em;text-transform:uppercase;opacity:.72}
@@ -1348,8 +1349,10 @@ kbd{font-family:var(--mono)}
 .tp-row.now .tp-fills:empty{display:none}
 .tp-row.now .tp-prog{display:block;position:absolute;left:var(--blk);right:0;bottom:0;height:3px;background:var(--bg4)}
 .tp-prog i{display:block;width:0;height:100%;background:var(--sec)}
-.tp-fill{display:inline-flex;align-items:center;gap:8px;padding:5px 9px;background:none;border:1px solid transparent;border-radius:0;font-family:var(--mono);font-size:clamp(13px,1.45vw,18px);letter-spacing:.02em;text-align:left;color:var(--accent);cursor:pointer;transition:opacity .2s,border-color .15s}
-.tp-fill:hover{border-color:rgba(255,140,43,.5)}
+.tp-fill{display:inline-flex;align-items:center;gap:8px;padding:5px 9px;background:none;border:1px solid transparent;border-radius:0;font-family:var(--mono);font-size:clamp(13px,1.45vw,18px);letter-spacing:.02em;text-align:left;color:var(--accent);cursor:pointer;transition:opacity .2s,border-color .15s,transform 120ms cubic-bezier(.23,1,.32,1)}
+@media (hover:hover) and (pointer:fine){ .tp-fill:hover{border-color:rgba(255,140,43,.5)} }
+.tp-fill:active{transform:scale(.98)}
+.tp-fn::before{content:'\2014\00a0'}
 .tp-fill.past{opacity:.38}
 .tp-fk{font-weight:700;white-space:nowrap}
 .tp-flong{white-space:nowrap}
@@ -1359,6 +1362,13 @@ kbd{font-family:var(--mono)}
 .tp-fill.soon{border-color:var(--accent);opacity:1}
 .tp-fill.hit{background:var(--accent);border-color:var(--accent);color:#160f06;opacity:1}
 .tp-fill.soon .tp-cnt,.tp-fill.hit .tp-cnt{display:inline}
+
+/* the section after the playing one: its notes and fills, so you can read ahead */
+.tp-row.ahead .tp-meta .tp-mn{display:none}
+.tp-row.ahead .tp-notes{display:block;max-width:56ch;font-family:var(--font);font-size:clamp(15px,1.7vw,21px);line-height:1.3;color:var(--text)}
+.tp-row.ahead .tp-notes:empty{display:none}
+.tp-row.ahead .tp-fills{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.tp-row.ahead .tp-fills:empty{display:none}
 
 /* the bar before a change: the next row lights up and counts in */
 .tp-row.incoming{--blk:clamp(84px,10vw,124px);opacity:1;outline:2px solid var(--sec);outline-offset:-2px}
@@ -1479,17 +1489,55 @@ kbd{font-family:var(--mono)}
          display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
   .tp-nd:empty{display:none}
 
-  /* list mode: every section in order, the playing one picked out without taking the screen */
-  #perf-overlay.list .tp-row.now{--blk:100px}
-  #perf-overlay.list .tp-row.now .tp-blk{padding:10px 6px}
-  #perf-overlay.list .tp-row.now .tp-num{font-size:58px}
-  #perf-overlay.list .tp-row.now .tp-unit{font-size:28px}
-  #perf-overlay.list .tp-row.now .tp-beats{gap:6px;margin-top:8px}
-  #perf-overlay.list .tp-row.now .tp-beats i{width:11px;height:11px}
-  #perf-overlay.list .tp-row.now .tp-body{gap:7px;padding:12px 14px}
-  #perf-overlay.list .tp-row.now .tp-name{font-size:32px}
-  #perf-overlay.list .tp-row.now .tp-notes{font-size:17px}
-  #perf-overlay.list .tp-row.now .tp-fill{font-size:14px;padding:4px 7px}
+  /* ── list mode: every section in order. The playing one reads in full and big, the next one
+     shows its notes and fills so you can read ahead, the rest are one glance each. Nothing truncates. ── */
+  #perf-overlay.list #tp-rows{padding:6px 0 40vh}
+  #perf-overlay.list .tp-list{gap:4px}
+  #perf-overlay.list .tp-row{--blk:72px;min-height:62px}
+  #perf-overlay.list .tp-num{font-size:30px}
+  #perf-overlay.list .tp-body{gap:4px;padding:10px 14px}
+  #perf-overlay.list .tp-name{font-size:24px;line-height:.95;white-space:normal;overflow-wrap:anywhere}
+  #perf-overlay.list .tp-meta{max-height:2.7em;font-size:13px;line-height:1.35;white-space:normal}
+  #perf-overlay.list .tp-row.done{min-height:42px}
+  #perf-overlay.list .tp-row.done .tp-num{font-size:19px}
+  #perf-overlay.list .tp-row.done .tp-name{font-size:17px;white-space:nowrap}
+
+  /* fills: a heading line (count · FILL · bar 3 · beat 1), then the note in full underneath */
+  #perf-overlay.list .tp-fill{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;align-self:stretch;padding:8px 11px 9px;
+      border-color:rgba(255,140,43,.3);font-size:13px;letter-spacing:0}
+  #perf-overlay.list .tp-fk{letter-spacing:.08em;text-transform:uppercase}
+  #perf-overlay.list .tp-cnt{text-transform:uppercase;letter-spacing:.06em}
+  #perf-overlay.list .tp-fn{flex:1 0 100%;overflow:visible;white-space:normal;font-family:var(--font);font-size:clamp(17px,4.8vw,20px);line-height:1.25;color:var(--text)}
+  #perf-overlay.list .tp-fn::before{content:none}
+  #perf-overlay.list .tp-fill.soon{background:rgba(255,140,43,.14)}
+  #perf-overlay.list .tp-fill.hit .tp-fn{color:#160f06}
+
+  /* the playing section */
+  #perf-overlay.list .tp-row.now{--blk:clamp(96px,27vw,124px);min-height:0}
+  #perf-overlay.list .tp-row.now .tp-blk{justify-content:flex-start;padding:16px 6px 14px}
+  #perf-overlay.list .tp-row.now .tp-num{font-size:clamp(66px,19vw,86px)}
+  #perf-overlay.list .tp-row.now .tp-unit{margin-top:6px;font-size:clamp(30px,8.5vw,40px)}
+  #perf-overlay.list .tp-row.now .tp-beats{flex-wrap:wrap;justify-content:center;gap:6px;margin-top:12px;padding:0 4px}
+  #perf-overlay.list .tp-row.now .tp-beats i{width:12px;height:12px}
+  #perf-overlay.list .tp-row.now .tp-body{justify-content:flex-start;gap:10px;padding:14px 14px 18px 16px}
+  #perf-overlay.list .tp-row.now .tp-name{font-size:clamp(32px,9.6vw,42px);line-height:.92}
+  #perf-overlay.list .tp-row.now .tp-notes{max-width:none;font-size:clamp(18px,5.2vw,21px);line-height:1.3}
+  #perf-overlay.list .tp-row.now .tp-fills{align-items:stretch;gap:6px;margin-top:2px}
+  #perf-overlay.list .tp-row.now .tp-fill{font-size:13.5px}
+  #perf-overlay.list .tp-row.now .tp-prog{height:5px}
+
+  /* the next section: read-ahead, a step down from the playing one */
+  #perf-overlay.list .tp-row.ahead{--blk:clamp(80px,22vw,100px);background:var(--bg3)}
+  #perf-overlay.list .tp-row.ahead .tp-blk{justify-content:flex-start;padding:14px 4px 12px}
+  #perf-overlay.list .tp-row.ahead .tp-num{font-size:40px}
+  #perf-overlay.list .tp-row.ahead .tp-body{justify-content:flex-start;gap:7px;padding:12px 14px 14px 16px}
+  #perf-overlay.list .tp-row.ahead .tp-name{font-size:clamp(26px,7.4vw,32px)}
+  #perf-overlay.list .tp-row.ahead .tp-meta{font-size:12px}
+  #perf-overlay.list .tp-row.ahead .tp-notes{max-width:none;font-size:17px}
+  #perf-overlay.list .tp-row.ahead .tp-fills{align-items:stretch;gap:5px}
+  #perf-overlay.list .tp-row.ahead .tp-fn{font-size:17px}
+  /* counting into it: the count takes the bar block */
+  #perf-overlay.list .tp-row.incoming .tp-num{font-size:clamp(56px,16vw,72px)}
 }
 @media (max-width: 560px){
   #perform-btn .lbl-long{display:none}
@@ -1524,6 +1572,14 @@ kbd{font-family:var(--mono)}
   #perf-overlay:not(.list) .tp-row.now .tp-next{grid-area:next;align-self:start;align-items:flex-start;max-width:none;margin:0 0 clamp(6px,2vh,12px);padding:5px 10px 6px;text-align:left}
   #perf-overlay:not(.list) .tp-row.now .tp-nn{font-size:clamp(18px,6vh,28px)}
   #perf-overlay:not(.list) .tp-row.now .tp-nd{font-size:clamp(13px,3.8vh,17px);-webkit-line-clamp:1}
+  /* list mode sideways: the playing section's name and notes left, its fills right */
+  #perf-overlay.list .tp-row.now .tp-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-areas:"name fills" "notes fills";
+      grid-template-rows:auto 1fr;align-content:start;column-gap:16px;row-gap:8px}
+  #perf-overlay.list .tp-row.now .tp-name{grid-area:name}
+  #perf-overlay.list .tp-row.now .tp-notes{grid-area:notes}
+  #perf-overlay.list .tp-row.now .tp-fills{grid-area:fills;align-self:start;margin-top:0}
+  #perf-overlay.list .tp-row.now .tp-num{font-size:clamp(56px,17vh,80px)}
+  #perf-overlay.list .tp-row.now .tp-unit{font-size:clamp(28px,8vh,38px)}
 }
 @media (prefers-reduced-motion: reduce){
   #perf-overlay.active,.tp-row.beat .tp-blk{animation:none}
@@ -4892,7 +4948,7 @@ function renderPerfRows(song){
         <div class="tp-name">${name}${sec.repeats > 1 ? `<span class="tp-rep">×${sec.repeats}</span>` : ''}</div>
         <div class="tp-meta"><span class="tp-when"></span><span class="tp-mn">${esc(sec.notes || '')}</span></div>
         <div class="tp-notes">${esc(sec.notes || '')}</div>
-        <div class="tp-fills">${fills.map(o => `<button type="button" class="tp-fill" data-fi="${o.fi}" title="Jump to this fill · ${barBeatLabel(o.bb)}" onclick="perfSeekFill(${i},${o.fi},event)"><span class="tp-cnt"></span><span class="tp-fk">Fill</span><span class="tp-flong">· ${barBeatLabel(o.bb, true)}</span><span class="tp-at">· ${barBeatShort(o.bb)}</span>${o.f.notes ? `<span class="tp-fn">— ${esc(o.f.notes)}</span>` : ''}</button>`).join('')}</div>
+        <div class="tp-fills">${fills.map(o => `<button type="button" class="tp-fill" data-fi="${o.fi}" title="Jump to this fill · ${barBeatLabel(o.bb)}" onclick="perfSeekFill(${i},${o.fi},event)"><span class="tp-cnt"></span><span class="tp-fk">Fill</span><span class="tp-flong">· ${barBeatLabel(o.bb, true)}</span><span class="tp-at">· ${barBeatShort(o.bb)}</span>${o.f.notes ? `<span class="tp-fn">${esc(o.f.notes)}</span>` : ''}</button>`).join('')}</div>
       </div>
       <div class="tp-prog"><i></i></div>
     </div>`;
@@ -4910,6 +4966,7 @@ function perfSetCurrent(rows, ci){
   rows.forEach((r, i) => {
     r.classList.toggle('done', ci >= 0 && i < ci);
     r.classList.toggle('now', i === ci);
+    r.classList.toggle('ahead', i === ci + 1);          // before the first section, that's the first row
     r.classList.remove('incoming');
     if(i === ci) r.dataset.live = '1'; else perfRestRow(r, secs[i]);
   });
@@ -4920,7 +4977,8 @@ function perfScrollTo(rows, ci, instant){
   if(performance.now() < perfManualScrollUntil) return;
   const box = document.getElementById('tp-rows');
   requestAnimationFrame(() => {
-    const bias = perfStage() ? 0 : 0.18;
+    // phone list: playing row near the top, so the next one and its fills fit underneath
+    const bias = perfStage() ? 0 : matchMedia(PERF_STAGE_Q).matches ? 0.03 : 0.18;
     const top = ci < 0 ? 0 : rows[ci].getBoundingClientRect().top - box.getBoundingClientRect().top + box.scrollTop - box.clientHeight * bias;
     box.scrollTo({ top:Math.max(0, top), behavior:instant ? 'auto' : 'smooth' });
   });
