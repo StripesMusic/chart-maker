@@ -1363,6 +1363,16 @@ kbd{font-family:var(--mono)}
 .tp-fill.hit{background:var(--accent);border-color:var(--accent);color:#160f06;opacity:1}
 .tp-fill.soon .tp-cnt,.tp-fill.hit .tp-cnt{display:inline}
 
+/* short bars. In the bar block: "2/4 bar" while one plays (solid), "Next 2/4" the bar before (outlined).
+   Under the name: where a section's short bars and pickups sit. */
+.tp-sbar{display:none;margin-top:10px;padding:3px 7px 4px;border:2px solid currentColor;font-family:var(--mono);font-size:12px;font-weight:700;line-height:1;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+.tp-row.now .tp-sbar.on,.tp-row.now .tp-sbar.next{display:block}
+.tp-sbar.on{background:var(--on-sec);border-color:var(--on-sec);color:var(--sec)}
+.tp-row.pickup .tp-num{letter-spacing:0}
+.tp-sb{font-family:var(--mono);font-size:12px;line-height:1.35;letter-spacing:.02em;color:var(--accent)}
+.tp-sb:empty,.tp-row.done .tp-sb{display:none}
+.tp-row.now .tp-sb{font-size:clamp(12px,1.3vw,15px)}
+
 /* the section after the playing one: its notes and fills, so you can read ahead */
 .tp-row.ahead .tp-meta .tp-mn{display:none}
 .tp-row.ahead .tp-notes{display:block;max-width:56ch;font-family:var(--font);font-size:clamp(15px,1.7vw,21px);line-height:1.3;color:var(--text)}
@@ -1465,6 +1475,8 @@ kbd{font-family:var(--mono)}
   #perf-overlay:not(.list) .tp-row.now .tp-unit::before{content:'/';margin:0 .06em 0 .02em;font-size:.82em;opacity:.5}
   #perf-overlay:not(.list) .tp-row.now .tp-beats{flex:0 0 100%;justify-content:center;gap:clamp(9px,3vw,16px);margin-top:clamp(8px,2.6vw,16px)}
   #perf-overlay:not(.list) .tp-row.now .tp-beats i{width:clamp(16px,4.6vw,26px);height:clamp(16px,4.6vw,26px);border-width:3px}
+  #perf-overlay:not(.list) .tp-row.now .tp-sbar{flex:0 0 auto;margin:clamp(10px,3vw,16px) calc(50% - 8ch) 0;font-size:clamp(13px,3.8vw,17px);text-align:center}
+  #perf-overlay:not(.list) .tp-row.now .tp-sbar.on{background:var(--sec);border-color:var(--sec);color:var(--on-sec)}
   #perf-overlay:not(.list) .tp-row.now .tp-body{flex:0 1 auto;min-height:0;justify-content:flex-start;gap:clamp(6px,2vw,12px);
                        padding:clamp(14px,5vw,30px) clamp(14px,4.5vw,24px) 0;text-align:center}
   #perf-overlay:not(.list) .tp-row.now .tp-name{font-size:clamp(40px,12.5vw,88px);line-height:.92}
@@ -1525,6 +1537,8 @@ kbd{font-family:var(--mono)}
   #perf-overlay.list .tp-row.now .tp-fills{align-items:stretch;gap:6px;margin-top:2px}
   #perf-overlay.list .tp-row.now .tp-fill{font-size:13.5px}
   #perf-overlay.list .tp-row.now .tp-prog{height:5px}
+  #perf-overlay.list .tp-row.now .tp-sb{font-size:13px}
+  #perf-overlay.list .tp-row.now .tp-sbar{font-size:12.5px}
 
   /* the next section: read-ahead, a step down from the playing one */
   #perf-overlay.list .tp-row.ahead{--blk:clamp(80px,22vw,100px);background:var(--bg3)}
@@ -1573,10 +1587,12 @@ kbd{font-family:var(--mono)}
   #perf-overlay:not(.list) .tp-row.now .tp-nn{font-size:clamp(18px,6vh,28px)}
   #perf-overlay:not(.list) .tp-row.now .tp-nd{font-size:clamp(13px,3.8vh,17px);-webkit-line-clamp:1}
   /* list mode sideways: the playing section's name and notes left, its fills right */
-  #perf-overlay.list .tp-row.now .tp-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-areas:"name fills" "notes fills";
-      grid-template-rows:auto 1fr;align-content:start;column-gap:16px;row-gap:8px}
+  #perf-overlay.list .tp-row.now .tp-body{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);grid-template-areas:"name fills" "notes fills" "sb fills";
+      grid-template-rows:auto auto 1fr;align-content:start;column-gap:16px;row-gap:8px}
   #perf-overlay.list .tp-row.now .tp-name{grid-area:name}
   #perf-overlay.list .tp-row.now .tp-notes{grid-area:notes}
+  #perf-overlay.list .tp-row.now .tp-sb{grid-area:sb}
+  #perf-overlay:not(.list) .tp-row.now .tp-sb{grid-column:1}
   #perf-overlay.list .tp-row.now .tp-fills{grid-area:fills;align-self:start;margin-top:0}
   #perf-overlay.list .tp-row.now .tp-num{font-size:clamp(56px,17vh,80px)}
   #perf-overlay.list .tp-row.now .tp-unit{font-size:clamp(28px,8vh,38px)}
@@ -4930,8 +4946,39 @@ function perfPosition(tl, t){
   const b = x.layout[k];
   const bb16 = b.s16b || x.beat16;
   const beatsInBar = Math.max(1, Math.round(b.len16 / bb16));
-  return { ci, bar:b.num == null ? 0 : rep * x.counted + b.num, bars:x.bars, beatsInBar, within16, beat16:bb16,
-           beat:Math.min(beatsInBar, Math.floor((within16 - b.start16) / bb16) + 1), prog:pos16 / x.total16 };
+  // an uncounted short bar (a pickup) has no number: it sits after the last bar that does
+  let prev = 0;
+  for(let j = k - 1; j >= 0; j--) if(x.layout[j].num != null){ prev = x.layout[j].num; break; }
+  const pickup = b.num == null;
+  // the bar after this one, within the section (the next pass's first bar on a repeat)
+  const nb = k < x.layout.length - 1 ? x.layout[k + 1] : rep < x.sec.repeats - 1 ? x.layout[0] : null;
+  return { ci, rep, pickup, bar:pickup ? rep * x.counted + prev : rep * x.counted + b.num, bars:x.bars, beatsInBar, within16, beat16:bb16,
+           beat:Math.min(beatsInBar, Math.floor((within16 - b.start16) / bb16) + 1), prog:pos16 / x.total16,
+           odd:b.isOdd ? b : null, nextOdd:nb && nb.isOdd ? nb : null };
+}
+// "2/4" for a short bar, in its own beats
+function perfBarTS(b){ return b.beats + '/' + b.d; }
+// a section's short bars, in words: "bar 9 is 2/4 · 1/4 pickup before bar 1"
+function perfShortBarsNote(layout, repeats){
+  const odd = layout.filter(b => b.isOdd);
+  if(!odd.length) return '';
+  const total = layout.reduce((a, b) => a + (b.num == null ? 0 : 1), 0);
+  return odd.map(b => {
+    if(b.num != null) return `bar ${b.num} is ${perfBarTS(b)}`;
+    const after = layout.slice(0, layout.indexOf(b)).reverse().find(c => c.num != null);
+    const before = layout.slice(layout.indexOf(b) + 1).find(c => c.num != null);
+    return `${perfBarTS(b)} pickup ` + (before ? `before bar ${before.num}` : after ? `after bar ${after.num}` : '');
+  }).join(' · ') + (repeats > 1 && total ? ' (each time)' : '');
+}
+// fill labels follow the pass: the second time through an 8-bar section, bar 3 reads "bar 11"
+function perfFillLabels(row, x, rep){
+  row.querySelectorAll('.tp-fill').forEach(el => {
+    const f = x.sec.fills[+el.dataset.fi]; if(!f) return;
+    const bb = fillBarBeat(x.ets, f.start16, x.layout);
+    const shown = bb.bar == null ? bb : { ...bb, bar:bb.bar + rep * x.counted };
+    el.querySelector('.tp-flong').textContent = '· ' + barBeatLabel(shown, true);
+    el.querySelector('.tp-at').textContent = '· ' + barBeatShort(shown);
+  });
 }
 
 function renderPerfRows(song){
@@ -4943,10 +4990,11 @@ function renderPerfRows(song){
     const next = nx ? `<span class="tp-nk">Next</span><span class="tp-nn">${esc(sectionDisplay(song, i + 1))}</span><span class="tp-nd">${esc(nx.notes || '')}</span>` : '';
     return `<div class="tp-row" data-i="${i}" role="button" title="Jump here" aria-label="Jump to ${name}" style="--sec:${ec};--on-sec:${onColor(ec)}" onclick="perfRowTap(${i},event)">
       <div class="tp-next"${nx ? ` style="--nx:${effColor(nx)}"` : ''}>${next}</div>
-      <div class="tp-blk"><b class="tp-num">${secBarsShown(sec)}</b><span class="tp-unit">${secBarsShown(sec) == 1 ? 'Bar' : 'Bars'}</span><span class="tp-beats"></span></div>
+      <div class="tp-blk"><b class="tp-num">${secBarsShown(sec)}</b><span class="tp-unit">${secBarsShown(sec) == 1 ? 'Bar' : 'Bars'}</span><span class="tp-beats"></span><span class="tp-sbar"></span></div>
       <div class="tp-body">
         <div class="tp-name">${name}${sec.repeats > 1 ? `<span class="tp-rep">×${sec.repeats}</span>` : ''}</div>
         <div class="tp-meta"><span class="tp-when"></span><span class="tp-mn">${esc(sec.notes || '')}</span></div>
+        <div class="tp-sb">${esc(perfShortBarsNote(lay, sec.repeats))}</div>
         <div class="tp-notes">${esc(sec.notes || '')}</div>
         <div class="tp-fills">${fills.map(o => `<button type="button" class="tp-fill" data-fi="${o.fi}" title="Jump to this fill · ${barBeatLabel(o.bb)}" onclick="perfSeekFill(${i},${o.fi},event)"><span class="tp-cnt"></span><span class="tp-fk">Fill</span><span class="tp-flong">· ${barBeatLabel(o.bb, true)}</span><span class="tp-at">· ${barBeatShort(o.bb)}</span>${o.f.notes ? `<span class="tp-fn">${esc(o.f.notes)}</span>` : ''}</button>`).join('')}</div>
       </div>
@@ -4959,6 +5007,10 @@ function perfRestRow(row, sec){
   if(!row.dataset.live) return;
   row.querySelector('.tp-num').textContent = secBarsShown(sec);
   row.querySelector('.tp-unit').textContent = secBarsShown(sec) == 1 ? 'Bar' : 'Bars';
+  const sb = row.querySelector('.tp-sbar'); sb.textContent = ''; sb.className = 'tp-sbar';
+  row.classList.remove('pickup');
+  const x = perfTL && perfTL.secs[+row.dataset.i];
+  if(x) perfFillLabels(row, x, 0);
   delete row.dataset.live;
 }
 function perfSetCurrent(rows, ci){
@@ -4984,7 +5036,8 @@ function perfScrollTo(rows, ci, instant){
   });
 }
 function perfUpdateWhen(rows, tl, p){
-  let acc = p.bars - Math.max(1, p.bar) + 1;
+  // bars left, counting this one; a pickup isn't a counted bar, so only those after it are left
+  let acc = p.pickup ? Math.max(1, p.bars - p.bar) : p.bars - Math.max(1, p.bar) + 1;
   rows.forEach((r, k) => {
     const w = r.querySelector('.tp-when');
     if(k <= p.ci){ w.textContent = ''; return; }
@@ -5004,7 +5057,7 @@ function perfFollow(){
   cancelAnimationFrame(perfRAF);
   const song = currentSong(), tl = perfTL;
   const rows = [...document.querySelectorAll('#tp-rows .tp-row')];
-  const st = { ci:-2, bar:0, beat:0, beatsInBar:0, incoming:-1, count:0, fillKey:'', playing:null, nowS:'', dur:0, held:false, whenS:'' };
+  const st = { ci:-2, bar:0, beat:0, beatsInBar:0, incoming:-1, count:0, fillKey:'', playing:null, nowS:'', dur:0, held:false, whenS:'', barKey:'', rep:-1 };
   const overlay = document.getElementById('perf-overlay');
   const tick = () => {
     if(!overlay.classList.contains('active')){ perfRAF = null; return; }
@@ -5014,7 +5067,7 @@ function perfFollow(){
     if(p.ci !== st.ci){
       perfSetCurrent(rows, p.ci);
       perfScrollTo(rows, p.ci, st.ci === -2);
-      st.ci = p.ci; st.bar = 0; st.beat = 0; st.beatsInBar = 0; st.incoming = -1; st.count = 0;
+      st.ci = p.ci; st.bar = -1; st.beat = 0; st.beatsInBar = 0; st.incoming = -1; st.count = 0; st.barKey = ''; st.rep = -1;
     }
     const held = performance.now() < perfManualScrollUntil;
     if(perfRecenter){ perfRecenter = false; perfScrollTo(rows, st.ci, true); }
@@ -5023,10 +5076,20 @@ function perfFollow(){
 
     if(p.ci >= 0){
       const cur = rows[p.ci], x = tl.secs[p.ci];
-      if(p.bar !== st.bar){
-        st.bar = p.bar;
-        cur.querySelector('.tp-num').textContent = p.bar;
+      // which bar this is, by its place in the layout, so a pickup and the bar before it differ
+      const barKey = p.rep + ':' + p.bar + ':' + (p.pickup ? 'p' : '') + (p.odd ? p.odd.start16 : '');
+      if(p.rep !== st.rep){ st.rep = p.rep; perfFillLabels(cur, x, p.rep); }
+      if(barKey !== st.barKey){
+        st.barKey = barKey; st.bar = p.bar;
+        // an uncounted short bar shows "PU" rather than a number: it isn't one of the bars you count
+        cur.querySelector('.tp-num').textContent = p.pickup ? 'PU' : p.bar;
         cur.querySelector('.tp-unit').innerHTML = '<i>of </i>' + p.bars;
+        cur.classList.toggle('pickup', p.pickup);
+        // short bar now, or the next one: say so in its own time signature
+        const sb = cur.querySelector('.tp-sbar');
+        sb.className = 'tp-sbar' + (p.odd ? ' on' : p.nextOdd ? ' next' : '');
+        sb.textContent = p.odd ? perfBarTS(p.odd) + (p.pickup ? ' pickup' : ' bar')
+                       : p.nextOdd ? 'Next ' + perfBarTS(p.nextOdd) : '';
         perfUpdateWhen(rows, tl, p);
         cur.querySelectorAll('.tp-fill').forEach(el => {
           const f = x.sec.fills[+el.dataset.fi];
